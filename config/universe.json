@@ -1,0 +1,30 @@
+{
+  "_comment": "Lista de tickers que el radar analiza cada día. Agrega o quita símbolos de Yahoo Finance (ej: NVDA, BRK-B, SPY). Máximo recomendado: 120.",
+  "stocks": [
+    "NVDA", "AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "AMD", "TSM",
+    "NFLX", "PLTR", "CRM", "ORCL", "ADBE", "INTC", "QCOM", "MU", "ARM", "ASML",
+    "COIN", "MSTR", "SHOP", "UBER", "ABNB", "SNOW", "CRWD", "PANW", "NOW", "MELI",
+    "JPM", "V", "MA", "BRK-B", "GS", "BAC", "AXP",
+    "UNH", "LLY", "NVO", "JNJ", "PFE", "ABBV", "ISRG",
+    "XOM", "CVX", "OXY", "FCX", "SQM", "ALB", "NEM",
+    "WMT", "COST", "KO", "PEP", "MCD", "SBUX", "NKE", "DIS", "HD",
+    "BA", "CAT", "LMT", "RTX", "GE", "DE"
+  ],
+  "etfs": [
+    "SPY", "QQQ", "VOO", "VTI", "IWM", "DIA",
+    "XLK", "XLE", "XLF", "XLV", "SOXX", "SMH", "ARKK",
+    "SCHD", "JEPI", "VNQ", "GLD", "SLV", "TLT", "BND", "EEM", "VEA"
+  ],
+  "market": {
+    "^GSPC": "S&P 500",
+    "^IXIC": "Nasdaq",
+    "^DJI": "Dow Jones",
+    "^VIX": "VIX (miedo)",
+    "^TNX": "Bono 10 años (%)",
+    "DX-Y.NYB": "Dólar (DXY)",
+    "CLP=X": "USD/CLP",
+    "CL=F": "Petróleo WTI",
+    "GC=F": "Oro",
+    "BTC-USD": "Bitcoin"
+  }
+}

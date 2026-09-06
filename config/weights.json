@@ -1,0 +1,21 @@
+{
+  "_comment": "Pesos del motor de señales. Cada bloque suma 1.0. Ajusta y el próximo run recalcula todo. Umbrales de señal en 'signal'.",
+  "horizons": { "short": 0.25, "medium": 0.40, "long": 0.35 },
+  "short": {
+    "trend": 0.35, "momentum": 0.25, "macd": 0.15, "volume": 0.10, "bollinger": 0.15
+  },
+  "medium": {
+    "analysts": 0.25, "upside": 0.20, "revisions": 0.15, "growth": 0.15, "momentum": 0.15, "valuation": 0.10
+  },
+  "long": {
+    "growth": 0.20, "profitability": 0.20, "balance": 0.15, "cashflow": 0.15, "valuation": 0.15, "analysts": 0.10, "trend": 0.05
+  },
+  "signal": {
+    "strong_buy": 78, "buy": 62, "hold": 42, "sell": 28,
+    "strong_buy_min_horizon": 65,
+    "_comment": "Compra fuerte exige score >= strong_buy Y que mediano y largo plazo sean >= strong_buy_min_horizon (confluencia)."
+  },
+  "retention": {
+    "history_days": 120, "news_per_ticker": 5, "news_max_age_days": 7, "market_news": 12
+  }
+}
