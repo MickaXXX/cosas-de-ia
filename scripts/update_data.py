@@ -61,6 +61,14 @@ QS_MODULES = [
 # --------------------------------------------------------------------------- #
 # Utilidades
 # --------------------------------------------------------------------------- #
+def env_int(name: str, default: int) -> int:
+    """Variables de GitHub Actions sin definir llegan como cadena vacía."""
+    try:
+        return int((os.environ.get(name) or "").strip() or default)
+    except ValueError:
+        return default
+
+
 def load_json(path: Path, default):
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -864,7 +872,7 @@ def main():
     ap.add_argument("--demo", action="store_true", help="datos sintéticos, sin internet")
     ap.add_argument("--only", help="lista de tickers separada por comas")
     ap.add_argument("--mode", choices=["fast", "daily", "full"], default="daily")
-    ap.add_argument("--workers", type=int, default=int(os.environ.get("WORKERS", "8")))
+    ap.add_argument("--workers", type=int, default=env_int("WORKERS", 8))
     ap.add_argument("--refresh-days", type=float, default=3.0, help="antigüedad máxima de los metadatos")
     ap.add_argument("--max-meta", type=int, default=0, help="0 = automático según el modo")
     args = ap.parse_args()
@@ -935,7 +943,7 @@ def main():
         stale = [s for s in all_syms if meta_age_days(s) >= args.refresh_days]
         stale.sort(key=meta_age_days, reverse=True)
         need = list(dict.fromkeys(list(priority) + stale))
-        cap = args.max_meta or int(os.environ.get("MAX_META", "420"))
+        cap = args.max_meta or env_int("MAX_META", 420)
     need = [s for s in need if s in hists or args.demo][:max(cap, 0)]
     print(f"-- metadatos a refrescar: {len(need)} de {len(all_syms)} "
           f"(prioritarios {len(priority)}, resto por antigüedad)", flush=True)
@@ -1016,7 +1024,7 @@ def main():
     # ---------------- noticias ----------------
     from news_ai import classify_all
     news_by_tk = {t["sym"]: t["news"] for t in tickers if t.get("news")}
-    max_ai = 0 if args.demo else int(os.environ.get("NEWS_AI_MAX", "250"))
+    max_ai = 0 if args.demo else env_int("NEWS_AI_MAX", 250)
     news_stats = classify_all(news_by_tk, max_ai=max_ai)
     print(f"== noticias: {news_stats}", flush=True)
 

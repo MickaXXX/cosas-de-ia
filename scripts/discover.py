@@ -44,6 +44,9 @@ STOPWORDS = {
     "NYSE", "NASDAQ", "Q1", "Q2", "Q3", "Q4", "EU", "UK", "CHINA", "OPEC", "IMF", "WSJ", "CNBC",
     "THE", "AND", "FOR", "WITH", "FROM", "THIS", "THAT", "NEW", "TOP", "BUY", "SELL", "HOLD",
     "WHY", "HOW", "WHAT", "BEST", "STOCK", "STOCKS", "MARKET", "NEWS", "MORE", "AFTER", "BEFORE",
+    "SPDR", "PIMCO", "ASUS", "CFTC", "GTA", "DCF", "BTC", "ETH", "VIX", "CPU", "FY", "CD", "ARK",
+    "IPO", "M&A", "ESG", "CEOS", "YTD", "EBIT", "ROE", "ROIC", "PEG", "SP", "DOW", "FOMC", "BLS",
+    "ETFS", "AMC", "PRE", "POST", "OPEC", "NATO", "WTI", "OTC", "SPAC", "REIT", "AGM", "AI2",
 }
 
 
@@ -98,49 +101,37 @@ def from_news(latest: dict, known: set) -> dict:
             mentions[m] = mentions.get(m, 0) + 3
         for m in re.findall(r"\b([A-Z]{2,5})\b", txt):          # sueltos en mayúsculas
             mentions[m] = mentions.get(m, 0) + 1
+    # Umbral 4: basta una mención explícita ($NVDA o "Nvidia (NVDA)") o cuatro sueltas.
     return {s: c for s, c in mentions.items()
-            if c >= 2 and s not in STOPWORDS and s not in known}
+            if c >= 4 and s not in STOPWORDS and s not in known}
 
 
 def validate(symbols: list) -> dict:
-    """Confirma que existan, coticen en EE.UU. y tengan tamaño mínimo."""
+    """Confirma que existan y tengan precio y volumen razonables (descarga en lote)."""
+    import pandas as pd
     import yfinance as yf
-    from yfinance.data import YfData
     ok = {}
-    for i in range(0, len(symbols), 40):
-        batch = symbols[i:i + 40]
+    for i in range(0, len(symbols), 60):
+        batch = symbols[i:i + 60]
         try:
-            url = "https://query2.finance.yahoo.com/v7/finance/quote"
-            j = YfData().get_raw_json(url, params={"symbols": ",".join(batch), "crumb": None}, timeout=20)
-            rows = ((j or {}).get("quoteResponse") or {}).get("result") or []
-        except Exception:
-            rows = []
-            for s in batch:                                     # respaldo, uno por uno
-                try:
-                    fi = yf.Ticker(s).fast_info
-                    rows.append({"symbol": s, "marketCap": getattr(fi, "market_cap", None),
-                                 "fullExchangeName": "?", "exchange": "NMS",
-                                 "regularMarketPrice": getattr(fi, "last_price", None),
-                                 "regularMarketVolume": getattr(fi, "last_volume", None),
-                                 "quoteType": "EQUITY"})
-                except Exception:
+            df = yf.download(batch, period="1mo", interval="1d", group_by="ticker",
+                             auto_adjust=True, progress=False, threads=True, timeout=30)
+        except Exception as e:
+            print(f"  ! validación lote {i}: {str(e)[:80]}", file=sys.stderr)
+            continue
+        for sym in batch:
+            try:
+                sub = df[sym] if isinstance(df.columns, pd.MultiIndex) else df
+                sub = sub.dropna(subset=["Close"])
+                if len(sub) < 12:
                     continue
-        for q in rows:
-            sym = (q.get("symbol") or "").upper()
-            if q.get("quoteType") not in (None, "EQUITY", "ETF"):
+                price = float(sub["Close"].iloc[-1])
+                dvol = float((sub["Close"] * sub["Volume"]).tail(10).mean())
+                if price < 1 or dvol < MIN_DOLLAR_VOL:
+                    continue
+                ok[sym] = {"price": round(price, 2), "dollar_vol": round(dvol)}
+            except Exception:
                 continue
-            if q.get("exchange") and q["exchange"] not in US_EXCHANGES:
-                continue
-            cap = q.get("marketCap") or 0
-            price = q.get("regularMarketPrice") or 0
-            vol = (q.get("regularMarketVolume") or 0) * price
-            if cap and cap < MIN_CAP:
-                continue
-            if vol and vol < MIN_DOLLAR_VOL:
-                continue
-            if price and price < 1:
-                continue
-            ok[sym] = {"cap": cap, "price": price}
     return ok
 
 
