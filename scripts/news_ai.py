@@ -165,3 +165,81 @@ def classify_all(news_by_ticker: dict, max_ai: int) -> dict:
             for k in ("t_es", "r_es", "nivel", "accion", "tag", "prio", "ai"):
                 it[k] = src[k]
     return {"total": len(flat), "unique": len(uniq), "ai": ai_done}
+
+
+def market_brief(regime: dict, tickers: list, changes: list, news: list, portfolio_syms: list = None) -> dict:
+    """Resumen del día escrito por Claude: qué pasa en el mercado y qué vigilar.
+
+    Se guarda en latest.json y la app lo muestra arriba de la pestaña Hoy y como
+    primer mensaje del chat. Sin ANTHROPIC_API_KEY devuelve un resumen heurístico.
+    """
+    top = [t for t in tickers if not t.get("etf") and t.get("conf") != "baja"][:12]
+    top_txt = "\n".join(
+        f"- {t['sym']} ({t.get('name','')}): {t['signal']} {t['score']}/100, corto {t['h']['short']['s']}, "
+        f"mediano {t['h']['medium']['s']}, largo {t['h']['long']['s']}, riesgo {t['risk']['label']}"
+        + (f", potencial {t['analysts']['upside']}%" if (t.get('analysts') or {}).get('upside') is not None else "")
+        for t in top)
+    chg_txt = "\n".join(f"- {c['sym']}: {c['from']} → {c['to']} (score {c['score_from']} → {c['score_to']})"
+                        for c in (changes or [])[:8])
+    news_txt = "\n".join(f"- [{n.get('sym','')}] {n.get('t_es') or n.get('t','')}" for n in (news or [])[:15])
+
+    fallback = {
+        "text": f"Régimen {regime.get('label','')}. {regime.get('desc','')} "
+                f"{len([t for t in tickers if t.get('signal')=='strong_buy'])} activos en compra fuerte y "
+                f"{len(changes or [])} cambios de señal en el radar.",
+        "bullets": [n.get("t_es") or n.get("t", "") for n in (news or [])[:3]],
+        "ai": False,
+    }
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return fallback
+    try:
+        import anthropic
+    except ImportError:
+        return fallback
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "resumen": {"type": "string"},
+            "vigilar": {"type": "array", "items": {"type": "string"}},
+            "riesgo": {"type": "string"},
+        },
+        "required": ["resumen", "vigilar", "riesgo"],
+        "additionalProperties": False,
+    }
+    prompt = f"""Eres el analista de cabecera de un inversionista minorista chileno que invierte en acciones y ETFs de EE.UU.
+
+RÉGIMEN DE MERCADO: {regime.get('label')} — {regime.get('desc')} {' '.join(regime.get('notes') or [])}
+
+MEJORES SEÑALES DEL MODELO HOY:
+{top_txt}
+
+CAMBIOS DE SEÑAL:
+{chg_txt or '(ninguno)'}
+
+TITULARES PRIORITARIOS:
+{news_txt or '(sin noticias)'}
+{('ACCIONES EN SU CARTERA: ' + ', '.join(portfolio_syms)) if portfolio_syms else ''}
+
+Escribe en español de Chile, directo y sin relleno:
+- "resumen": 3 o 4 frases sobre qué está pasando hoy y qué implica para alguien con esta cartera.
+- "vigilar": 3 puntos concretos y accionables para hoy (menciona tickers).
+- "riesgo": una frase sobre el principal riesgo del día.
+No prometas rentabilidades ni des órdenes de compra: son señales cuantitativas, no asesoría."""
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model=(os.environ.get("NEWS_MODEL") or "").strip() or "claude-opus-5",
+            max_tokens=4000,
+            messages=[{"role": "user", "content": prompt}],
+            output_config={"format": {"type": "json_schema", "schema": schema}, "effort": "low"},
+        )
+        if resp.stop_reason == "refusal":
+            return fallback
+        data = json.loads(next(b.text for b in resp.content if b.type == "text"))
+        return {"text": data["resumen"][:700], "bullets": [b[:200] for b in data["vigilar"][:4]],
+                "riesgo": data["riesgo"][:250], "ai": True}
+    except Exception as e:
+        print(f"  ! brief: {e}", file=sys.stderr)
+        return fallback

@@ -53,6 +53,17 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.4
+
+- **Varias carteras con selector.** El nombre de la cartera activa está en la barra superior: cámbiala, crea otras y compáralas. Toda la app (posiciones, alertas, noticias, chat) se ajusta a la que tengas activa.
+- **Compartir en solo lectura.** Un enlace lleva la cartera comprimida dentro del `#` de la URL: quien lo abra la ve pero no puede editarla, y puede duplicarla o crear la suya. Sin servidores ni cuentas.
+- **Chat con Claude.** La pestaña IA deja de ser una biblioteca de prompts para copiar: con una clave de la API responde con tu cartera, el régimen del mercado y las señales del día ya cargados. Los 10 prompts institucionales se responden con un toque. Se reinicia cada día.
+- **Resumen del día** generado por Claude en el run diario (`brief` en `latest.json`): qué pasa, qué vigilar y cuál es el riesgo principal.
+- **Valoración de analistas estilo Google Finance**: anillo de Compra / Mantenimiento / Venta y previsión de 12 meses con máximo, medio y mínimo frente al precio actual. Está en el detalle de cada activo y en la vista **🎯 Analistas** del radar, con el top 20 del filtro actual.
+- **Rendimiento de la cartera**: evolución del valor, mejores y peores días, calendario mensual con color por resultado, últimas ocho semanas y resumen por mes. Se reconstruye con el historial de precios del radar.
+- **Objetivos de precio**: potencial agregado de la cartera a 12 meses (medio, alto y bajo) y desglose posición por posición.
+- **Noticias cada 3 horas** con un modo `news` barato que solo refresca titulares.
+
 ## Novedades v1.3
 
 - **Actualización rápida.** El motor se reescribió: precios de todo el universo en lotes (`yf.download`), **una sola** petición de metadatos por activo en vez de seis, descargas en paralelo y caché rotativa de fundamentales. El run diario pasó de ~40 min a **3-6 min**; el modo `fast` (solo precios y técnico) tarda **~2 min**.
