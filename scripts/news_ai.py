@@ -66,7 +66,7 @@ def enrich_with_claude(items: list) -> int:
         print("  ! anthropic no instalado; se omite el enriquecimiento IA", file=sys.stderr)
         return 0
 
-    model = os.environ.get("NEWS_MODEL", "claude-opus-5")
+    model = (os.environ.get("NEWS_MODEL") or "").strip() or "claude-opus-5"
     client = anthropic.Anthropic(api_key=api_key)
     schema = {
         "type": "object",
