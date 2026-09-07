@@ -232,3 +232,17 @@ details summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
 .tag { font-size: 10px; padding: 2px 6px; border-radius: 6px; background: var(--surface-2); color: var(--muted); font-weight: 700; }
 .alert { border-left: 3px solid var(--s); }
 .alert.good { border-left-color: var(--sb); }
+
+/* v1.2 */
+.card.stamp { padding: 10px 12px; }
+.tag.live { background: color-mix(in srgb, var(--sb) 22%, transparent); color: var(--sb); }
+table.ocr { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+table.ocr th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px 2px; font-size: 11px; }
+table.ocr td { padding: 4px 2px; border-top: 1px solid var(--border); vertical-align: top; }
+table.ocr input[type="text"], table.ocr input:not([type]) { padding: 6px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 13px; }
+table.ocr tr.off { opacity: .45; }
+.tap-sym { cursor: pointer; color: var(--accent); }
+.empty.small { padding: 12px; font-size: 13px; }
+details > summary { list-style: none; }
+h3 small { font-weight: 500; font-size: 11px; margin-left: 4px; }
+.mini-scores b.guru { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); }

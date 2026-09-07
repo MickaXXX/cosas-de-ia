@@ -4,14 +4,23 @@ on:
   schedule:
     # Lunes a viernes, 21:30 UTC (≈ 17:30/18:30 Chile), tras el cierre de Wall Street.
     - cron: "30 21 * * 1-5"
-    # Domingo por la noche: refresca noticias/consenso antes de la semana.
+    # Domingo por la noche: refresca fundamentales, consenso y noticias antes de la semana.
     - cron: "0 23 * * 0"
   workflow_dispatch:
     inputs:
+      mode:
+        description: "fast = solo precios (~2 min) · daily = precios + metadatos prioritarios (~6 min) · full = todo (~20 min)"
+        type: choice
+        options: [daily, fast, full]
+        default: daily
       only:
         description: "Solo estos tickers (coma). Vacío = todo el universo"
         required: false
         default: ""
+      discover:
+        description: "Buscar tickers nuevos en screeners y noticias"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -23,7 +32,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -36,22 +45,36 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
 
+      - name: Descubrir tickers nuevos
+        if: ${{ github.event.inputs.only == '' && github.event.inputs.discover != 'false' }}
+        continue-on-error: true
+        run: python scripts/discover.py
+
       - name: Generar datos
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_MODEL: ${{ vars.NEWS_MODEL }}
+          NEWS_AI_MAX: ${{ vars.NEWS_AI_MAX }}
+          WORKERS: ${{ vars.WORKERS }}
+          MAX_META: ${{ vars.MAX_META }}
         run: |
+          MODE="${{ github.event.inputs.mode }}"
+          [ -z "$MODE" ] && MODE=daily
           if [ -n "${{ github.event.inputs.only }}" ]; then
-            python scripts/update_data.py --only "${{ github.event.inputs.only }}"
+            python scripts/update_data.py --mode full --only "${{ github.event.inputs.only }}"
           else
-            python scripts/update_data.py
+            python scripts/update_data.py --mode "$MODE"
           fi
 
-      - name: Publicar (commit a la rama)
+      - name: Publicar
         run: |
           git config user.name "market-intelligence-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/data/latest.json docs/data/history.json
+          git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
+          git add docs/data/latest.json docs/data/history.json config/universe.json config/discovered.json
           if git diff --cached --quiet; then
             echo "Sin cambios."
           else
-            git commit -m "data: snapshot $(date -u +%Y-%m-%d) [skip ci]"
+            git commit -m "data: $(date -u +%Y-%m-%dT%H:%M) [skip ci]"
             git push
           fi

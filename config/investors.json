@@ -1,0 +1,138 @@
+{
+  "_note": "Posiciones conocidas de inversionistas de referencia (reportes 13F y carteras públicas). Son referenciales y cambian cada trimestre: úsalas como filtro de ideas, no como confirmación. Revisado: 2026-09.",
+  "_como_actualizar": "Edita 'holdings' de cada inversionista. El motor calcula cuántos gurús tienen cada acción y lo muestra en la app (chip 'Gurús' y filtro en el Radar).",
+  "investors": [
+    {
+      "short": "Buffett",
+      "name": "Warren Buffett · Berkshire Hathaway",
+      "style": "Valor de calidad, muy largo plazo",
+      "holdings": ["AAPL", "AXP", "BAC", "KO", "CVX", "OXY", "MCO", "KHC", "CB", "KR", "DVA", "VRSN", "AMZN", "COF", "ALLY", "LEN", "NU", "DPZ", "POOL", "HEI", "SIRI", "C", "TMUS", "LPX", "JEF", "STZ", "LLYVA"]
+    },
+    {
+      "short": "Ackman",
+      "name": "Bill Ackman · Pershing Square",
+      "style": "Concentrado, activista, calidad con foso",
+      "holdings": ["CMG", "QSR", "HLT", "HHH", "NKE", "GOOGL", "GOOG", "BN", "UBER", "CP", "AMZN"]
+    },
+    {
+      "short": "Tepper",
+      "name": "David Tepper · Appaloosa",
+      "style": "Macro oportunista, tecnología y China",
+      "holdings": ["BABA", "PDD", "JD", "AMZN", "META", "MSFT", "NVDA", "ORCL", "UBER", "LRCX", "KWEB", "FXI", "CAVA"]
+    },
+    {
+      "short": "Loeb",
+      "name": "Daniel Loeb · Third Point",
+      "style": "Event-driven y activista",
+      "holdings": ["AMZN", "META", "PCG", "TSM", "KVUE", "LYV", "APO", "TPR", "VST"]
+    },
+    {
+      "short": "Druckenmiller",
+      "name": "Stanley Druckenmiller · Duquesne",
+      "style": "Macro con rotación rápida",
+      "holdings": ["TEVA", "COHR", "NTAP", "WFC", "PM", "NRG", "WDAY", "SEG", "FLUT"]
+    },
+    {
+      "short": "Icahn",
+      "name": "Carl Icahn · Icahn Enterprises",
+      "style": "Activista de valor profundo",
+      "holdings": ["CVI", "CZR", "SWX", "BALL", "IEP", "DAN"]
+    },
+    {
+      "short": "ARK",
+      "name": "Cathie Wood · ARK Invest",
+      "style": "Innovación disruptiva, alta volatilidad",
+      "holdings": ["TSLA", "COIN", "ROKU", "RBLX", "PLTR", "HOOD", "CRSP", "PATH", "TWLO", "RXRX", "IONQ", "TEM", "SHOP", "DKNG", "TER", "BEAM", "NTLA", "AMD", "ARCT"]
+    },
+    {
+      "short": "Fundsmith",
+      "name": "Terry Smith · Fundsmith",
+      "style": "Calidad compuesta, comprar y no vender",
+      "holdings": ["MSFT", "NVO", "PG", "PM", "ADP", "VRSK", "IDXX", "WAT", "STZ", "ADBE", "MCO", "ULTA", "META", "AMZN"]
+    },
+    {
+      "short": "Akre",
+      "name": "Chuck Akre · Akre Capital",
+      "style": "Compounders con reinversión alta",
+      "holdings": ["MA", "V", "MCO", "KKR", "BN", "ROP", "DHI", "AMT", "CSGP", "OMAB"]
+    },
+    {
+      "short": "Li Lu",
+      "name": "Li Lu · Himalaya Capital",
+      "style": "Valor concentrado estilo Munger",
+      "holdings": ["BAC", "GOOGL", "BRK-B", "EWBC", "AAPL"]
+    },
+    {
+      "short": "Klarman",
+      "name": "Seth Klarman · Baupost",
+      "style": "Valor profundo y situaciones especiales",
+      "holdings": ["LBRDK", "WBD", "FWONK", "VSAT", "CRH", "LNG", "JAZZ"]
+    },
+    {
+      "short": "Tiger",
+      "name": "Chase Coleman · Tiger Global",
+      "style": "Crecimiento tecnológico global",
+      "holdings": ["META", "MSFT", "SE", "MELI", "NU", "TSM", "APO", "GOOGL", "AMZN", "NVDA", "SPOT", "FLUT"]
+    },
+    {
+      "short": "Coatue",
+      "name": "Philippe Laffont · Coatue",
+      "style": "Tecnología de gran capitalización e IA",
+      "holdings": ["NVDA", "META", "AMZN", "MSFT", "TSLA", "SPOT", "CRWD", "NOW", "SHOP", "NFLX", "AVGO", "TSM"]
+    },
+    {
+      "short": "Lone Pine",
+      "name": "Stephen Mandel · Lone Pine",
+      "style": "Crecimiento de calidad",
+      "holdings": ["META", "MSFT", "AMZN", "TSM", "GOOGL", "FI", "INTU", "DASH", "TEAM", "PGR"]
+    },
+    {
+      "short": "Viking",
+      "name": "Andreas Halvorsen · Viking Global",
+      "style": "Long/short fundamental",
+      "holdings": ["AMZN", "GOOGL", "MSFT", "TSM", "JPM", "WDAY", "ROP", "UNH", "LLY", "BSX"]
+    },
+    {
+      "short": "Bridgewater",
+      "name": "Ray Dalio · Bridgewater Associates",
+      "style": "Paridad de riesgo y macro global",
+      "holdings": ["GOOGL", "NVDA", "PG", "JNJ", "KO", "PEP", "WMT", "COST", "META", "SPY", "IVV", "AAPL"]
+    },
+    {
+      "short": "Renaissance",
+      "name": "Renaissance Technologies",
+      "style": "Cuantitativo puro, rotación alta",
+      "holdings": ["NVDA", "PLTR", "VRTX", "GILD", "NVO", "ARGX", "SPOT", "APP", "DASH", "UTHR"]
+    },
+    {
+      "short": "Gates",
+      "name": "Bill & Melinda Gates Foundation Trust",
+      "style": "Cartera perpetua defensiva",
+      "holdings": ["MSFT", "BRK-B", "WM", "CNI", "CAT", "DE", "ECL", "FDX", "KOF", "SDGR"]
+    },
+    {
+      "short": "Trian",
+      "name": "Nelson Peltz · Trian Partners",
+      "style": "Activista operacional en consumo e industria",
+      "holdings": ["WEN", "SOLV", "GE", "IFF", "MDLZ", "JNJ"]
+    },
+    {
+      "short": "Elliott",
+      "name": "Paul Singer · Elliott Management",
+      "style": "Activista agresivo multisector",
+      "holdings": ["HON", "SWK", "TXN", "PSX", "HPE", "SBUX", "CTSH", "PINS"]
+    },
+    {
+      "short": "ValueAct",
+      "name": "Mason Morfit · ValueAct Capital",
+      "style": "Activista constructivo",
+      "holdings": ["SPOT", "EXPE", "SLB", "INSP", "SAP", "DIS"]
+    },
+    {
+      "short": "Baillie Gifford",
+      "name": "Baillie Gifford",
+      "style": "Crecimiento a muy largo plazo",
+      "holdings": ["NVDA", "AMZN", "MELI", "SHOP", "SE", "NU", "DASH", "SPOT", "MRNA", "TSLA", "CRWD", "TTD", "ROKU", "ASML"]
+    }
+  ]
+}
