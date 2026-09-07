@@ -665,7 +665,7 @@ def parse_fundamentals(info: dict) -> dict:
         "roe": pct("returnOnEquity"),
         "debt_to_equity": num(info.get("debtToEquity")),
         "fcf_yield": (fcf / mc * 100) if fcf and mc else None,
-        "dividend_yield": (num(info.get("dividendYield")) * (100 if num(info.get("dividendYield")) < 1 else 1)) if num(info.get("dividendYield")) is not None else None,
+        "dividend_yield": num(info.get("dividendYield")),  # Yahoo ya lo entrega en % (ej. 2.41)
         "beta": num(info.get("beta")) or num(info.get("beta3Year")),
         "currency": info.get("currency") or "USD",
         "expense_ratio": pct("annualReportExpenseRatio") if info.get("annualReportExpenseRatio") is not None else None,
@@ -710,7 +710,7 @@ def demo_ticker(sym: str, is_etf: bool, seed: int) -> dict:
             "earningsGrowth": rng.uniform(-0.3, 0.9), "profitMargins": rng.uniform(-0.1, 0.45),
             "operatingMargins": rng.uniform(-0.1, 0.5), "returnOnEquity": rng.uniform(-0.1, 0.6),
             "debtToEquity": rng.uniform(0, 300), "freeCashflow": rng.uniform(-1e9, 5e10),
-            "beta": rng.uniform(0.4, 2.5), "dividendYield": rng.choice([0, rng.uniform(0.005, 0.04)]),
+            "beta": rng.uniform(0.4, 2.5), "dividendYield": rng.choice([0, rng.uniform(0.5, 4.0)]),
             "recommendationMean": rng.uniform(1.3, 3.8), "numberOfAnalystOpinions": rng.randint(4, 50),
         })
         rm = info["recommendationMean"]
