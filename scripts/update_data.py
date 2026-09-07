@@ -29,6 +29,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = ROOT / "config"
 DATA_DIR = ROOT / "docs" / "data"
@@ -206,7 +207,7 @@ def technicals(hist: pd.DataFrame) -> dict:
         "dist_hi52": (price / hi52 - 1) * 100 if hi52 else None,
         "dist_lo52": (price / lo52 - 1) * 100 if lo52 else None,
         "avg_dollar_vol": float((c * v).tail(30).mean()),
-        "spark": [round(float(x), 2) for x in c.tail(130).iloc[::2]],  # ~6 meses, 1 de cada 2 días
+        "spark": [round(float(x), 2) for x in c.tail(129).iloc[::3]],  # ~6 meses, 1 de cada 3 días
     }
 
 
@@ -607,7 +608,7 @@ def parse_news(items: list, max_age_days: int, limit: int) -> list:
             "p": (publisher or "")[:40],
             "u": link,
             "d": ts.isoformat(timespec="minutes") if ts else None,
-            "s": (c.get("summary") or "")[:220],
+            "s": (c.get("summary") or "")[:150],
         })
     res.sort(key=lambda x: x["d"] or "", reverse=True)
     return res[:limit]
@@ -918,7 +919,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true", help="datos sintéticos, sin internet")
     ap.add_argument("--only", help="lista de tickers separada por comas")
-    ap.add_argument("--sleep", type=float, default=0.8, help="pausa entre tickers (rate limit)")
+    ap.add_argument("--sleep", type=float, default=0.4, help="pausa entre tickers (rate limit)")
     args = ap.parse_args()
 
     universe = load_json(CONFIG_DIR / "universe.json", {})
@@ -927,8 +928,8 @@ def main():
         print("Faltan config/universe.json o config/weights.json", file=sys.stderr)
         sys.exit(1)
 
-    stocks = universe.get("stocks", [])
-    etfs = universe.get("etfs", [])
+    stocks = list(dict.fromkeys(universe.get("stocks", [])))
+    etfs = [e for e in dict.fromkeys(universe.get("etfs", [])) if e not in stocks]
     if args.only:
         wanted = {s.strip().upper() for s in args.only.split(",")}
         stocks = [s for s in stocks if s in wanted]
@@ -965,15 +966,19 @@ def main():
     history = update_history(history, tickers, today, W["retention"]["history_days"], set(stocks) | set(etfs))
     changes = signal_changes(tickers, history)
 
-    # Noticias de mercado: las más recientes del universo, sin duplicados.
+    # Clasificación de noticias (heurística + Claude opcional) y titulares de mercado.
+    from news_ai import classify_all
+    news_stats = classify_all({tk["sym"]: tk["news"] for tk in tickers},
+                              max_ai=int(os.environ.get("NEWS_AI_MAX", "250")) if not args.demo else 0)
+    print(f"== noticias: {news_stats}")
     seen, market_news = set(), []
-    for tk in sorted(tickers, key=lambda x: -(x["fund"].get("market_cap") or 0)):
+    for tk in tickers:
         for nw in tk["news"]:
             if nw["t"] in seen:
                 continue
             seen.add(nw["t"])
-            market_news.append({**nw, "sym": tk["sym"]})
-    market_news.sort(key=lambda x: x["d"] or "", reverse=True)
+            market_news.append(dict(nw))
+    market_news.sort(key=lambda x: (-(x.get("prio") or 0), x.get("d") or ""))
     market_news = market_news[: W["retention"]["market_news"]]
 
     tickers.sort(key=lambda x: -(x["score"] or 0))
@@ -981,12 +986,13 @@ def main():
         "generated_at": now.isoformat(timespec="minutes"),
         "date": today,
         "demo": bool(args.demo),
-        "version": 1,
+        "version": 2,
         "weights": {k: v for k, v in W.items() if not k.startswith("_")},
         "labels": SIGNAL_LABELS,
         "regime": regime,
         "market": market,
         "market_news": market_news,
+        "news_stats": news_stats,
         "changes": changes[:30],
         "tickers": tickers,
         "failed": failed,

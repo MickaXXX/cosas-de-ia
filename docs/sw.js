@@ -1,5 +1,5 @@
 /* Service worker: app offline + datos con "red primero, caché de respaldo". */
-const VERSION = 'mia-v1.0.0';
+const VERSION = 'mia-v1.2.0';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {

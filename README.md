@@ -17,6 +17,10 @@ scripts/update_data.py   ← motor: descarga (yfinance), indicadores, scoring, p
 config/universe.json     ← tickers que analiza el radar (edítalo para agregar/quitar)
 config/weights.json      ← pesos del modelo y umbrales de señal (mejora continua)
 .github/workflows/update-data.yml ← ejecuta el motor a diario y publica los JSON
+.github/workflows/quotes.yml      ← cotizaciones intradía cada hora (docs/data/quotes.json)
+scripts/update_quotes.py          ← descarga de cotizaciones en lote
+scripts/news_ai.py                ← clasificación de noticias (heurística + Claude opcional)
+docs/vendor/tess/                 ← motor OCR (tesseract.js) para leer capturas de Racional
 ```
 
 ## Puesta en marcha (una sola vez, 5 minutos)
@@ -46,6 +50,15 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.2
+
+- **Cabecera "Actualizado"** en Cartera con hora del análisis, de los precios intradía y de los precios en vivo, más el botón **Actualizar mercado**.
+- **Importar desde capturas de Racional**: sube las capturas de la pantalla Inicio (lista de acciones) y la app las lee con OCR en el teléfono (sin enviar nada a internet), calcula cantidad y precio promedio a partir de inversión + ganancia y reemplaza las posiciones. Motor: tesseract.js incluido en `docs/vendor/tess` (≈7 MB, se descarga una sola vez).
+- **Radar ampliado**: ~730 activos (S&P 500, Nasdaq 100, mid/small caps populares, ADRs latinoamericanos, semis, IA, energía, uranio, litio, cripto-mineras, defensa, espacio y ETFs). Los tickers que faltan se pueden pedir desde la app y, con token de GitHub, agregarlos al radar en un toque.
+- **Precios que se mueven**: `quotes.yml` baja cotizaciones de todo el universo cada hora en horario de mercado (`docs/data/quotes.json`), y opcionalmente Finnhub (clave gratuita) refresca en vivo cada minuto tus posiciones y el activo abierto.
+- **Noticias priorizadas**: clasificación heurística siempre (Importante / Media / Baja por tipo de noticia + peso de tu cartera) y, si defines el secreto `ANTHROPIC_API_KEY`, Claude traduce, resume y afina la prioridad de hasta 250 titulares por día (`scripts/news_ai.py`).
+- **Conexión opcional con GitHub** (token fine-grained): pedir cotizaciones al instante, lanzar el análisis completo y agregar tickers al radar sin editar archivos.
+
 ## Qué hace la app
 
 - **Cartera**: valor en USD y CLP, ganancia abierta/realizada/del día, señal ponderada, alertas (cambios de señal, ventas, RSI extremo, resultados próximos, pérdidas > 15 %), distribución por activo/sector/señal, aviso de concentración, y "mis decisiones vs. el modelo" (qué decía el modelo cuando compraste y cómo fue el precio desde entonces).
@@ -54,6 +67,14 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 - **Hoy**: índices, VIX, bono 10 años, dólar, USD/CLP, petróleo, oro, bitcoin; régimen; cambios de señal; top oportunidades por horizonte; mayores movimientos; próximos resultados; noticias del día (cartera primero).
 - **IA**: superprompt con todos los datos del activo (o de la cartera) para pegar en ChatGPT/Claude/Gemini, más la biblioteca de 10 prompts institucionales (Goldman, Morgan Stanley, Bridgewater, JPMorgan, BlackRock, Citadel, Harvard, Bain, Renaissance, McKinsey) auto-rellenados.
 - **Ajustes**: estado de los datos, respaldo/restauración de la cartera (JSON), bitácora de mejora continua, explicación del modelo.
+
+## Opcionales (todos gratis salvo la IA)
+
+| Función | Qué configurar | Dónde |
+|---|---|---|
+| Precios en vivo cada minuto | Clave gratuita de finnhub.io | App → Ajustes → Precios en vivo |
+| Botón "Actualizar mercado" que pide cotizaciones nuevas, análisis completo bajo demanda y agregar tickers al radar | Token fine-grained de GitHub para este repo (Actions + Contents: read/write) | App → Ajustes → Conexión con GitHub |
+| Noticias traducidas, resumidas y priorizadas por Claude | Secreto `ANTHROPIC_API_KEY` (opcional: variables `NEWS_MODEL`, `NEWS_AI_MAX`) | GitHub → Settings → Secrets and variables → Actions |
 
 ## Almacenamiento auto-gestionado
 

@@ -1,0 +1,39 @@
+name: Cotizaciones intradía
+
+on:
+  schedule:
+    # Cada hora durante la sesión de Wall Street (13:30–20:00 UTC) de lunes a viernes,
+    # más una pasada al cierre (20:15 UTC).
+    - cron: "35 13-20 * * 1-5"
+    - cron: "15 20 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: quotes
+  cancel-in-progress: true
+
+jobs:
+  quotes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+      - run: pip install -r scripts/requirements.txt
+      - run: python scripts/update_quotes.py
+      - name: Publicar
+        run: |
+          git config user.name "market-intelligence-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
+          git add docs/data/quotes.json
+          if git diff --cached --quiet; then echo "Sin cambios."; else
+            git commit -m "data: cotizaciones $(date -u +%Y-%m-%dT%H:%M) [skip ci]" && git push
+          fi

@@ -16,6 +16,6 @@
     "_comment": "Compra fuerte exige score >= strong_buy Y que mediano y largo plazo sean >= strong_buy_min_horizon (confluencia)."
   },
   "retention": {
-    "history_days": 120, "news_per_ticker": 5, "news_max_age_days": 7, "market_news": 12
+    "history_days": 120, "news_per_ticker": 3, "news_max_age_days": 5, "market_news": 60
   }
 }

@@ -23,7 +23,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -37,6 +37,10 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Generar datos
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_MODEL: ${{ vars.NEWS_MODEL }}
+          NEWS_AI_MAX: ${{ vars.NEWS_AI_MAX }}
         run: |
           if [ -n "${{ github.event.inputs.only }}" ]; then
             python scripts/update_data.py --only "${{ github.event.inputs.only }}"
@@ -48,6 +52,7 @@ jobs:
         run: |
           git config user.name "market-intelligence-bot"
           git config user.email "actions@users.noreply.github.com"
+          git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
           git add docs/data/latest.json docs/data/history.json
           if git diff --cached --quiet; then
             echo "Sin cambios."
