@@ -16,6 +16,9 @@ docs/                    ← la app (GitHub Pages). Sin build, sin dependencias.
 scripts/update_data.py   ← motor: descarga (yfinance), indicadores, scoring, poda
 config/universe.json     ← tickers que analiza el radar (edítalo para agregar/quitar)
 config/weights.json      ← pesos del modelo y umbrales de señal (mejora continua)
+config/investors.json    ← inversionistas de referencia y sus posiciones conocidas
+config/discovered.json   ← registro del descubridor automático (qué se agregó y cuándo)
+scripts/discover.py      ← agrega al radar lo que aparece en screeners y noticias
 .github/workflows/update-data.yml ← ejecuta el motor a diario y publica los JSON
 .github/workflows/quotes.yml      ← cotizaciones intradía cada hora (docs/data/quotes.json)
 scripts/update_quotes.py          ← descarga de cotizaciones en lote
@@ -50,11 +53,19 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.3
+
+- **Actualización rápida.** El motor se reescribió: precios de todo el universo en lotes (`yf.download`), **una sola** petición de metadatos por activo en vez de seis, descargas en paralelo y caché rotativa de fundamentales. El run diario pasó de ~40 min a **3-6 min**; el modo `fast` (solo precios y técnico) tarda **~2 min**.
+- **Tres modos**: `--mode fast | daily | full`. El botón *Actualizar mercado* de la app dispara precios + análisis rápido y espera a que GitHub publique, sin que tengas que entrar a Actions.
+- **Inversionistas de referencia** (`config/investors.json`): 22 gestoras y gurús (Buffett, Ackman, Tepper, Loeb, Druckenmiller, Icahn, ARK, Fundsmith, Akre, Li Lu, Klarman, Tiger, Coatue, Lone Pine, Viking, Bridgewater, Renaissance, Gates, Trian, Elliott, ValueAct, Baillie Gifford). Cada acción muestra **quiénes la tienen** y el Radar tiene filtro **🏆 Gurús**.
+- **Radar que se alimenta solo** (`scripts/discover.py`): cada día revisa los screeners de Yahoo (más activas, mayores alzas/bajas, small caps al alza, crecimiento) y las **menciones en las noticias**; valida capitalización, volumen y bolsa de EE.UU., agrega hasta 25 tickers nuevos y poda los que llevan 21 días sin aparecer y no están en tu cartera.
+- **Tu cartera es prioritaria**: los tickers de `core` (tus posiciones en Racional) se refrescan completos en cada run, junto con los de los gurús y los que cambiaron de señal.
+
 ## Novedades v1.2
 
 - **Cabecera "Actualizado"** en Cartera con hora del análisis, de los precios intradía y de los precios en vivo, más el botón **Actualizar mercado**.
 - **Importar desde capturas de Racional**: sube las capturas de la pantalla Inicio (lista de acciones) y la app las lee con OCR en el teléfono (sin enviar nada a internet), calcula cantidad y precio promedio a partir de inversión + ganancia y reemplaza las posiciones. Motor: tesseract.js incluido en `docs/vendor/tess` (≈7 MB, se descarga una sola vez).
-- **Radar ampliado**: ~730 activos (S&P 500, Nasdaq 100, mid/small caps populares, ADRs latinoamericanos, semis, IA, energía, uranio, litio, cripto-mineras, defensa, espacio y ETFs). Los tickers que faltan se pueden pedir desde la app y, con token de GitHub, agregarlos al radar en un toque.
+- **Radar ampliado**: ~780 activos (S&P 500, Nasdaq 100, mid/small caps populares, ADRs latinoamericanos, semis, IA, energía, uranio, litio, cripto-mineras, defensa, espacio y ETFs). Los tickers que faltan se pueden pedir desde la app y, con token de GitHub, agregarlos al radar en un toque.
 - **Precios que se mueven**: `quotes.yml` baja cotizaciones de todo el universo cada hora en horario de mercado (`docs/data/quotes.json`), y opcionalmente Finnhub (clave gratuita) refresca en vivo cada minuto tus posiciones y el activo abierto.
 - **Noticias priorizadas**: clasificación heurística siempre (Importante / Media / Baja por tipo de noticia + peso de tu cartera) y, si defines el secreto `ANTHROPIC_API_KEY`, Claude traduce, resume y afina la prioridad de hasta 250 titulares por día (`scripts/news_ai.py`).
 - **Conexión opcional con GitHub** (token fine-grained): pedir cotizaciones al instante, lanzar el análisis completo y agregar tickers al radar sin editar archivos.

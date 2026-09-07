@@ -245,3 +245,4 @@ table.ocr tr.off { opacity: .45; }
 .empty.small { padding: 12px; font-size: 13px; }
 details > summary { list-style: none; }
 h3 small { font-weight: 500; font-size: 11px; margin-left: 4px; }
+.mini-scores b.guru { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); }

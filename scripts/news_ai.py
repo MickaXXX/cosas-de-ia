@@ -129,6 +129,7 @@ def enrich_with_claude(items: list) -> int:
                 it["accion"] = row["accion"]
                 it["tag"] = row["etiqueta"][:24]
                 it["ai"] = True
+                it.pop("s", None)          # el resumen en inglés ya no hace falta
                 # Reconciliar prioridad numérica con el nivel de Claude.
                 floor = {"alta": 60, "media": 38, "baja": 5}[row["nivel"]]
                 cap = {"alta": 100, "media": 54, "baja": 34}[row["nivel"]]

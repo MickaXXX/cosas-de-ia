@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -27,7 +27,7 @@ const RADAR_PAGE = 120;
 // ----------------------------------------------------------------------------
 const S = {
   data: null, history: {}, quotes: null, live: {}, liveAt: null, tab: 'cartera', detail: null,
-  radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, limit: RADAR_PAGE },
+  radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   pf: loadJSON(LS.portfolio, { tx: [], fav: [], log: [], pending: [] }),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', ghToken: '' }),
   ocr: null,
@@ -193,15 +193,36 @@ async function refreshLive(symbols) {
 setInterval(() => { if (document.visibilityState === 'visible') refreshLive(); }, 60000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.data && Date.now() - loadData.at > 10 * 60e3) loadData(true); });
 
-/** Botón "Actualizar mercado": recarga JSON, precios en vivo y (con token) pide cotizaciones nuevas a GitHub. */
-async function updateMarket() {
+/** Botón "Actualizar mercado": recarga, y con token pide precios + análisis rápido y espera el resultado. */
+async function updateMarket(mode) {
   toast('Actualizando…');
   await loadData(true);
   const token = (S.settings.ghToken || '').trim();
-  if (token) {
-    const ok = await dispatchWorkflow(token, REPO.quotesWorkflow);
-    toast(ok ? 'Cotizaciones solicitadas a GitHub (llegan en ~2 min)' : 'No se pudo lanzar el workflow (revisa el token)');
-  }
+  if (!token) { toast('Datos recargados. Agrega un token de GitHub en Ajustes para actualizar el mercado al instante.'); return; }
+  const stampBefore = S.quotes?.generated_at || '';
+  const okQ = await dispatchWorkflow(token, REPO.quotesWorkflow);
+  const okA = await dispatchWorkflow(token, REPO.workflow, { mode: mode || 'fast', discover: 'false' });
+  if (!okQ && !okA) { toast('No se pudo lanzar la actualización (revisa el token)'); return; }
+  toast(mode === 'full' ? 'Análisis completo lanzado (~20 min)' : 'Actualizando precios y señales (~2 min)…');
+  waitForFresh(stampBefore);
+}
+
+/** Espera a que GitHub publique el nuevo quotes.json y recarga solo. */
+let waitTimer = null;
+function waitForFresh(stampBefore, tries = 0) {
+  clearTimeout(waitTimer);
+  if (tries > 12) return;
+  waitTimer = setTimeout(async () => {
+    try {
+      const q = await fetchJSON(QUOTES_URL, true);
+      if (q && q.generated_at !== stampBefore) {
+        await loadData(true);
+        toast('Mercado actualizado');
+        return;
+      }
+    } catch { /* aún no publica */ }
+    waitForFresh(stampBefore, tries + 1);
+  }, 20000);
 }
 async function dispatchWorkflow(token, file, inputs = {}) {
   try {
@@ -416,6 +437,7 @@ function viewRadar() {
   if (R.type !== 'all') list = list.filter((t) => (R.type === 'etf') === !!t.etf);
   if (R.signal !== 'all') list = list.filter((t) => (R.horizon === 'score' ? t.signal : t.h[R.horizon].sig) === R.signal);
   if (R.fav) { const mine = held(); list = list.filter((t) => S.pf.fav.includes(t.sym) || mine.has(t.sym)); }
+  if (R.guru) list = list.filter((t) => t.gurus && t.gurus.length);
   if (R.q) { const q = R.q.toUpperCase(); list = list.filter((t) => t.sym.includes(q) || (t.name || '').toUpperCase().includes(q)); }
   const key = (t) => (R.horizon === 'score' ? t.score : t.h[R.horizon].s) ?? -1;
   list.sort((a, b) => key(b) - key(a));
@@ -426,7 +448,7 @@ function viewRadar() {
   let html = `<input class="search" id="radarQ" placeholder="Buscar entre ${S.data.tickers.length} activos…" value="${esc(R.q)}" autocomplete="off">
     <div class="seg" data-seg="horizon">${[['score', 'Global'], ['short', 'Corto'], ['medium', 'Mediano'], ['long', 'Largo']].map(([k, l]) => `<button data-v="${k}" class="${R.horizon === k ? 'on' : ''}">${l}</button>`).join('')}</div>
     <div class="chips" data-seg="signal"><span class="chip ${R.signal === 'all' ? 'on' : ''}" data-v="all">Todas</span>${SIG_ORDER.slice().reverse().map((s) => `<span class="chip ${R.signal === s ? 'on' : ''}" data-v="${s}">${SIG_ICON[s]} ${SIG_LABEL[s]} ${counts[s] || 0}</span>`).join('')}</div>
-    <div class="chips" data-seg="type"><span class="chip ${R.type === 'all' ? 'on' : ''}" data-v="all">Todo</span><span class="chip ${R.type === 'stock' ? 'on' : ''}" data-v="stock">Acciones</span><span class="chip ${R.type === 'etf' ? 'on' : ''}" data-v="etf">ETFs</span><span class="chip ${R.fav ? 'on' : ''}" data-v="fav">★ Míos y favoritos</span></div>`;
+    <div class="chips" data-seg="type"><span class="chip ${R.type === 'all' ? 'on' : ''}" data-v="all">Todo</span><span class="chip ${R.type === 'stock' ? 'on' : ''}" data-v="stock">Acciones</span><span class="chip ${R.type === 'etf' ? 'on' : ''}" data-v="etf">ETFs</span><span class="chip ${R.fav ? 'on' : ''}" data-v="fav">★ Míos y favoritos</span><span class="chip ${R.guru ? 'on' : ''}" data-v="guru">🏆 Gurús</span></div>`;
 
   if (R.signal === 'all' && !R.q && !R.fav) {
     html += `<h2>🔥 Top oportunidades <small>${R.horizon === 'score' ? 'global' : HZ[R.horizon]}</small></h2><div class="grid3">`;
@@ -446,7 +468,7 @@ function viewRadar() {
       <div style="width:44px;text-align:center"><div class="hero mono t-${sigClass(sig)}" style="font-size:20px">${key(t) ?? '—'}</div><div class="tiny muted">${t.conf === 'baja' ? 'conf. baja' : t.risk.label}</div></div>
       <div class="grow"><div class="row"><span class="sym">${t.sym}</span>${S.pf.fav.includes(t.sym) ? '<span class="t-s">★</span>' : ''}${chip(sig, 'sm')}</div>
         <div class="name ellipsis">${esc(t.name)}${t.sector ? ` · ${esc(t.sector)}` : ''}</div>
-        <div class="mini-scores"><b>C ${t.h.short.s ?? '—'}</b><b>M ${t.h.medium.s ?? '—'}</b><b>L ${t.h.long.s ?? '—'}</b>${t.analysts?.upside != null ? `<b class="${cls(t.analysts.upside)}">obj ${pct(t.analysts.upside, 0)}</b>` : ''}</div></div>
+        <div class="mini-scores"><b>C ${t.h.short.s ?? '—'}</b><b>M ${t.h.medium.s ?? '—'}</b><b>L ${t.h.long.s ?? '—'}</b>${t.analysts?.upside != null ? `<b class="${cls(t.analysts.upside)}">obj ${pct(t.analysts.upside, 0)}</b>` : ''}${t.gurus ? `<b class="guru">🏆 ${t.gurus.length}</b>` : ''}</div></div>
       <div style="width:64px">${spark(t.tech.spark?.slice(-20))}<div class="price mono small">${fmtUSD(t.price)}</div><div class="tiny mono ${cls(t.chg1d)}" style="text-align:right">${pct(t.chg1d)}</div></div>
     </div>`;
   }
@@ -647,10 +669,13 @@ function viewAjustes() {
   return `<div class="card"><h2 style="margin-top:0">📡 Datos</h2>
     <div class="kv"><div><span>Análisis diario</span><b>${esc(fmtStamp(d.generated_at))}</b></div><div><span>Precios intradía</span><b>${S.quotes ? esc(fmtStamp(S.quotes.generated_at)) : '—'}</b></div>
     <div><span>Modo</span><b>${d.demo ? 'DEMO (sintético)' : 'Real (Yahoo Finance)'}</b></div><div><span>Activos OK / fallidos</span><b>${d.stats?.ok} / ${d.stats?.failed}</b></div>
-    <div><span>Noticias con IA</span><b>${d.news_stats?.ai ? `${d.news_stats.ai} de ${d.news_stats.unique}` : 'no (solo heurística)'}</b></div><div><span>App</span><b>v${APP_VERSION}</b></div></div>
+    <div><span>Noticias con IA</span><b>${d.news_stats?.ai ? `${d.news_stats.ai} de ${d.news_stats.unique}` : 'no (solo heurística)'}</b></div><div><span>App</span><b>v${APP_VERSION}</b></div>
+    <div><span>Último modo</span><b>${esc(d.mode || '—')}</b></div><div><span>Duró</span><b>${d.elapsed_s ? Math.round(d.elapsed_s / 60) + ' min' : '—'}</b></div>
+    <div><span>Metadatos frescos</span><b>${d.stats?.meta_refreshed ?? '—'}</b></div><div><span>Gurús seguidos</span><b>${Object.keys(d.investors || {}).length}</b></div></div>
     ${d.failed?.length ? `<details><summary class="small">Fallidos (${d.failed.length})</summary><div class="tiny muted">${d.failed.map((f) => `${f.sym}: ${esc(f.error)}`).join('<br>')}</div></details>` : ''}
     <p class="small muted">El análisis completo se regenera cada día hábil al cierre; las cotizaciones cada hora en horario de mercado. Solo se guarda el último snapshot: el almacenamiento no crece.</p>
-    <div class="btn-row"><button class="btn secondary" data-action="updateMarket">⟳ Actualizar mercado</button>${hasToken ? `<button class="btn secondary" data-action="runFull">▶ Análisis completo ahora</button>` : ''}</div></div>
+    <div class="btn-row"><button class="btn secondary" data-action="updateMarket">⟳ Precios y señales (~2 min)</button>${hasToken ? `<button class="btn secondary" data-action="runFull">▶ Análisis completo (~20 min)</button>` : ''}</div>
+    <p class="tiny muted">Rápido = precios de todo el universo + recálculo del técnico. Completo = además refresca fundamentales, analistas y noticias de los ${d.tickers.length} activos.</p></div>
 
     <div class="card"><h2 style="margin-top:0">📈 Precios en vivo <small>opcional</small></h2>
     <p class="small muted">Con una clave gratuita de <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io</a> la app actualiza cada minuto el precio de tus posiciones y del activo que estés mirando (mientras la app esté abierta).</p>
@@ -716,6 +741,10 @@ function openDetail(sym, silent = false) {
 
   if (pos) html += `<div class="card" style="border-color:var(--accent)"><div class="between"><b>💼 Mi posición</b><span class="mono ${cls(pos.pnl)}">${pct(pos.pnlPct)} · ${fmtUSD(pos.pnl)}</span></div>
     <div class="small muted mono">${pos.qty > 0 ? `${fmtQ(pos.qty)} acciones · promedio ${fmtUSD(pos.avg)}` : `inversión ${fmtUSD(pos.cost)}`} · valor ${fmtUSD(pos.value)}</div>${positionAdvice(t, pos)}</div>`;
+
+  if (t.gurus?.length) html += `<div class="card"><div class="between"><b>🏆 Inversionistas que la tienen</b><span class="tag">${t.gurus.length}</span></div>
+    <div class="chips wrap" style="margin-top:6px">${t.gurus.map((g) => `<span class="chip gray" title="${esc(S.data.investors?.[g] || g)}">${esc(g)}</span>`).join('')}</div>
+    <div class="tiny muted" style="margin-top:4px">${esc(S.data.investors_note || '')}</div></div>`;
 
   html += `<div class="btn-row"><button class="btn green" data-action="addTx" data-type="buy" data-sym="${sym}">＋ Compré</button><button class="btn danger" data-action="addTx" data-type="sell" data-sym="${sym}" ${pos && pos.qty > 0 ? '' : 'disabled'}>－ Vendí</button></div>`;
 
@@ -986,7 +1015,9 @@ document.addEventListener('click', async (e) => {
   const seg = e.target.closest('[data-seg] [data-v]');
   if (seg && S.tab === 'radar') {
     const k = seg.closest('[data-seg]').dataset.seg, v = seg.dataset.v;
-    if (k === 'type' && v === 'fav') S.radar.fav = !S.radar.fav; else if (k === 'type') { S.radar.type = v; S.radar.fav = false; } else S.radar[k] = v;
+    if (k === 'type' && v === 'fav') S.radar.fav = !S.radar.fav;
+    else if (k === 'type' && v === 'guru') S.radar.guru = !S.radar.guru;
+    else if (k === 'type') { S.radar.type = v; S.radar.fav = false; S.radar.guru = false; } else S.radar[k] = v;
     S.radar.limit = RADAR_PAGE; render(); return;
   }
   const el = e.target.closest('[data-action]'); if (!el) return;
@@ -1002,7 +1033,7 @@ document.addEventListener('click', async (e) => {
     case 'fav': { const i = S.pf.fav.indexOf(sym); if (i >= 0) S.pf.fav.splice(i, 1); else S.pf.fav.push(sym); savePf(); openDetail(sym, true); break; }
     case 'reload': loadData(true); break;
     case 'updateMarket': updateMarket(); break;
-    case 'runFull': { const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow); toast(ok ? 'Análisis completo lanzado (tarda ~40 min)' : 'No se pudo lanzar (revisa el token)'); break; }
+    case 'runFull': { const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { mode: 'full' }); toast(ok ? 'Análisis completo lanzado (~20 min)' : 'No se pudo lanzar (revisa el token)'); break; }
     case 'ocr': openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
@@ -1011,7 +1042,7 @@ document.addEventListener('click', async (e) => {
     case 'testLive': { S.settings.finnhubKey = ($('#finnhubKey')?.value || '').trim(); saveSettings(); await refreshLive(['AAPL']); toast(S.live.AAPL ? `OK: AAPL ${fmtUSD(S.live.AAPL.p)}` : 'Sin respuesta: revisa la clave'); break; }
     case 'addPending': {
       const syms = (S.pf.pending || []).filter((s) => !tk(s)); if (!syms.length) break;
-      try { const n = await addToUniverse(S.settings.ghToken.trim(), syms); S.pf.pending = []; savePf(); const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { only: syms.join(',') }); toast(`${n} ticker(s) agregados${ok ? '; análisis lanzado (~3 min)' : ''}`); render({ keepScroll: true }); }
+      try { const n = await addToUniverse(S.settings.ghToken.trim(), syms); S.pf.pending = []; savePf(); const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { only: syms.join(','), mode: 'full', discover: 'false' }); toast(`${n} ticker(s) agregados${ok ? '; análisis lanzado (~3 min)' : ''}`); render({ keepScroll: true }); }
       catch (err) { toast('Error: ' + err.message); }
       break;
     }
