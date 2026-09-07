@@ -56,8 +56,8 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 ## Novedades v1.4
 
 - **Varias carteras con selector.** El nombre de la cartera activa está en la barra superior: cámbiala, crea otras y compáralas. Toda la app (posiciones, alertas, noticias, chat) se ajusta a la que tengas activa.
-- **Publicar la cartera en el propio enlace** (`docs/data/portfolios.json`): con el token de GitHub, la app la sube al sitio y desde ahí se ve igual en el teléfono, en el computador y para cualquiera que abra la URL, siempre en solo lectura salvo en los dispositivos con token. Se republica sola al editarla.
-- **Compartir puntual por enlace.** Alternativa sin token: la cartera viaja comprimida dentro del `#` de la URL y se agrega en solo lectura.
+- **Cartera publicada en el propio enlace** (`docs/data/portfolios.json`): vive en el sitio, así que se ve igual en el teléfono, en el computador y para cualquiera que abra la URL. Si un dispositivo no tiene cartera propia, la app abre la publicada sola; al editar algo se copia a ese dispositivo y sigue siendo tuya.
+- **Compartir puntual por enlace.** La cartera viaja comprimida dentro del `#` de la URL y se agrega en solo lectura.
 - **Chat con Claude.** La pestaña IA deja de ser una biblioteca de prompts para copiar: con una clave de la API responde con tu cartera, el régimen del mercado y las señales del día ya cargados. Los 10 prompts institucionales se responden con un toque. Se reinicia cada día.
 - **Resumen del día** generado por Claude en el run diario (`brief` en `latest.json`): qué pasa, qué vigilar y cuál es el riesgo principal.
 - **Valoración de analistas estilo Google Finance**: anillo de Compra / Mantenimiento / Venta y previsión de 12 meses con máximo, medio y mínimo frente al precio actual. Está en el detalle de cada activo y en la vista **🎯 Analistas** del radar, con el top 20 del filtro actual.
@@ -77,10 +77,10 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
 - **Cabecera "Actualizado"** en Cartera con hora del análisis, de los precios intradía y de los precios en vivo, más el botón **Actualizar mercado**.
 - **Importar desde capturas de Racional**: sube las capturas de la pantalla Inicio en sus dos vistas (**Último Precio** da la cantidad exacta de acciones, **Ganancia Total** da tu resultado) y la app las lee con OCR en el teléfono, sin enviar nada a internet. El valor se calcula con el precio de mercado actual y el costo sale de restar la ganancia, así que el precio promedio de compra queda exacto. Motor: tesseract.js incluido en `docs/vendor/tess` (≈7 MB, se descarga una sola vez).
-- **Radar ampliado**: ~780 activos (S&P 500, Nasdaq 100, mid/small caps populares, ADRs latinoamericanos, semis, IA, energía, uranio, litio, cripto-mineras, defensa, espacio y ETFs). Los tickers que faltan se pueden pedir desde la app y, con token de GitHub, agregarlos al radar en un toque.
+- **Radar ampliado**: ~780 activos (S&P 500, Nasdaq 100, mid/small caps populares, ADRs latinoamericanos, semis, IA, energía, uranio, litio, cripto-mineras, defensa, espacio y ETFs). Los tickers que faltan se pueden pedir desde la app y el descubridor diario los agrega solo cuando aparecen en noticias o en carteras de gurús.
 - **Precios que se mueven**: `quotes.yml` baja cotizaciones de todo el universo cada hora en horario de mercado (`docs/data/quotes.json`), y opcionalmente Finnhub (clave gratuita) refresca en vivo cada minuto tus posiciones y el activo abierto.
 - **Noticias priorizadas**: clasificación heurística siempre (Importante / Media / Baja por tipo de noticia + peso de tu cartera) y, si defines el secreto `ANTHROPIC_API_KEY`, Claude traduce, resume y afina la prioridad de hasta 250 titulares por día (`scripts/news_ai.py`).
-- **Conexión opcional con GitHub** (token fine-grained): pedir cotizaciones al instante, lanzar el análisis completo y agregar tickers al radar sin editar archivos.
+- **Cero configuración (v1.4.2)**: la app ya no pide token de GitHub. Precios, señales, noticias, carteras publicadas y análisis completo se generan solos en GitHub Actions; el botón "Actualizar mercado" solo recarga lo último publicado. El service worker sirve la red primero, así que cada dispositivo recibe la versión nueva sin borrar caché.
 
 ## Qué hace la app
 
@@ -96,7 +96,6 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 | Función | Qué configurar | Dónde |
 |---|---|---|
 | Precios en vivo cada minuto | Clave gratuita de finnhub.io | App → Ajustes → Precios en vivo |
-| Botón "Actualizar mercado" que pide cotizaciones nuevas, análisis completo bajo demanda y agregar tickers al radar | Token fine-grained de GitHub para este repo (Actions + Contents: read/write) | App → Ajustes → Conexión con GitHub |
 | Noticias traducidas, resumidas y priorizadas por Claude | Secreto `ANTHROPIC_API_KEY` (opcional: variables `NEWS_MODEL`, `NEWS_AI_MAX`) | GitHub → Settings → Secrets and variables → Actions |
 
 ## Almacenamiento auto-gestionado
