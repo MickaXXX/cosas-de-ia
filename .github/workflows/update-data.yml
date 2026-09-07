@@ -66,12 +66,19 @@ jobs:
             python scripts/update_data.py --mode "$MODE"
           fi
 
+      - name: Mesas de análisis
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DESKS_MODEL: ${{ vars.DESKS_MODEL }}
+        continue-on-error: true
+        run: python scripts/desks.py
+
       - name: Publicar
         run: |
           git config user.name "market-intelligence-bot"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
-          git add docs/data/latest.json docs/data/history.json config/universe.json config/discovered.json
+          git add docs/data/latest.json docs/data/history.json docs/data/desks.json config/universe.json config/discovered.json
           if git diff --cached --quiet; then
             echo "Sin cambios."
           else

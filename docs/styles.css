@@ -309,3 +309,30 @@ h3 small { font-weight: 500; font-size: 11px; margin-left: 4px; }
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 16px; font-family: inherit;
 }
 .chat-input .btn { width: 46px; height: 42px; flex: none; padding: 0; font-size: 17px; }
+
+/* v1.5 — mesas de análisis */
+.desks { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.desk {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font: inherit;
+}
+.desk:active { transform: scale(.995); }
+.desk .ic { font-size: 20px; line-height: 1; flex: none; }
+.desk .grow { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.desk b { font-size: 14px; }
+.desk .caret { color: var(--muted); font-size: 18px; flex: none; }
+.verdict { font-size: 13px; color: var(--accent); font-weight: 600; margin-top: 2px; }
+.verdict.big { font-size: 17px; line-height: 1.35; margin-bottom: 6px; }
+
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px; }
+table.grid { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+table.grid th {
+  text-align: left; color: var(--muted); font-weight: 600; font-size: 11px;
+  padding: 6px 8px 6px 0; border-bottom: 1px solid var(--border);
+}
+table.grid td { padding: 8px 8px 8px 0; border-top: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+table.grid td:first-child, table.grid th:first-child { position: sticky; left: 0; background: var(--surface); padding-right: 12px; }
+table.grid tr.mine td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+table.grid tr.mine td:first-child { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.lnk { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--accent); cursor: pointer; }
