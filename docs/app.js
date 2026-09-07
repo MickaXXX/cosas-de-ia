@@ -4,12 +4,13 @@
  */
 'use strict';
 
-const APP_VERSION = '1.4.2';
+const APP_VERSION = '1.5.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
 const QUOTES_URL = './data/quotes.json';
 const PUB_URL = './data/portfolios.json';
+const DESKS_URL = './data/desks.json';
 const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
 const SIG_LABEL = { strong_buy: 'Compra fuerte', buy: 'Compra', hold: 'Mantener', sell: 'Venta', strong_sell: 'Venta fuerte', neutral: 'Neutral' };
@@ -31,7 +32,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
+  pub: [], pubAt: null, desks: null, ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
 /** Carteras: una activa, varias guardadas. Las ajenas llegan por enlace y son de solo lectura. */
@@ -172,13 +173,14 @@ async function fetchJSON(url, force) {
 async function loadData(force = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
   try {
-    const [d, h, q, pub] = await Promise.all([
+    const [d, h, q, pub, desks] = await Promise.all([
       fetchJSON(DATA_URL, force),
       fetchJSON(HIST_URL, force).catch(() => ({})),
       fetchJSON(QUOTES_URL, force).catch(() => null),
       fetchJSON(PUB_URL, true).catch(() => null),
+      fetchJSON(DESKS_URL, force).catch(() => null),
     ]);
-    S.data = d; S.history = h || {}; S.quotes = q;
+    S.data = d; S.history = h || {}; S.quotes = q; S.desks = desks;
     S.pub = (pub?.list || []).map((p) => ({
       ...p, baseId: p.id, id: 'pub:' + p.id, fav: p.fav || [],
       tx: (p.tx || []).map((t, i) => ({ ...t, id: t.id || `${p.id}-${i}`, type: t.type || 'buy', date: t.date || today() })),
@@ -189,10 +191,10 @@ async function loadData(force = false) {
     if (!PF().tx.length && !PF().pub) { const pub = allPortfolios().find((p) => p.pub && p.tx.length); if (pub) S.book.active = pub.id; }
     syncHeader();
     applyQuotes();
-    try { localStorage.setItem(LS.cache, JSON.stringify({ d, h, q })); } catch { /* caché opcional (puede no caber) */ }
+    try { localStorage.setItem(LS.cache, JSON.stringify({ d, h, q, desks })); } catch { /* caché opcional (puede no caber) */ }
   } catch (e) {
     const c = loadJSON(LS.cache, null);
-    if (c && c.d) { S.data = c.d; S.history = c.h || {}; S.quotes = c.q || null; applyQuotes(); toast('Sin conexión: mostrando datos guardados'); }
+    if (c && c.d) { S.data = c.d; S.history = c.h || {}; S.quotes = c.q || null; S.desks = c.desks || null; applyQuotes(); toast('Sin conexión: mostrando datos guardados'); }
   } finally { btn.classList.remove('spin'); }
   renderStatus(); render();
   refreshLive();
@@ -844,9 +846,13 @@ El modelo puntúa 0-100 en tres horizontes (corto 1d-1m, mediano 1-12m, largo 1-
 
 async function aiSend(text) {
   const key = (S.settings.aiKey || '').trim();
-  if (!key) return toast('Falta la clave de Claude (Ajustes)');
   if (S.chatBusy || !text.trim()) return;
   S.chat.push({ role: 'user', content: text.trim() });
+  if (!key) {                                   // sin clave: responde con los datos del día
+    S.chat.push({ role: 'assistant', content: localAnswer(text) });
+    saveChat(); render(); scrollChat();
+    return;
+  }
   S.chatBusy = true; saveChat(); render(); scrollChat();
   try {
     const r = await fetch(AI_URL, {
@@ -906,41 +912,161 @@ function briefCard() {
 }
 
 function viewIA() {
-  const hasKey = !!(S.settings.aiKey || '').trim();
-  const syms = S.data.tickers.map((t) => t.sym);
-  const { open } = positions();
-  const sel = S.iaSym || open[0]?.sym || syms[0];
+  const dk = S.desks;
   let html = briefCard();
 
-  if (!hasKey) {
-    html += `<div class="card"><h2 style="margin-top:0">🤖 Activa el chat</h2>
-      <p class="small muted">Con una clave de la API de Claude, esta pestaña se convierte en un analista que ya conoce tu cartera, el régimen del mercado y las señales del día. Consíguela en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. La clave se guarda solo en este teléfono.</p>
-      <label class="field">Clave de Claude<input id="aiKey" type="password" autocomplete="off" placeholder="sk-ant-..." value=""></label>
-      <button class="btn" data-action="saveAiKey">Guardar y activar</button>
-      <p class="tiny muted">Mientras tanto puedes copiar los prompts y pegarlos en ChatGPT, Claude o Gemini.</p></div>`;
+  if (!dk?.desks?.length) {
+    html += `<div class="card"><h2 style="margin-top:0">🏛️ Mesas de análisis</h2>
+      <p class="small muted">Las mesas se generan en el análisis diario. Todavía no hay ninguna publicada; vuelve después del próximo cierre de mercado.</p></div>`;
   } else {
-    const starters = ['¿Qué hago hoy con mi cartera?', `Analiza ${sel} a fondo`, '¿Dónde estoy demasiado concentrado?', '¿Qué oportunidad me estoy perdiendo?'];
-    html += `<div class="card chat"><div class="between"><h2 style="margin:0">🤖 Chat con Claude</h2>
-        <button class="btn secondary sm" data-action="chatClear">Limpiar</button></div>
-      <div class="tiny muted">Conoce tu cartera y los datos de hoy. Se reinicia cada día.</div>
-      <div id="chatBox">${S.chat.length ? S.chat.map((m) => `<div class="msg ${m.role}">${m.role === 'assistant' ? mdLite(m.content) : esc(m.content)}</div>`).join('')
-        : '<div class="empty small">Pregúntale lo que quieras sobre tu cartera o el mercado.</div>'}
-        ${S.chatBusy ? '<div class="msg assistant pending">Pensando…</div>' : ''}<div id="chatEnd"></div></div>
-      <div class="chips">${starters.map((q) => `<span class="chip" data-action="chatAsk" data-q="${esc(q)}">${esc(q)}</span>`).join('')}</div>
-      <div class="chat-input"><textarea id="chatText" rows="1" placeholder="Escribe tu pregunta…"></textarea>
-        <button class="btn sm" data-action="chatSend" ${S.chatBusy ? 'disabled' : ''}>➤</button></div></div>`;
+    html += `<div class="card"><div class="between"><h2 style="margin:0">🏛️ Mesas de análisis</h2>
+        <span class="tag">${dk.ai ? 'IA · ' : ''}${esc(dk.date || '')}</span></div>
+      <p class="small muted">Diez mesas institucionales revisan tu cartera todos los días. Están listas al abrir: no hay que activar nada.</p>
+      <div class="desks">${dk.desks.map((d) => `<button class="desk" data-action="desk" data-id="${esc(d.id)}">
+        <span class="ic">${d.icon}</span>
+        <span class="grow"><b>${esc(d.firm)}</b><span class="tiny muted">${esc(d.title)}</span>
+          <span class="verdict">${esc(d.veredicto || '')}</span></span>
+        <span class="caret">›</span></button>`).join('')}</div></div>`;
   }
 
-  html += `<div class="card"><h2 style="margin-top:0">📚 Prompts institucionales</h2>
-    <p class="small muted">${hasKey ? 'Tócalos para que Claude los responda con los datos de tu cartera.' : 'Cópialos y pégalos en el chat de IA que uses.'}</p>
-    <label class="field">Activo de referencia<select id="iaSym">${syms.map((x) => `<option ${x === sel ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
-    ${PROMPTS.map((p) => `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
-      <div class="grow"><b class="small">${p.n}. ${esc(p.t)}</b><div class="tiny muted">${esc(p.s)}</div></div>
-      ${hasKey ? `<button class="btn sm" data-action="chatPrompt" data-n="${p.n}">Preguntar</button>`
-        : `<button class="btn secondary sm" data-action="copyPrompt" data-kind="lib" data-n="${p.n}">Copiar</button>`}</div>`).join('')}
-    <div class="btn-row" style="margin-top:10px"><button class="btn secondary sm" data-action="copyPrompt" data-kind="super">📋 Copiar superprompt de ${sel}</button>
-      <button class="btn secondary sm" data-action="copyPrompt" data-kind="portfolio" ${open.length ? '' : 'disabled'}>📋 Copiar prompt de cartera</button></div></div>`;
+  html += askCard();
+
+  const { open } = positions();
+  const ref = S.detail || open[0]?.sym || S.data.tickers[0]?.sym;
+  html += `<div class="card"><h2 style="margin-top:0">📚 Llevar a otra IA</h2>
+    <p class="small muted">Los prompts institucionales originales, ya rellenados con tus datos de hoy, para pegarlos en ChatGPT, Gemini o donde quieras.</p>
+    <div class="btn-row"><button class="btn secondary sm" data-action="copyPrompt" data-kind="super">📋 Superprompt de ${esc(ref || '')}</button>
+      <button class="btn secondary sm" data-action="copyPrompt" data-kind="portfolio" ${open.length ? '' : 'disabled'}>📋 Prompt de cartera</button></div>
+    <p class="tiny muted">Cada mesa también trae su prompt original, dentro de su ficha.</p></div>`;
   return html;
+}
+
+/** Ficha completa de una mesa, en página aparte. */
+function openDesk(id) {
+  const d = (S.desks?.desks || []).find((x) => x.id === id);
+  if (!d) return;
+  S.deskOpen = id;
+  const cols = d.cols || [], rows = d.rows || [];
+  const tabla = rows.length ? `<div class="scroll-x"><table class="grid">
+      <thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map((r) => `<tr class="${r.mine ? 'mine' : ''}">
+        <td><button class="lnk" data-action="detail" data-sym="${esc(r.sym)}">${esc(r.sym)}</button>${r.tag ? `<div class="tiny muted">${esc(r.tag)}</div>` : ''}</td>
+        ${(r.cols || []).map((c) => `<td>${esc(String(c))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+    : '<div class="empty small">Sin filas que mostrar hoy.</div>';
+
+  $('#pageContent').innerHTML = `<div class="page-head"><button class="icon-btn" data-action="closePage" aria-label="Volver">←</button>
+      <div class="grow"><div class="row"><span style="font-size:18px">${d.icon}</span><b>${esc(d.firm)}</b></div>
+      <div class="name ellipsis">${esc(d.title)}</div></div></div><div class="inner">
+    <div class="card"><div class="verdict big">${esc(d.veredicto || '')}</div>
+      <p class="small">${esc(d.resumen || '')}</p>
+      <div class="tiny muted">Datos del ${esc(S.desks.date || '')} · cartera ${esc(S.desks.portfolio?.name || '')} · ${d.ai ? 'redactado por Claude sobre los números calculados' : 'calculado con los datos de la app'}</div></div>
+    ${d.acciones?.length ? `<div class="card"><h2 style="margin-top:0">✅ Qué haría esta mesa</h2>
+      ${d.acciones.map((a) => `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
+        <div class="grow"><button class="lnk"><b>${esc(a.sym)}</b></button> <span class="chip sm">${esc(a.accion)}</span>
+          <div class="tiny muted">${esc(a.por)}</div></div></div>`).join('')}</div>` : ''}
+    <div class="card"><h2 style="margin-top:0">📋 Los números</h2>${tabla}
+      <p class="tiny muted">Las filas de tu cartera van resaltadas. Toca un símbolo para abrir su ficha.</p></div>
+    <div class="card"><h2 style="margin-top:0">🔍 Lectura de la mesa</h2>
+      <ul class="reasons">${(d.puntos || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <p class="tiny muted">Análisis cuantitativo con datos de Yahoo Finance. No es asesoría financiera personalizada.</p></div>
+    <div class="btn-row"><button class="btn secondary sm" data-action="copyDesk" data-id="${esc(d.id)}">📋 Copiar informe</button>
+      <button class="btn secondary sm" data-action="copyPrompt" data-kind="lib" data-n="${d.n}">📋 Copiar el prompt original</button></div>
+    </div>`;
+  const page = $('#page'); page.hidden = false; page.scrollTop = 0; document.body.classList.add('locked');
+}
+
+/** Texto plano de una mesa, para pegarlo donde sea. */
+function deskText(d) {
+  const filas = (d.rows || []).map((r) => [r.sym, r.tag, ...(r.cols || [])].join(' | ')).join('\n');
+  return [`${d.firm} — ${d.title} · ${S.desks.date}`, '', d.veredicto, '', d.resumen, '',
+    (d.cols || []).join(' | '), filas, '', ...(d.puntos || []).map((x) => `• ${x}`)].join('\n');
+}
+
+// ---- Asistente ---------------------------------------------------------------
+/** Con clave de Claude es un chat; sin clave responde con los datos ya calculados. */
+function askCard() {
+  const hasKey = !!(S.settings.aiKey || '').trim();
+  const { open } = positions();
+  const sel = open[0]?.sym || S.data.tickers[0]?.sym;
+  const starters = ['¿Qué hago hoy con mi cartera?', `¿Cómo viene ${sel}?`, '¿Dónde estoy demasiado concentrado?', '¿Qué reporta pronto?'];
+  return `<div class="card chat"><div class="between"><h2 style="margin:0">💬 Pregúntale a tu cartera</h2>
+      ${S.chat.length ? '<button class="btn secondary sm" data-action="chatClear">Limpiar</button>' : ''}</div>
+    <div class="tiny muted">${hasKey ? 'Chat con Claude: conoce tu cartera y los datos de hoy.' : 'Responde con los datos y las mesas del día, sin conexión ni claves.'}</div>
+    <div id="chatBox">${S.chat.length ? S.chat.map((m) => `<div class="msg ${m.role}">${m.role === 'assistant' ? mdLite(m.content) : esc(m.content)}</div>`).join('')
+      : '<div class="empty small">Pregunta por una acción, por tu riesgo o por lo que viene esta semana.</div>'}
+      ${S.chatBusy ? '<div class="msg assistant pending">Pensando…</div>' : ''}<div id="chatEnd"></div></div>
+    <div class="chips">${starters.map((q) => `<span class="chip" data-action="chatAsk" data-q="${esc(q)}">${esc(q)}</span>`).join('')}</div>
+    <div class="chat-input"><textarea id="chatText" rows="1" placeholder="Escribe tu pregunta…"></textarea>
+      <button class="btn sm" data-action="chatSend" ${S.chatBusy ? 'disabled' : ''}>➤</button></div>
+    ${hasKey ? '' : '<p class="tiny muted">Responde solo, con lo que la app ya calculó. Si quieres que conteste Claude en vivo, agrega tu clave en Ajustes.</p>'}</div>`;
+}
+
+/** Responde sin conexión, leyendo las mesas y los datos del día. */
+function localAnswer(q) {
+  const txt = (q || '').toLowerCase();
+  const dk = S.desks;
+  const d = S.data;
+  const { open } = positions();
+  const total = open.reduce((a, p) => a + (p.value || 0), 0);
+  const norm = (x) => x.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const t = txt.split(/[^a-záéíóúñ0-9.]+/i).map(norm).filter(Boolean);
+  const has = (...ws) => ws.some((w) => t.includes(norm(w)) || txt.includes(w));
+  const desk = (id) => (dk?.desks || []).find((x) => x.id === id);
+  const linea = (x) => `**${x.firm}** · ${x.veredicto}\n${(x.puntos || []).slice(0, 2).map((p) => `• ${p}`).join('\n')}`;
+
+  // ¿Habla de un activo concreto? Se compara palabra por palabra: "concentrado"
+  // no puede activar el ticker NTR.
+  const pal = new Set(t);
+  const sym = (d.tickers.find((x) => pal.has(x.sym.toLowerCase()))
+    || d.tickers.find((x) => { const n = norm((x.name || '').split(/[ ,.]/)[0].toLowerCase()); return n.length > 4 && pal.has(n); }));
+  if (sym && !has('cartera', 'portafolio')) {
+    const pos = open.find((p) => p.sym === sym.sym);
+    const a = sym.analysts || {};
+    const conVeredicto = ['goldman', 'morgan', 'blackrock', 'citadel', 'jpmorgan', 'harvard'];
+    const enMesas = (dk?.desks || []).filter((x) => conVeredicto.includes(x.id) && (x.rows || []).some((r) => r.sym === sym.sym))
+      .map((x) => { const r = x.rows.find((y) => y.sym === sym.sym); return `**${x.firm}**: ${r.tag || '—'}`; });
+    return [`**${sym.sym} · ${sym.name}**`,
+      `Señal del modelo: **${SIG_LABEL[sym.signal]} ${sym.score}/100** (corto ${sym.h.short.s} · mediano ${sym.h.medium.s} · largo ${sym.h.long.s}, riesgo ${sym.risk.label}).`,
+      `Precio ${fmtUSD(sym.price)} (${pct(sym.chg1d)} hoy). ${a.target?.mean ? `Objetivo de analistas ${fmtUSD(a.target.mean)} (${pct(a.upside)}), ${a.count} opiniones.` : ''}`,
+      pos ? `Tu posición: ${fmtQ(pos.qty)} acciones, valor ${fmtUSD(pos.value)} (${fmtN(pos.value / total * 100, 1)}% de la cartera), resultado ${pct(pos.pnlPct)}.` : 'No tienes esta acción.',
+      enMesas.length ? `\nQué dicen las mesas hoy:\n${enMesas.map((x) => `• ${x}`).join('\n')}` : '',
+      sym.reasons?.length ? `\nMotivos del modelo: ${sym.reasons.slice(0, 3).join('; ')}.` : '',
+      `\nToca el símbolo en el radar para ver la ficha completa.`].filter(Boolean).join('\n');
+  }
+
+  if (has('riesgo', 'concentrado', 'concentracion', 'diversific', 'peligro')) {
+    const b = desk('bridgewater'), bl = desk('blackrock');
+    return [b ? linea(b) : '', bl ? `\n**${bl.firm}** · ${bl.veredicto}` : '',
+      '\nAbre la mesa de Bridgewater para ver el mapa por sector y la prueba de estrés.'].filter(Boolean).join('\n');
+  }
+  if (has('reporta', 'resultados', 'earnings', 'semana', 'viene', 'proximo', 'próximo')) {
+    const j = desk('jpmorgan');
+    if (j) return [linea(j), '', ...(j.rows || []).slice(0, 6).map((r) => `• ${r.sym}: ${r.cols[0]} (${r.tag})`)].join('\n');
+  }
+  if (has('dividendo', 'renta', 'ingreso')) { const h = desk('harvard'); if (h) return linea(h); }
+  if (has('caro', 'barato', 'valoracion', 'valoración', 'sobrevalorad', 'infravalorad', 'dcf')) {
+    const m = desk('morgan'); if (m) return linea(m);
+  }
+  if (has('comprar', 'oportunidad', 'idea', 'nuevo', 'agregar')) {
+    const g = desk('goldman');
+    if (g) return [linea(g), '', ...(g.rows || []).slice(0, 5).map((r) => `• ${r.sym} — ${r.cols[0]} · ${r.tag}`)].join('\n');
+  }
+  if (has('tecnico', 'técnico', 'grafico', 'gráfico', 'stop', 'soporte', 'resistencia', 'rsi')) {
+    const c = desk('citadel'); if (c) return linea(c);
+  }
+  if (has('macro', 'tasas', 'fed', 'dolar', 'dólar', 'inflacion', 'inflación', 'mercado')) {
+    const mk = desk('mckinsey'); if (mk) return linea(mk);
+  }
+
+  // Pregunta general: el estado del día en cuatro líneas.
+  const cambios = (d.changes || []).slice(0, 3).map((c) => `${c.sym} ${SIG_LABEL[c.from]}→${SIG_LABEL[c.to]}`);
+  const alertas = portfolioAlerts(open).slice(0, 3);
+  return [`**Tu cartera hoy**: ${fmtUSD(total)} en ${open.length} posiciones.`,
+    d.regime ? `Régimen: **${d.regime.label}** — ${d.regime.desc}` : '',
+    cambios.length ? `Cambios de señal: ${cambios.join('; ')}.` : 'Sin cambios de señal hoy.',
+    alertas.length ? `\nAlertas:\n${alertas.map((x) => `• ${x.sym}: ${x.text}`).join('\n')}` : '',
+    dk?.desks?.length ? `\nLas mesas de hoy en una línea:\n${dk.desks.slice(0, 4).map((x) => `• **${x.firm}**: ${x.veredicto}`).join('\n')}` : '',
+    '\nPregunta por una acción por su símbolo (por ejemplo "¿cómo viene NVDA?") o por riesgo, dividendos, valoración o resultados.'].filter(Boolean).join('\n');
 }
 
 function tickerBrief(t) {
@@ -1059,6 +1185,11 @@ function viewAjustes() {
     <p class="small muted">Estos símbolos aún no están en el radar. El robot que descubre acciones los agrega solo en el próximo análisis diario si aparecen en noticias o en carteras de gurús.</p>
     <div class="chips wrap">${pending.map((s) => `<span class="chip gray">${esc(s)}</span>`).join('')}</div>
     <div class="btn-row"><button class="btn secondary sm" data-action="copyPending">Copiar lista</button><button class="btn secondary sm" data-action="clearPending">Limpiar</button></div></div>` : ''}
+
+    <div class="card"><h2 style="margin-top:0">💬 Chat con Claude <small>opcional</small></h2>
+    <p class="small muted">Las mesas de análisis y el asistente funcionan sin ninguna clave. Si además quieres conversar en vivo con Claude sobre tu cartera, pega una clave de <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. Se guarda solo en este dispositivo y el cobro corre por tu cuenta.</p>
+    <label class="field">Clave de Claude<input id="aiKey" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(S.settings.aiKey || '')}"></label>
+    <div class="btn-row"><button class="btn secondary sm" data-action="saveKeys">Guardar</button>${(S.settings.aiKey || '').trim() ? '<button class="btn danger sm" data-action="clearAiKey">Quitar clave</button>' : ''}</div></div>
 
     <div class="card"><h2 style="margin-top:0">🤖 Noticias con IA <small>opcional</small></h2>
     <p class="small muted">Para que las noticias lleguen <b>traducidas, resumidas y priorizadas por Claude</b>, agrega en GitHub → Settings → Secrets and variables → Actions un secreto llamado <code>ANTHROPIC_API_KEY</code>. El run diario clasifica hasta 250 titulares (costo aproximado US$0,5/día con claude-opus-5; la variable <code>NEWS_MODEL</code> permite elegir otro modelo).</p></div>
@@ -1574,7 +1705,8 @@ document.addEventListener('click', async (e) => {
       if (p) { let n = p.name; if (S.book.list.some((x) => x.name === n)) n = `${n} (compartida)`; pfNew(n, p.tx, true); S.pendingShare = null; }
       closeSheet(); render(); syncHeader(); break; }
     case 'carteraView': S.carteraView = el.dataset.v; render(); break;
-    case 'saveAiKey': { const k = ($('#aiKey')?.value || '').trim(); if (!k) return toast('Pega la clave'); S.settings.aiKey = k; saveSettings(); render(); toast('Chat activado'); break; }
+    case 'desk': openDesk(el.dataset.id); break;
+    case 'copyDesk': { const d = (S.desks?.desks || []).find((x) => x.id === el.dataset.id); if (d) copy(deskText(d)); break; }
     case 'chatSend': { const el2 = $('#chatText'); const q = el2?.value || ''; if (el2) el2.value = ''; aiSend(q); break; }
     case 'chatAsk': aiSend(el.dataset.q); break;
     case 'chatClear': S.chat = []; saveChat(); render(); break;
@@ -1595,7 +1727,9 @@ document.addEventListener('click', async (e) => {
     case 'ocrImport': ocrImport(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
     case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} quedó pendiente de agregar al radar (Ajustes)`); } break;
-    case 'saveKeys': S.settings.finnhubKey = ($('#finnhubKey')?.value ?? S.settings.finnhubKey ?? '').trim(); saveSettings(); toast('Guardado'); render({ keepScroll: true }); break;
+    case 'saveKeys': S.settings.finnhubKey = ($('#finnhubKey')?.value ?? S.settings.finnhubKey ?? '').trim();
+      S.settings.aiKey = ($('#aiKey')?.value ?? S.settings.aiKey ?? '').trim(); saveSettings(); toast('Guardado'); render({ keepScroll: true }); break;
+    case 'clearAiKey': S.settings.aiKey = ''; saveSettings(); toast('Clave eliminada'); render({ keepScroll: true }); break;
     case 'testLive': { S.settings.finnhubKey = ($('#finnhubKey')?.value || '').trim(); saveSettings(); await refreshLive(['AAPL']); toast(S.live.AAPL ? `OK: AAPL ${fmtUSD(S.live.AAPL.p)}` : 'Sin respuesta: revisa la clave'); break; }
     case 'copyPending': copy((S.book.pending || []).join(', ')); break;
     case 'clearPending': S.book.pending = []; savePf(); render({ keepScroll: true }); break;
@@ -1608,7 +1742,8 @@ document.addEventListener('click', async (e) => {
     case 'addLog': { const t = $('#logText').value.trim(); if (!t) return; S.book.log.push({ d: today(), t }); savePf(); render(); toast('Nota guardada'); break; }
     case 'copyLog': copy(S.book.log.map((l) => `[${l.d}] ${l.t}`).join('\n')); break;
     case 'copyPrompt': {
-      const kind = el.dataset.kind; const s = sym || $('#iaSym')?.value || S.iaSym;
+      const kind = el.dataset.kind;
+      const s = sym || $('#iaSym')?.value || S.iaSym || S.detail || positions().open[0]?.sym || S.data.tickers[0]?.sym;
       if (kind === 'super') copy(buildSuperPrompt(s));
       else if (kind === 'portfolio') copy(buildPortfolioPrompt());
       else { const p = PROMPTS.find((x) => x.n === +el.dataset.n); const t = tk(s); copy(p.b(t ? tickerBrief(t) : s, portfolioText())); }

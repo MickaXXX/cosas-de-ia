@@ -53,12 +53,34 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.5 — las mesas de análisis
+
+La pestaña IA deja de ser un chat que hay que activar. Ahora son **diez mesas institucionales que revisan tu cartera todos los días y ya están escritas cuando abres la app**, sin claves ni configuración:
+
+| Mesa | Qué responde con tus datos |
+|---|---|
+| 🏦 Goldman Sachs | Las 10 mejores ideas del radar: P/E contra la mediana de su propio sector, crecimiento, deuda, ventaja competitiva, objetivo a 12 meses y stop |
+| 📐 Morgan Stanley | DCF a 10 años y, sobre todo, el **crecimiento implícito**: el que el precio de hoy ya da por hecho, contra el que la empresa realmente tiene |
+| 🛡️ Bridgewater | Concentración por sector, beta de la cartera, prueba de estrés (−20% del S&P, VIX a 35) y coberturas concretas |
+| 📅 JPMorgan | Qué posiciones reportan en 60 días, movimiento típico de un día de resultados y hacia dónde apuntan las revisiones |
+| 🧩 BlackRock | Peso actual contra peso objetivo posición por posición, y cuántos dólares hay que mover |
+| 📊 Citadel | Ficha técnica de cada posición: tendencia, soporte, resistencia, stop a dos ATR y relación riesgo/beneficio |
+| 💵 Harvard Endowment | Cuánta renta genera hoy tu cartera y los pagadores más sólidos del radar, con puntaje de seguridad del dividendo |
+| ⚔️ Bain & Company | Cada posición contra sus rivales de la misma industria: tamaño, márgenes, crecimiento y quién lidera |
+| 🔬 Renaissance | Anomalías del día: volumen inusual, extremos de RSI, giros de tendencia, máximos anuales, revisiones en bloque |
+| 🌍 McKinsey | Régimen de mercado, cuánto pesa el perfil crecimiento en tu cartera, exposición a tasas y al dólar |
+
+- **Todo el cálculo es determinista** (`scripts/desks.py`): sale de los precios, fundamentales, analistas y técnico que la app ya descargó. Funciona sin ninguna clave de API. Se recalcula en el análisis diario y otra vez cada 3 horas con los precios nuevos.
+- **Con `ANTHROPIC_API_KEY` en los secretos del repo**, Claude reescribe encima el veredicto, el resumen y los puntos de cada mesa a partir de esos mismos números, y agrega una lista de "qué haría esta mesa" por posición. Sin la clave, se muestra el texto calculado.
+- **Asistente que responde sin conexión ni claves.** Pregúntale por una acción ("¿cómo viene SNDK?"), por tu riesgo, por dividendos, por valoración o por lo que reporta pronto: contesta leyendo las mesas y los datos del día. La clave de Claude pasa a ser opcional y vive en Ajustes, solo para conversar en vivo.
+- Cada mesa trae su **prompt institucional original** ya rellenado con tus datos, por si quieres pegarlo en otra IA.
+
 ## Novedades v1.4
 
 - **Varias carteras con selector.** El nombre de la cartera activa está en la barra superior: cámbiala, crea otras y compáralas. Toda la app (posiciones, alertas, noticias, chat) se ajusta a la que tengas activa.
 - **Cartera publicada en el propio enlace** (`docs/data/portfolios.json`): vive en el sitio, así que se ve igual en el teléfono, en el computador y para cualquiera que abra la URL. Si un dispositivo no tiene cartera propia, la app abre la publicada sola; al editar algo se copia a ese dispositivo y sigue siendo tuya.
 - **Compartir puntual por enlace.** La cartera viaja comprimida dentro del `#` de la URL y se agrega en solo lectura.
-- **Chat con Claude.** La pestaña IA deja de ser una biblioteca de prompts para copiar: con una clave de la API responde con tu cartera, el régimen del mercado y las señales del día ya cargados. Los 10 prompts institucionales se responden con un toque. Se reinicia cada día.
+- **Chat con Claude.** La pestaña IA deja de ser una biblioteca de prompts para copiar: con una clave de la API responde con tu cartera, el régimen del mercado y las señales del día ya cargados. Se reinicia cada día. (En v1.5 los prompts institucionales pasaron a ser las mesas de análisis, que ya no necesitan clave.)
 - **Resumen del día** generado por Claude en el run diario (`brief` en `latest.json`): qué pasa, qué vigilar y cuál es el riesgo principal.
 - **Valoración de analistas estilo Google Finance**: anillo de Compra / Mantenimiento / Venta y previsión de 12 meses con máximo, medio y mínimo frente al precio actual. Está en el detalle de cada activo y en la vista **🎯 Analistas** del radar, con el top 20 del filtro actual.
 - **Rendimiento de la cartera**: evolución del valor, mejores y peores días, calendario mensual con color por resultado, últimas ocho semanas y resumen por mes. Se reconstruye con el historial de precios del radar.

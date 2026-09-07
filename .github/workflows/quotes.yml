@@ -47,12 +47,18 @@ jobs:
           WORKERS: ${{ vars.WORKERS }}
         run: python scripts/update_data.py --mode news
 
+      # Recalcula las mesas con los precios recién bajados. Sin clave de IA: es
+      # aritmética sobre los datos, no cuesta nada y mantiene los veredictos al día.
+      - name: Recalcular mesas
+        continue-on-error: true
+        run: python scripts/desks.py
+
       - name: Publicar
         run: |
           git config user.name "market-intelligence-bot"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
-          git add docs/data/quotes.json docs/data/latest.json docs/data/history.json
+          git add docs/data/quotes.json docs/data/latest.json docs/data/history.json docs/data/desks.json
           if git diff --cached --quiet; then echo "Sin cambios."; else
             git commit -m "data: intradía $(date -u +%Y-%m-%dT%H:%M) [skip ci]" && git push
           fi
