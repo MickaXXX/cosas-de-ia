@@ -883,5 +883,13 @@
   "HG=F": "Cobre",
   "BTC-USD": "Bitcoin",
   "ETH-USD": "Ethereum"
+ },
+ "_renames": "Símbolos que cambiaron de nombre: al podar el viejo se agrega el nuevo.",
+ "renames": {
+  "SQ": "XYZ",
+  "FB": "META",
+  "RE": "EG",
+  "FISV": "FI",
+  "ANTM": "ELV"
  }
 }
