@@ -144,7 +144,8 @@ def main():
 
     uni = load(CONFIG / "universe.json", {})
     latest = load(DATA / "latest.json", {})
-    log = load(CONFIG / "discovered.json", {"added": {}, "seen": {}})
+    log = load(CONFIG / "discovered.json", {"added": {}, "seen": {}, "fails": {}})
+    log.setdefault("fails", {})
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     known = set(uni.get("stocks", [])) | set(uni.get("etfs", [])) | set(uni.get("core", []))
@@ -178,9 +179,31 @@ def main():
             print(f"   + {s:<6} {why} · vol ${valid[s]['dollar_vol'] / 1e6:.0f}M", flush=True)
     print(f"-- validados para agregar: {len(add)}", flush=True)
 
-    # Poda: auto-agregados que llevan >21 días sin aparecer y no son core/watch.
-    protected = set(uni.get("core", [])) | set(uni.get("watch", [])) | set(uni.get("etfs", []))
+    # Renombres conocidos: reemplaza el símbolo viejo por el nuevo.
+    renames = uni.get("renames") or {}
+    protected = set(uni.get("core", [])) | set(uni.get("watch", []))
     drop = []
+
+    # Poda 1: tickers que el motor no logra descargar varias veces seguidas
+    # (empresas adquiridas, deslistadas o con símbolo cambiado).
+    failing = {f["sym"] for f in latest.get("failed", [])}
+    for sym in list(log["fails"]):
+        if sym not in failing:
+            log["fails"].pop(sym)
+    for sym in failing:
+        log["fails"][sym] = log["fails"].get(sym, 0) + 1
+    dead = [s for s, c in log["fails"].items() if c >= 2 and s not in protected]
+    if dead:
+        print(f"-- deslistados o sin datos ({len(dead)}): {', '.join(dead)}", flush=True)
+        drop += dead
+        for s in dead:
+            log["fails"].pop(s, None)
+            if renames.get(s) and renames[s] not in known:
+                add.append(renames[s])
+                print(f"   → renombrado: {s} pasa a {renames[s]}", flush=True)
+
+    # Poda 2: auto-agregados que llevan >21 días sin aparecer y no son core/watch.
+    protected |= set(uni.get("etfs", []))
     for sym, added_on in list(log["added"].items()):
         if sym in protected:
             continue
