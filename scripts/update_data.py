@@ -486,27 +486,43 @@ def build_reasons(t, f, a, risk_label) -> tuple:
 # --------------------------------------------------------------------------- #
 # Descarga
 # --------------------------------------------------------------------------- #
-def batch_history(symbols: list, chunk=120, period="1y") -> dict:
-    """Precios de todos los símbolos en pocas peticiones. {sym: DataFrame}."""
+def _download_chunk(part: list, period: str, out: dict):
     import yfinance as yf
+    try:
+        df = yf.download(part, period=period, interval="1d", group_by="ticker",
+                         auto_adjust=True, progress=False, threads=True, timeout=30)
+    except Exception as e:
+        print(f"  ! lote precios: {str(e)[:90]}", file=sys.stderr)
+        return
+    for sym in part:
+        try:
+            sub = df[sym] if isinstance(df.columns, pd.MultiIndex) else df
+            sub = sub.dropna(subset=["Close"])
+            if len(sub) >= 30:
+                out[sym] = sub
+        except Exception:
+            continue
+
+
+def batch_history(symbols: list, chunk=120, period="1y") -> dict:
+    """Precios de todos los símbolos en pocas peticiones, con dos reintentos
+    en lotes cada vez más chicos para recuperar los que fallan de forma
+    intermitente (un lote grande a veces vuelve incompleto)."""
     out = {}
     for i in range(0, len(symbols), chunk):
-        part = symbols[i:i + chunk]
-        try:
-            df = yf.download(part, period=period, interval="1d", group_by="ticker",
-                             auto_adjust=True, progress=False, threads=True, timeout=30)
-        except Exception as e:
-            print(f"  ! lote precios {i}: {e}", file=sys.stderr)
-            continue
-        for sym in part:
-            try:
-                sub = df[sym] if isinstance(df.columns, pd.MultiIndex) else df
-                sub = sub.dropna(subset=["Close"])
-                if len(sub) >= 30:
-                    out[sym] = sub
-            except Exception:
-                continue
+        _download_chunk(symbols[i:i + chunk], period, out)
         print(f"  precios {min(i + chunk, len(symbols))}/{len(symbols)} ({len(out)} ok)", flush=True)
+    for size in (25, 8):
+        missing = [s for s in symbols if s not in out]
+        if not missing:
+            break
+        print(f"  reintento de {len(missing)} símbolos en lotes de {size}", flush=True)
+        for i in range(0, len(missing), size):
+            _download_chunk(missing[i:i + size], period, out)
+            time.sleep(0.4)
+    missing = [s for s in symbols if s not in out]
+    if missing:
+        print(f"  sin precios tras reintentos: {', '.join(missing)}", file=sys.stderr)
     return out
 
 
