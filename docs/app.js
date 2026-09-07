@@ -4,11 +4,12 @@
  */
 'use strict';
 
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
 const QUOTES_URL = './data/quotes.json';
+const PUB_URL = './data/portfolios.json';
 const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
 const SIG_LABEL = { strong_buy: 'Compra fuerte', buy: 'Compra', hold: 'Mantener', sell: 'Venta', strong_sell: 'Venta fuerte', neutral: 'Neutral' };
@@ -30,7 +31,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', ghToken: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
+  pub: [], pubAt: null, ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
 /** Carteras: una activa, varias guardadas. Las ajenas llegan por enlace y son de solo lectura. */
@@ -38,15 +39,25 @@ function loadBook() {
   const b = loadJSON(LS.book, null);
   if (b && Array.isArray(b.list) && b.list.length) return b;
   const old = loadJSON(LS.portfolio, null);           // migración desde la versión anterior
-  const first = { id: 'mia', name: 'Mi cartera', ro: false, tx: old?.tx || [], fav: old?.fav || [] };
+  const first = { id: old ? 'mia' : 'd' + Math.random().toString(36).slice(2, 8), name: 'Mi cartera', ro: false, tx: old?.tx || [], fav: old?.fav || [] };
   return { active: first.id, list: [first], log: old?.log || [], pending: old?.pending || [] };
 }
-const PF = () => S.book.list.find((p) => p.id === S.book.active) || S.book.list[0];
+/** Carteras visibles: las de este dispositivo, más las publicadas que no tengan
+ *  ya una copia local (si la tienes, la local manda y se marca como publicada). */
+function allPortfolios() {
+  const conDatos = new Set(S.book.list.filter((p) => p.tx.length).map((p) => p.id));
+  const ajenas = S.pub.filter((p) => !conDatos.has(p.baseId)).map((p) => ({ ...p, pub: true, ro: true }));
+  return [...S.book.list, ...ajenas];
+}
+const PF = () => allPortfolios().find((p) => p.id === S.book.active) || S.book.list[0];
 const isRO = () => !!PF().ro;
+const hasToken = () => !!(S.settings.ghToken || '').trim();
+const pubOf = (id) => S.pub.find((p) => p.baseId === id || p.id === id);
+const isPub = (id) => !!pubOf(id ?? S.book.active);
 
 function loadJSON(k, d) { try { const v = localStorage.getItem(k); return v ? { ...d, ...JSON.parse(v) } : d; } catch { return d; } }
 function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { toast('No se pudo guardar (almacenamiento lleno)'); } }
-function savePf() { pruneLocal(); saveJSON(LS.book, S.book); }
+function savePf() { pruneLocal(); saveJSON(LS.book, S.book); autoPublish(); }
 function saveSettings() { saveJSON(LS.settings, S.settings); }
 
 /** Auto-gestión de almacenamiento local: límites suaves para no saturar el teléfono. */
@@ -156,12 +167,19 @@ async function fetchJSON(url, force) {
 async function loadData(force = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
   try {
-    const [d, h, q] = await Promise.all([
+    const [d, h, q, pub] = await Promise.all([
       fetchJSON(DATA_URL, force),
       fetchJSON(HIST_URL, force).catch(() => ({})),
       fetchJSON(QUOTES_URL, force).catch(() => null),
+      fetchJSON(PUB_URL, true).catch(() => null),
     ]);
     S.data = d; S.history = h || {}; S.quotes = q;
+    S.pub = (pub?.list || []).map((p) => ({
+      ...p, baseId: p.id, id: 'pub:' + p.id, fav: p.fav || [],
+      tx: (p.tx || []).map((t, i) => ({ ...t, id: t.id || `${p.id}-${i}`, type: t.type || 'buy', date: t.date || today() })),
+    }));
+    S.pubAt = pub?.updated || null;
+    if (S.book.active && !allPortfolios().some((p) => p.id === S.book.active)) S.book.active = S.book.list[0].id;
     applyQuotes();
     try { localStorage.setItem(LS.cache, JSON.stringify({ d, h, q })); } catch { /* caché opcional (puede no caber) */ }
   } catch (e) {
@@ -350,7 +368,8 @@ function viewCartera() {
       <div class="tiny muted">${liveOn ? '🟢 precios en vivo activos' : 'Precios: cierre diario + intradía cada hora'}</div></div>
       <button class="btn sm" data-action="updateMarket">⟳ Actualizar mercado</button></div></div>`;
 
-  if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b>, una cartera compartida en solo lectura.
+  if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
+    ${PF().pub ? 'Para editarla desde este dispositivo, agrega tu token de GitHub en Ajustes.' : ''}
     <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
 
   html += `<div class="seg" data-seg2="carteraView">${[['posiciones', 'Posiciones'], ['rendimiento', 'Rendimiento'], ['objetivos', 'Objetivos']]
@@ -359,9 +378,16 @@ function viewCartera() {
   if (open.length && S.carteraView === 'objetivos') return html + viewObjetivos();
 
   if (!open.length) {
-    html += `<div class="empty"><div class="big">💼</div>Tu cartera está vacía.<br>Sube capturas de la pantalla "Inicio" de Racional y la app lee tus posiciones sola, o agrégalas a mano.</div>
-      <button class="btn" data-action="ocr">📷 Cargar capturas de Racional</button>
-      <button class="btn secondary" style="margin-top:8px" data-action="addTx">＋ Agregar posición a mano</button>`;
+    html += `<div class="empty"><div class="big">💼</div><b>${esc(PF().name)}</b> está vacía en este dispositivo.<br>
+      <span class="small">Tus posiciones se guardan en el navegador donde las cargaste. Publica una cartera para verla igual en el teléfono y en el computador.</span></div>`;
+    const ajenas = S.pub.filter((p) => !S.book.list.some((l) => l.id === p.baseId && l.tx.length));
+    if (ajenas.length) html += `<div class="card"><h3 style="margin-top:0">🔗 Publicadas en este enlace</h3>
+      ${ajenas.map((p) => { const { open: o } = positionsOf(p); return `<div class="pf-row" data-action="pfSwitch" data-id="${p.id}"><span class="dot"></span>
+        <div class="grow"><b>${esc(p.name)}</b><div class="tiny muted">${o.length} posiciones · ${fmtUSD(o.reduce((a, x) => a + (x.value || 0), 0))}</div></div>
+        <span class="chip gray sm">Ver</span></div>`; }).join('')}</div>`;
+    html += `<button class="btn" data-action="ocr">📷 Cargar capturas de Racional</button>
+      <button class="btn secondary" style="margin-top:8px" data-action="addTx">＋ Agregar posición a mano</button>
+      <button class="btn secondary" style="margin-top:8px" data-action="book">📂 Ver mis carteras</button>`;
   } else {
     html += `<div class="card">
       <div class="between"><div><div class="muted small">Valor de la cartera</div><div class="hero mono">${fmtUSD(total)}</div>
@@ -1048,6 +1074,7 @@ function viewAjustes() {
   return `<div class="card"><h2 style="margin-top:0">📡 Datos</h2>
     <div class="kv"><div><span>Análisis diario</span><b>${esc(fmtStamp(d.generated_at))}</b></div><div><span>Precios intradía</span><b>${S.quotes ? esc(fmtStamp(S.quotes.generated_at)) : '—'}</b></div>
     <div><span>Modo</span><b>${d.demo ? 'DEMO (sintético)' : 'Real (Yahoo Finance)'}</b></div><div><span>Activos OK / fallidos</span><b>${d.stats?.ok} / ${d.stats?.failed}</b></div>
+    <div><span>Carteras publicadas</span><b>${S.pub.length}${S.pubAt ? ` · ${relTime(S.pubAt)}` : ''}</b></div>
     <div><span>Noticias con IA</span><b>${d.news_stats?.ai ? `${d.news_stats.ai} de ${d.news_stats.unique}` : 'no (solo heurística)'}</b></div><div><span>App</span><b>v${APP_VERSION}</b></div>
     <div><span>Último modo</span><b>${esc(d.mode || '—')}</b></div><div><span>Duró</span><b>${d.elapsed_s ? Math.round(d.elapsed_s / 60) + ' min' : '—'}</b></div>
     <div><span>Metadatos frescos</span><b>${d.stats?.meta_refreshed ?? '—'}</b></div><div><span>Gurús seguidos</span><b>${Object.keys(d.investors || {}).length}</b></div></div>
@@ -1062,7 +1089,7 @@ function viewAjustes() {
     <div class="btn-row"><button class="btn secondary sm" data-action="saveKeys">Guardar</button><button class="btn secondary sm" data-action="testLive">Probar</button></div></div>
 
     <div class="card"><h2 style="margin-top:0">🔑 Conexión con GitHub <small>opcional</small></h2>
-    <p class="small muted">Con un token de GitHub la app puede <b>pedir cotizaciones al instante</b>, lanzar el <b>análisis completo</b> y <b>agregar tickers al radar</b> sin que edites archivos. Crea uno en GitHub → Settings → Developer settings → Fine-grained tokens, solo para este repo, con permisos <i>Actions: Read and write</i> y <i>Contents: Read and write</i>.</p>
+    <p class="small muted">Con un token de GitHub la app puede <b>publicar tu cartera en el enlace</b> (para verla igual en el teléfono y el computador), <b>pedir cotizaciones al instante</b>, lanzar el <b>análisis completo</b> y <b>agregar tickers al radar</b> sin que edites archivos. Crea uno en GitHub → Settings → Developer settings → Fine-grained tokens, solo para este repo, con permisos <i>Actions: Read and write</i> y <i>Contents: Read and write</i>.</p>
     <label class="field">Token de GitHub<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(S.settings.ghToken || '')}"></label>
     <button class="btn secondary sm" data-action="saveKeys">Guardar</button>
     ${pending.length ? `<h3>Tickers pendientes de agregar al radar</h3><div class="chips wrap">${pending.map((s) => `<span class="chip gray">${esc(s)}</span>`).join('')}</div>
@@ -1238,26 +1265,48 @@ function addPending(sym) { if (!S.book.pending) S.book.pending = []; if (!S.book
 // Carteras: cambiar, crear, renombrar, compartir
 // ----------------------------------------------------------------------------
 function openBookSheet() {
-  const rows = S.book.list.map((p) => {
+  const row = (p, grupo) => {
     const { open } = positionsOf(p);
     const val = open.reduce((a, x) => a + (x.value || 0), 0);
     return `<div class="pf-row ${p.id === S.book.active ? 'on' : ''}" data-action="pfSwitch" data-id="${p.id}">
       <span class="dot"></span>
-      <div class="grow"><b>${esc(p.name)}</b>${p.ro ? ' <span class="tag">solo lectura</span>' : ''}
-        <div class="tiny muted">${open.length} posiciones · ${fmtUSD(val)}</div></div>
+      <div class="grow"><b>${esc(p.name)}</b>${grupo === 'pub' || isPub(p.id) ? ' <span class="tag">en el enlace</span>' : ''}${p.ro && grupo !== 'pub' ? ' <span class="tag">solo lectura</span>' : ''}
+        <div class="tiny muted">${open.length} posiciones · ${fmtUSD(val)}${p.updated ? ` · ${relTime(p.updated)}` : ''}</div></div>
       ${p.id === S.book.active ? '<span class="chip accent sm">activa</span>' : ''}</div>`;
-  }).join('');
+  };
+  const locales = S.book.list.map((p) => row(p, 'local')).join('');
+  const conDatos = new Set(S.book.list.filter((x) => x.tx.length).map((x) => x.id));
+  const pubs = S.pub.filter((p) => !conDatos.has(p.baseId)).map((p) => row({ ...p, ro: true }, 'pub')).join('');
+  const activa = PF(), publicada = isPub(activa.id);
+
   openSheet(`<h2 style="margin-top:4px">Mis carteras</h2>
-    <p class="tiny muted">Todo se guarda en este teléfono. Puedes seguir varias carteras y comparar; la app se ajusta a la que tengas activa.</p>
-    ${rows}
-    <div class="btn-row" style="margin-top:12px"><button class="btn" data-action="pfNew">＋ Nueva cartera</button>
-      <button class="btn secondary" data-action="pfShare">🔗 Compartir</button></div>
+
+    <h3>📱 En este dispositivo</h3>
+    <p class="tiny muted">Guardadas solo en este teléfono o computador. No se ven desde otro aparato.</p>
+    ${locales}
+
+    <h3>🔗 Publicadas en el enlace</h3>
+    <p class="tiny muted">Viven en el propio sitio, así que se ven igual desde cualquier dispositivo y cualquiera que abra el enlace puede mirarlas (sin editarlas).</p>
+    ${pubs || (S.pub.length ? '<div class="tiny muted">La tuya ya está publicada; aparece arriba con la etiqueta "en el enlace".</div>' : '<div class="empty small">Ninguna publicada todavía.</div>')}
+
+    ${hasToken()
+      ? `<div class="btn-row" style="margin-top:12px">
+          ${publicada
+            ? `<button class="btn secondary" data-action="pfPublishNow">⟳ Republicar "${esc(activa.name)}"</button>
+               <button class="btn danger sm" data-action="pfUnpublish" data-id="${activa.id}">Dejar de publicar</button>`
+            : `<button class="btn" data-action="pfPublishNow">🔗 Publicar "${esc(activa.name)}" en el enlace</button>`}
+         </div>
+         <p class="tiny muted">Al publicarla la verás en tu computador y en tu teléfono con el mismo enlace, y se republica sola cuando la edites.</p>`
+      : `<div class="ro-banner" style="margin-top:12px">Para que tu cartera se vea en <b>todos tus dispositivos</b> con el mismo enlace, agrega tu token de GitHub en Ajustes y luego pulsa "Publicar". Sin token, cada aparato guarda lo suyo.</div>`}
+
+    <div class="btn-row" style="margin-top:10px"><button class="btn secondary" data-action="pfNew">＋ Nueva</button>
+      <button class="btn secondary" data-action="pfShare">📤 Compartir por enlace</button></div>
     <div class="btn-row"><button class="btn secondary sm" data-action="pfRename">Renombrar</button>
-      ${S.book.list.length > 1 ? `<button class="btn danger sm" data-action="pfDelete">Eliminar esta</button>` : ''}</div>`);
+      ${S.book.list.length > 1 && !isPub() ? `<button class="btn danger sm" data-action="pfDelete">Eliminar de este dispositivo</button>` : ''}</div>`);
 }
 
 function pfSwitch(id) {
-  if (!S.book.list.some((p) => p.id === id)) return;
+  if (!allPortfolios().some((p) => p.id === id)) return;
   S.book.active = id; savePf(); closeSheet(); S.detail = null; render(); syncHeader();
   toast(`Cartera: ${PF().name}`);
 }
@@ -1267,6 +1316,71 @@ function pfNew(name, tx = [], ro = false) {
   return p;
 }
 function syncHeader() { const el = $('#pfName'); if (el) el.textContent = PF().name; }
+
+/** Publica la cartera en el propio repositorio: así se ve igual en el teléfono,
+ *  en el computador y para quien abra el enlace. Requiere el token de GitHub. */
+async function pfPublish(pf) {
+  const token = (S.settings.ghToken || '').trim();
+  if (!token) { toast('Necesitas el token de GitHub (Ajustes)'); return false; }
+  const H = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+  const path = 'docs/data/portfolios.json';
+  const base = `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/${path}`;
+  let sha = null, list = [];
+  try {
+    const r = await fetch(`${base}?ref=${REPO.branch}&t=${Date.now()}`, { headers: H });
+    if (r.ok) {
+      const j = await r.json();
+      sha = j.sha;
+      list = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))).list || [];
+    }
+  } catch { /* aún no existe */ }
+
+  const { open } = positionsOf(pf);
+  const entry = {
+    id: pf.id, name: pf.name, updated: new Date().toISOString(),
+    tx: open.filter((p) => p.qty > 0).map((p) => ({ sym: p.sym, qty: +p.qty.toFixed(8), price: +p.avg.toFixed(4), date: p.txs[0]?.date || today() })),
+    fav: pf.fav || [],
+  };
+  list = [entry, ...list.filter((x) => x.id !== pf.id)].slice(0, 12);
+  const body = {
+    message: `carteras: publica ${pf.name}`, branch: REPO.branch, sha: sha || undefined,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify({ updated: entry.updated, list })))),
+  };
+  const put = await fetch(base, { method: 'PUT', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!put.ok) { toast(`No se pudo publicar (${put.status})`); return false; }
+  S.pub = [{ ...entry, baseId: entry.id, id: 'pub:' + entry.id }, ...S.pub.filter((x) => x.baseId !== pf.id)];
+  S.pubAt = entry.updated;
+  savePf(); return true;
+}
+
+async function pfUnpublish(id) {
+  const token = (S.settings.ghToken || '').trim();
+  if (!token) return toast('Necesitas el token de GitHub');
+  const H = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+  const base = `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/docs/data/portfolios.json`;
+  const r = await fetch(`${base}?ref=${REPO.branch}&t=${Date.now()}`, { headers: H });
+  if (!r.ok) return toast('No hay carteras publicadas');
+  const j = await r.json();
+  const bare = String(id).replace(/^pub:/, '');
+  const list = (JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))).list || []).filter((x) => x.id !== bare);
+  const put = await fetch(base, {
+    method: 'PUT', headers: { ...H, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'carteras: deja de publicar', branch: REPO.branch, sha: j.sha,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify({ updated: new Date().toISOString(), list })))) }),
+  });
+  if (!put.ok) return toast(`No se pudo quitar (${put.status})`);
+  S.pub = S.pub.filter((x) => x.baseId !== bare);
+  if (S.book.active === id || S.book.active === bare) S.book.active = S.book.list[0].id;
+  render(); syncHeader(); toast('Cartera despublicada');
+}
+
+/** Tras editar una cartera ya publicada, se republica sola (con un respiro). */
+let pubTimer = null;
+function autoPublish() {
+  if (!hasToken() || !isPub()) return;
+  clearTimeout(pubTimer);
+  pubTimer = setTimeout(async () => { if (await pfPublish(PF())) toast('Cambios publicados'); }, 4000);
+}
 
 /** Enlace compartible: la cartera viaja comprimida en el # de la URL, sin servidores. */
 function encodePortfolio(p) {
@@ -1483,7 +1597,9 @@ function ocrImport() {
 function roGuard() {
   if (!isRO()) return false;
   openSheet(`<h2 style="margin-top:4px">Cartera de solo lectura</h2>
-    <p class="small">"${esc(PF().name)}" llegó por un enlace compartido, así que no se puede editar. Puedes duplicarla para trabajar sobre una copia tuya, o crear una cartera nueva desde cero.</p>
+    <p class="small">${PF().pub
+      ? `"${esc(PF().name)}" está publicada en el enlace y este dispositivo no tiene permiso para modificarla. Agrega tu token de GitHub en Ajustes para editarla desde aquí, o trabaja sobre una copia local.`
+      : `"${esc(PF().name)}" llegó por un enlace compartido, así que no se puede editar. Puedes duplicarla para trabajar sobre una copia tuya, o crear una cartera nueva desde cero.`}</p>
     <div class="btn-row"><button class="btn" data-action="pfDuplicate">Duplicar como mía</button>
       <button class="btn secondary" data-action="pfNew">Crear una vacía</button></div>`);
   return true;
@@ -1547,6 +1663,8 @@ document.addEventListener('click', async (e) => {
     case 'pfRename': { const n = prompt('Nuevo nombre', PF().name); if (n) { PF().name = n.slice(0, 40); savePf(); closeSheet(); render(); syncHeader(); } break; }
     case 'pfDelete': if (S.book.list.length > 1 && confirm(`¿Eliminar la cartera "${PF().name}"?`)) { S.book.list = S.book.list.filter((x) => x.id !== S.book.active); S.book.active = S.book.list[0].id; savePf(); closeSheet(); render(); syncHeader(); toast('Cartera eliminada'); } break;
     case 'pfShare': pfShare(); break;
+    case 'pfPublishNow': { toast('Publicando…'); if (await pfPublish(PF())) { closeSheet(); render(); toast('Publicada. Ábrela desde cualquier dispositivo con el mismo enlace.'); } break; }
+    case 'pfUnpublish': if (confirm('¿Quitar esta cartera del enlace público?')) pfUnpublish(el.dataset.id); break;
     case 'pfDuplicate': { const src = PF(); pfNew(src.name + ' (mi copia)', src.tx.map((t) => ({ ...t, id: uid() })), false); closeSheet(); render(); toast('Cartera duplicada'); break; }
     case 'shareUrlNative': try { await navigator.share({ title: 'Mi cartera', url: $('#shareUrl').value }); } catch { /* cancelado */ } break;
     case 'pfAcceptShare': { const p = S.pendingShare;

@@ -56,7 +56,8 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 ## Novedades v1.4
 
 - **Varias carteras con selector.** El nombre de la cartera activa está en la barra superior: cámbiala, crea otras y compáralas. Toda la app (posiciones, alertas, noticias, chat) se ajusta a la que tengas activa.
-- **Compartir en solo lectura.** Un enlace lleva la cartera comprimida dentro del `#` de la URL: quien lo abra la ve pero no puede editarla, y puede duplicarla o crear la suya. Sin servidores ni cuentas.
+- **Publicar la cartera en el propio enlace** (`docs/data/portfolios.json`): con el token de GitHub, la app la sube al sitio y desde ahí se ve igual en el teléfono, en el computador y para cualquiera que abra la URL, siempre en solo lectura salvo en los dispositivos con token. Se republica sola al editarla.
+- **Compartir puntual por enlace.** Alternativa sin token: la cartera viaja comprimida dentro del `#` de la URL y se agrega en solo lectura.
 - **Chat con Claude.** La pestaña IA deja de ser una biblioteca de prompts para copiar: con una clave de la API responde con tu cartera, el régimen del mercado y las señales del día ya cargados. Los 10 prompts institucionales se responden con un toque. Se reinicia cada día.
 - **Resumen del día** generado por Claude en el run diario (`brief` en `latest.json`): qué pasa, qué vigilar y cuál es el riesgo principal.
 - **Valoración de analistas estilo Google Finance**: anillo de Compra / Mantenimiento / Venta y previsión de 12 meses con máximo, medio y mínimo frente al precio actual. Está en el detalle de cada activo y en la vista **🎯 Analistas** del radar, con el top 20 del filtro actual.
