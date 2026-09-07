@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.4.2';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -30,7 +30,7 @@ const S = {
   data: null, history: {}, quotes: null, live: {}, liveAt: null, tab: 'cartera', detail: null,
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
-  settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', ghToken: '', aiKey: '', aiModel: 'claude-opus-5' }),
+  settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
   pub: [], pubAt: null, ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
@@ -51,14 +51,19 @@ function allPortfolios() {
 }
 const PF = () => allPortfolios().find((p) => p.id === S.book.active) || S.book.list[0];
 const isRO = () => !!PF().ro;
-const hasToken = () => !!(S.settings.ghToken || '').trim();
 const pubOf = (id) => S.pub.find((p) => p.baseId === id || p.id === id);
 const isPub = (id) => !!pubOf(id ?? S.book.active);
 
 function loadJSON(k, d) { try { const v = localStorage.getItem(k); return v ? { ...d, ...JSON.parse(v) } : d; } catch { return d; } }
 function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { toast('No se pudo guardar (almacenamiento lleno)'); } }
-function savePf() { pruneLocal(); saveJSON(LS.book, S.book); autoPublish(); }
+function savePf() { pruneLocal(); saveJSON(LS.book, S.book); }
 function saveSettings() { saveJSON(LS.settings, S.settings); }
+/** v1.4.2: la app ya no usa token de GitHub. Se borra el que hubiera guardado. */
+(function limpiarCredencialesViejas() {
+  if (S.settings.ghToken === undefined) return;
+  delete S.settings.ghToken;
+  saveSettings();
+})();
 
 /** Auto-gestión de almacenamiento local: límites suaves para no saturar el teléfono. */
 function pruneLocal() {
@@ -180,6 +185,9 @@ async function loadData(force = false) {
     }));
     S.pubAt = pub?.updated || null;
     if (S.book.active && !allPortfolios().some((p) => p.id === S.book.active)) S.book.active = S.book.list[0].id;
+    // Si en este dispositivo no hay nada cargado, se abre directamente la cartera publicada.
+    if (!PF().tx.length && !PF().pub) { const pub = allPortfolios().find((p) => p.pub && p.tx.length); if (pub) S.book.active = pub.id; }
+    syncHeader();
     applyQuotes();
     try { localStorage.setItem(LS.cache, JSON.stringify({ d, h, q })); } catch { /* caché opcional (puede no caber) */ }
   } catch (e) {
@@ -228,64 +236,24 @@ async function refreshLive(symbols) {
 setInterval(() => { if (document.visibilityState === 'visible') refreshLive(); }, 60000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.data && Date.now() - loadData.at > 10 * 60e3) loadData(true); });
 
-/** Botón "Actualizar mercado": recarga, y con token pide precios + análisis rápido y espera el resultado. */
-async function updateMarket(mode) {
-  toast('Actualizando…');
+/** Botón "Actualizar mercado": recarga lo último publicado. Las actualizaciones
+ *  corren solas en GitHub: precios cada hora en sesión, noticias cada 3 h y el
+ *  análisis completo al cierre. */
+async function updateMarket() {
+  toast('Recargando…');
+  const before = (S.quotes?.generated_at || '') + (S.data?.generated_at || '');
   await loadData(true);
-  const token = (S.settings.ghToken || '').trim();
-  if (!token) { toast('Datos recargados. Agrega un token de GitHub en Ajustes para actualizar el mercado al instante.'); return; }
-  const stampBefore = S.quotes?.generated_at || '';
-  const okQ = await dispatchWorkflow(token, REPO.quotesWorkflow);
-  const okA = await dispatchWorkflow(token, REPO.workflow, { mode: mode || 'fast', discover: 'false' });
-  if (!okQ && !okA) { toast('No se pudo lanzar la actualización (revisa el token)'); return; }
-  toast(mode === 'full' ? 'Análisis completo lanzado (~20 min)' : 'Actualizando precios y señales (~2 min)…');
-  waitForFresh(stampBefore);
+  const after = (S.quotes?.generated_at || '') + (S.data?.generated_at || '');
+  toast(after !== before ? 'Datos nuevos cargados' : `Ya tienes lo último. ${nextRefreshText()}`);
 }
-
-/** Espera a que GitHub publique el nuevo quotes.json y recarga solo. */
-let waitTimer = null;
-function waitForFresh(stampBefore, tries = 0) {
-  clearTimeout(waitTimer);
-  if (tries > 12) return;
-  waitTimer = setTimeout(async () => {
-    try {
-      const q = await fetchJSON(QUOTES_URL, true);
-      if (q && q.generated_at !== stampBefore) {
-        await loadData(true);
-        toast('Mercado actualizado');
-        return;
-      }
-    } catch { /* aún no publica */ }
-    waitForFresh(stampBefore, tries + 1);
-  }, 20000);
-}
-async function dispatchWorkflow(token, file, inputs = {}) {
-  try {
-    const r = await fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.name}/actions/workflows/${file}/dispatches`, {
-      method: 'POST', headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: REPO.branch, inputs }),
-    });
-    return r.status === 204;
-  } catch { return false; }
-}
-/** Agrega tickers a config/universe.json en GitHub (requiere token con permiso de contenido). */
-async function addToUniverse(token, syms) {
-  const H = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
-  const base = `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/config/universe.json`;
-  const r = await fetch(`${base}?ref=${REPO.branch}`, { headers: H });
-  if (!r.ok) throw new Error(`GET ${r.status}`);
-  const j = await r.json();
-  const text = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
-  const cfg = JSON.parse(text);
-  const have = new Set([...(cfg.stocks || []), ...(cfg.etfs || [])]);
-  const add = syms.filter((s) => !have.has(s));
-  if (!add.length) return 0;
-  cfg.stocks = [...(cfg.stocks || []), ...add];
-  const body = { message: `config: agrega ${add.join(', ')} al radar`, sha: j.sha, branch: REPO.branch,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(cfg, null, 1)))) };
-  const put = await fetch(base, { method: 'PUT', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!put.ok) throw new Error(`PUT ${put.status}`);
-  return add.length;
+/** Cuándo llega la próxima actualización automática (hora de Chile aproximada). */
+function nextRefreshText() {
+  const now = new Date();
+  const utcH = now.getUTCHours(), dow = now.getUTCDay();
+  const weekday = dow >= 1 && dow <= 5;
+  if (weekday && utcH >= 13 && utcH < 21) return 'Próximos precios en menos de 1 hora.';
+  if (weekday && utcH < 13) return 'Los precios se mueven desde la apertura (10:30 Chile).';
+  return 'Próximo análisis completo al cierre de Wall Street de mañana.';
 }
 
 function renderStatus() {
@@ -369,7 +337,7 @@ function viewCartera() {
       <button class="btn sm" data-action="updateMarket">⟳ Actualizar mercado</button></div></div>`;
 
   if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
-    ${PF().pub ? 'Para editarla desde este dispositivo, agrega tu token de GitHub en Ajustes.' : ''}
+    ${PF().pub ? 'Se actualiza sola desde el enlace. Si editas algo, se copia a este dispositivo automáticamente.' : ''}
     <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
 
   html += `<div class="seg" data-seg2="carteraView">${[['posiciones', 'Posiciones'], ['rendimiento', 'Rendimiento'], ['objetivos', 'Objetivos']]
@@ -1070,7 +1038,6 @@ function viewAjustes() {
   const used = (() => { try { let n = 0; for (const k in localStorage) if (Object.prototype.hasOwnProperty.call(localStorage, k)) n += (localStorage.getItem(k) || '').length * 2; return n; } catch { return 0; } })();
   const d = S.data;
   const pending = (S.book.pending || []).filter((s) => !tk(s));
-  const hasToken = !!(S.settings.ghToken || '').trim();
   return `<div class="card"><h2 style="margin-top:0">📡 Datos</h2>
     <div class="kv"><div><span>Análisis diario</span><b>${esc(fmtStamp(d.generated_at))}</b></div><div><span>Precios intradía</span><b>${S.quotes ? esc(fmtStamp(S.quotes.generated_at)) : '—'}</b></div>
     <div><span>Modo</span><b>${d.demo ? 'DEMO (sintético)' : 'Real (Yahoo Finance)'}</b></div><div><span>Activos OK / fallidos</span><b>${d.stats?.ok} / ${d.stats?.failed}</b></div>
@@ -1080,21 +1047,18 @@ function viewAjustes() {
     <div><span>Metadatos frescos</span><b>${d.stats?.meta_refreshed ?? '—'}</b></div><div><span>Gurús seguidos</span><b>${Object.keys(d.investors || {}).length}</b></div></div>
     ${d.failed?.length ? `<details><summary class="small">Fallidos (${d.failed.length})</summary><div class="tiny muted">${d.failed.map((f) => `${f.sym}: ${esc(f.error)}`).join('<br>')}</div></details>` : ''}
     <p class="small muted">El análisis completo se regenera cada día hábil al cierre; las cotizaciones cada hora en horario de mercado. Solo se guarda el último snapshot: el almacenamiento no crece.</p>
-    <div class="btn-row"><button class="btn secondary" data-action="updateMarket">⟳ Precios y señales (~2 min)</button>${hasToken ? `<button class="btn secondary" data-action="runFull">▶ Análisis completo (~20 min)</button>` : ''}</div>
-    <p class="tiny muted">Rápido = precios de todo el universo + recálculo del técnico. Completo = además refresca fundamentales, analistas y noticias de los ${d.tickers.length} activos.</p></div>
+    <div class="btn-row"><button class="btn secondary" data-action="updateMarket">⟳ Buscar datos nuevos</button></div>
+    <p class="tiny muted">Todo es automático: no hay nada que configurar. El servidor recalcula precios y señales cada hora de mercado, las noticias cada 3 horas y el análisis completo de los ${d.tickers.length} activos cada día al cierre.</p></div>
 
     <div class="card"><h2 style="margin-top:0">📈 Precios en vivo <small>opcional</small></h2>
     <p class="small muted">Con una clave gratuita de <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io</a> la app actualiza cada minuto el precio de tus posiciones y del activo que estés mirando (mientras la app esté abierta).</p>
     <label class="field">Clave Finnhub<input id="finnhubKey" type="text" autocomplete="off" autocapitalize="off" placeholder="pega aquí tu API key" value="${esc(S.settings.finnhubKey || '')}"></label>
     <div class="btn-row"><button class="btn secondary sm" data-action="saveKeys">Guardar</button><button class="btn secondary sm" data-action="testLive">Probar</button></div></div>
 
-    <div class="card"><h2 style="margin-top:0">🔑 Conexión con GitHub <small>opcional</small></h2>
-    <p class="small muted">Con un token de GitHub la app puede <b>publicar tu cartera en el enlace</b> (para verla igual en el teléfono y el computador), <b>pedir cotizaciones al instante</b>, lanzar el <b>análisis completo</b> y <b>agregar tickers al radar</b> sin que edites archivos. Crea uno en GitHub → Settings → Developer settings → Fine-grained tokens, solo para este repo, con permisos <i>Actions: Read and write</i> y <i>Contents: Read and write</i>.</p>
-    <label class="field">Token de GitHub<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(S.settings.ghToken || '')}"></label>
-    <button class="btn secondary sm" data-action="saveKeys">Guardar</button>
-    ${pending.length ? `<h3>Tickers pendientes de agregar al radar</h3><div class="chips wrap">${pending.map((s) => `<span class="chip gray">${esc(s)}</span>`).join('')}</div>
-      <div class="btn-row"><button class="btn sm" data-action="addPending" ${hasToken ? '' : 'disabled'}>Agregar al radar (con token)</button><button class="btn secondary sm" data-action="copyPending">Copiar lista</button><button class="btn secondary sm" data-action="clearPending">Limpiar</button></div>
-      <p class="tiny muted">Sin token: copia la lista y pégala en <code>config/universe.json</code> en GitHub.</p>` : ''}</div>
+    ${pending.length ? `<div class="card"><h2 style="margin-top:0">🎯 Tickers pendientes</h2>
+    <p class="small muted">Estos símbolos aún no están en el radar. El robot que descubre acciones los agrega solo en el próximo análisis diario si aparecen en noticias o en carteras de gurús.</p>
+    <div class="chips wrap">${pending.map((s) => `<span class="chip gray">${esc(s)}</span>`).join('')}</div>
+    <div class="btn-row"><button class="btn secondary sm" data-action="copyPending">Copiar lista</button><button class="btn secondary sm" data-action="clearPending">Limpiar</button></div></div>` : ''}
 
     <div class="card"><h2 style="margin-top:0">🤖 Noticias con IA <small>opcional</small></h2>
     <p class="small muted">Para que las noticias lleguen <b>traducidas, resumidas y priorizadas por Claude</b>, agrega en GitHub → Settings → Secrets and variables → Actions un secreto llamado <code>ANTHROPIC_API_KEY</code>. El run diario clasifica hasta 250 titulares (costo aproximado US$0,5/día con claude-opus-5; la variable <code>NEWS_MODEL</code> permite elegir otro modelo).</p></div>
@@ -1274,30 +1238,21 @@ function openBookSheet() {
         <div class="tiny muted">${open.length} posiciones · ${fmtUSD(val)}${p.updated ? ` · ${relTime(p.updated)}` : ''}</div></div>
       ${p.id === S.book.active ? '<span class="chip accent sm">activa</span>' : ''}</div>`;
   };
-  const locales = S.book.list.map((p) => row(p, 'local')).join('');
+  const locales = S.book.list.filter((p) => p.tx.length || p.id === S.book.active).map((p) => row(p, 'local')).join('');
   const conDatos = new Set(S.book.list.filter((x) => x.tx.length).map((x) => x.id));
   const pubs = S.pub.filter((p) => !conDatos.has(p.baseId)).map((p) => row({ ...p, ro: true }, 'pub')).join('');
-  const activa = PF(), publicada = isPub(activa.id);
 
   openSheet(`<h2 style="margin-top:4px">Mis carteras</h2>
 
     <h3>📱 En este dispositivo</h3>
     <p class="tiny muted">Guardadas solo en este teléfono o computador. No se ven desde otro aparato.</p>
-    ${locales}
+    ${locales || '<div class="empty small">Ninguna en este dispositivo.</div>'}
 
     <h3>🔗 Publicadas en el enlace</h3>
     <p class="tiny muted">Viven en el propio sitio, así que se ven igual desde cualquier dispositivo y cualquiera que abra el enlace puede mirarlas (sin editarlas).</p>
     ${pubs || (S.pub.length ? '<div class="tiny muted">La tuya ya está publicada; aparece arriba con la etiqueta "en el enlace".</div>' : '<div class="empty small">Ninguna publicada todavía.</div>')}
 
-    ${hasToken()
-      ? `<div class="btn-row" style="margin-top:12px">
-          ${publicada
-            ? `<button class="btn secondary" data-action="pfPublishNow">⟳ Republicar "${esc(activa.name)}"</button>
-               <button class="btn danger sm" data-action="pfUnpublish" data-id="${activa.id}">Dejar de publicar</button>`
-            : `<button class="btn" data-action="pfPublishNow">🔗 Publicar "${esc(activa.name)}" en el enlace</button>`}
-         </div>
-         <p class="tiny muted">Al publicarla la verás en tu computador y en tu teléfono con el mismo enlace, y se republica sola cuando la edites.</p>`
-      : `<div class="ro-banner" style="margin-top:12px">Para que tu cartera se vea en <b>todos tus dispositivos</b> con el mismo enlace, agrega tu token de GitHub en Ajustes y luego pulsa "Publicar". Sin token, cada aparato guarda lo suyo.</div>`}
+    <p class="tiny muted" style="margin-top:12px">La cartera publicada se mantiene sola desde el propio sitio: no hay tokens ni claves que configurar. Si quieres cambiar la que está publicada, dímelo en el chat y la actualizo en el enlace.</p>
 
     <div class="btn-row" style="margin-top:10px"><button class="btn secondary" data-action="pfNew">＋ Nueva</button>
       <button class="btn secondary" data-action="pfShare">📤 Compartir por enlace</button></div>
@@ -1316,71 +1271,6 @@ function pfNew(name, tx = [], ro = false) {
   return p;
 }
 function syncHeader() { const el = $('#pfName'); if (el) el.textContent = PF().name; }
-
-/** Publica la cartera en el propio repositorio: así se ve igual en el teléfono,
- *  en el computador y para quien abra el enlace. Requiere el token de GitHub. */
-async function pfPublish(pf) {
-  const token = (S.settings.ghToken || '').trim();
-  if (!token) { toast('Necesitas el token de GitHub (Ajustes)'); return false; }
-  const H = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
-  const path = 'docs/data/portfolios.json';
-  const base = `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/${path}`;
-  let sha = null, list = [];
-  try {
-    const r = await fetch(`${base}?ref=${REPO.branch}&t=${Date.now()}`, { headers: H });
-    if (r.ok) {
-      const j = await r.json();
-      sha = j.sha;
-      list = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))).list || [];
-    }
-  } catch { /* aún no existe */ }
-
-  const { open } = positionsOf(pf);
-  const entry = {
-    id: pf.id, name: pf.name, updated: new Date().toISOString(),
-    tx: open.filter((p) => p.qty > 0).map((p) => ({ sym: p.sym, qty: +p.qty.toFixed(8), price: +p.avg.toFixed(4), date: p.txs[0]?.date || today() })),
-    fav: pf.fav || [],
-  };
-  list = [entry, ...list.filter((x) => x.id !== pf.id)].slice(0, 12);
-  const body = {
-    message: `carteras: publica ${pf.name}`, branch: REPO.branch, sha: sha || undefined,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify({ updated: entry.updated, list })))),
-  };
-  const put = await fetch(base, { method: 'PUT', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!put.ok) { toast(`No se pudo publicar (${put.status})`); return false; }
-  S.pub = [{ ...entry, baseId: entry.id, id: 'pub:' + entry.id }, ...S.pub.filter((x) => x.baseId !== pf.id)];
-  S.pubAt = entry.updated;
-  savePf(); return true;
-}
-
-async function pfUnpublish(id) {
-  const token = (S.settings.ghToken || '').trim();
-  if (!token) return toast('Necesitas el token de GitHub');
-  const H = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
-  const base = `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/docs/data/portfolios.json`;
-  const r = await fetch(`${base}?ref=${REPO.branch}&t=${Date.now()}`, { headers: H });
-  if (!r.ok) return toast('No hay carteras publicadas');
-  const j = await r.json();
-  const bare = String(id).replace(/^pub:/, '');
-  const list = (JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))).list || []).filter((x) => x.id !== bare);
-  const put = await fetch(base, {
-    method: 'PUT', headers: { ...H, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: 'carteras: deja de publicar', branch: REPO.branch, sha: j.sha,
-      content: btoa(unescape(encodeURIComponent(JSON.stringify({ updated: new Date().toISOString(), list })))) }),
-  });
-  if (!put.ok) return toast(`No se pudo quitar (${put.status})`);
-  S.pub = S.pub.filter((x) => x.baseId !== bare);
-  if (S.book.active === id || S.book.active === bare) S.book.active = S.book.list[0].id;
-  render(); syncHeader(); toast('Cartera despublicada');
-}
-
-/** Tras editar una cartera ya publicada, se republica sola (con un respiro). */
-let pubTimer = null;
-function autoPublish() {
-  if (!hasToken() || !isPub()) return;
-  clearTimeout(pubTimer);
-  pubTimer = setTimeout(async () => { if (await pfPublish(PF())) toast('Cambios publicados'); }, 4000);
-}
 
 /** Enlace compartible: la cartera viaja comprimida en el # de la URL, sin servidores. */
 function encodePortfolio(p) {
@@ -1593,12 +1483,27 @@ function ocrImport() {
 // ----------------------------------------------------------------------------
 // Sheet / page helpers
 // ----------------------------------------------------------------------------
-/** Las carteras compartidas no se editan: se ofrece copiarlas a una propia. */
+/** Copia la cartera publicada a este dispositivo para poder editarla. */
+function adoptPub() {
+  const pub = PF();
+  if (!pub.pub) return false;
+  const vacia = S.book.list.find((x) => !x.ro && !x.tx.length);
+  const destino = vacia || { id: '', name: pub.name, ro: false, tx: [], fav: [] };
+  destino.id = pub.baseId; destino.name = pub.name;
+  destino.tx = pub.tx.map((t) => ({ ...t })); destino.fav = [...(pub.fav || [])];
+  if (!vacia) S.book.list.push(destino);
+  S.book.active = destino.id; savePf(); syncHeader();
+  return true;
+}
+
+/** Las carteras compartidas no se editan: se ofrece copiarlas a una propia.
+ *  La publicada sí: se copia sola a este dispositivo y la edición continúa. */
 function roGuard() {
   if (!isRO()) return false;
+  if (PF().pub && adoptPub()) { toast('Cartera copiada a este dispositivo para editarla'); render(); return false; }
   openSheet(`<h2 style="margin-top:4px">Cartera de solo lectura</h2>
     <p class="small">${PF().pub
-      ? `"${esc(PF().name)}" está publicada en el enlace y este dispositivo no tiene permiso para modificarla. Agrega tu token de GitHub en Ajustes para editarla desde aquí, o trabaja sobre una copia local.`
+      ? `"${esc(PF().name)}" es la cartera publicada en el enlace: se mantiene sola y no se edita desde el navegador. Duplícala para trabajar sobre una copia tuya en este dispositivo.`
       : `"${esc(PF().name)}" llegó por un enlace compartido, así que no se puede editar. Puedes duplicarla para trabajar sobre una copia tuya, o crear una cartera nueva desde cero.`}</p>
     <div class="btn-row"><button class="btn" data-action="pfDuplicate">Duplicar como mía</button>
       <button class="btn secondary" data-action="pfNew">Crear una vacía</button></div>`);
@@ -1663,8 +1568,6 @@ document.addEventListener('click', async (e) => {
     case 'pfRename': { const n = prompt('Nuevo nombre', PF().name); if (n) { PF().name = n.slice(0, 40); savePf(); closeSheet(); render(); syncHeader(); } break; }
     case 'pfDelete': if (S.book.list.length > 1 && confirm(`¿Eliminar la cartera "${PF().name}"?`)) { S.book.list = S.book.list.filter((x) => x.id !== S.book.active); S.book.active = S.book.list[0].id; savePf(); closeSheet(); render(); syncHeader(); toast('Cartera eliminada'); } break;
     case 'pfShare': pfShare(); break;
-    case 'pfPublishNow': { toast('Publicando…'); if (await pfPublish(PF())) { closeSheet(); render(); toast('Publicada. Ábrela desde cualquier dispositivo con el mismo enlace.'); } break; }
-    case 'pfUnpublish': if (confirm('¿Quitar esta cartera del enlace público?')) pfUnpublish(el.dataset.id); break;
     case 'pfDuplicate': { const src = PF(); pfNew(src.name + ' (mi copia)', src.tx.map((t) => ({ ...t, id: uid() })), false); closeSheet(); render(); toast('Cartera duplicada'); break; }
     case 'shareUrlNative': try { await navigator.share({ title: 'Mi cartera', url: $('#shareUrl').value }); } catch { /* cancelado */ } break;
     case 'pfAcceptShare': { const p = S.pendingShare;
@@ -1687,19 +1590,13 @@ document.addEventListener('click', async (e) => {
     case 'fav': { const i = PF().fav.indexOf(sym); if (i >= 0) PF().fav.splice(i, 1); else PF().fav.push(sym); savePf(); openDetail(sym, true); break; }
     case 'reload': loadData(true); break;
     case 'updateMarket': updateMarket(); break;
-    case 'runFull': { const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { mode: 'full' }); toast(ok ? 'Análisis completo lanzado (~20 min)' : 'No se pudo lanzar (revisa el token)'); break; }
+
     case 'ocr': if (roGuard()) break; openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
     case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} quedó pendiente de agregar al radar (Ajustes)`); } break;
-    case 'saveKeys': S.settings.finnhubKey = ($('#finnhubKey')?.value ?? S.settings.finnhubKey ?? '').trim(); S.settings.ghToken = ($('#ghToken')?.value ?? S.settings.ghToken ?? '').trim(); saveSettings(); toast('Guardado'); render({ keepScroll: true }); break;
+    case 'saveKeys': S.settings.finnhubKey = ($('#finnhubKey')?.value ?? S.settings.finnhubKey ?? '').trim(); saveSettings(); toast('Guardado'); render({ keepScroll: true }); break;
     case 'testLive': { S.settings.finnhubKey = ($('#finnhubKey')?.value || '').trim(); saveSettings(); await refreshLive(['AAPL']); toast(S.live.AAPL ? `OK: AAPL ${fmtUSD(S.live.AAPL.p)}` : 'Sin respuesta: revisa la clave'); break; }
-    case 'addPending': {
-      const syms = (S.book.pending || []).filter((s) => !tk(s)); if (!syms.length) break;
-      try { const n = await addToUniverse(S.settings.ghToken.trim(), syms); S.book.pending = []; savePf(); const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { only: syms.join(','), mode: 'full', discover: 'false' }); toast(`${n} ticker(s) agregados${ok ? '; análisis lanzado (~3 min)' : ''}`); render({ keepScroll: true }); }
-      catch (err) { toast('Error: ' + err.message); }
-      break;
-    }
     case 'copyPending': copy((S.book.pending || []).join(', ')); break;
     case 'clearPending': S.book.pending = []; savePf(); render({ keepScroll: true }); break;
     case 'export': exportBackup(); break;
