@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -866,7 +866,10 @@ function addPending(sym) { if (!S.pf.pending) S.pf.pending = []; if (!S.pf.pendi
 // ----------------------------------------------------------------------------
 function openOcrSheet() {
   openSheet(`<h2 style="margin-top:4px">📷 Cargar capturas de Racional</h2>
-    <p class="small muted">Toma capturas de la pantalla <b>Inicio</b> de Racional con la lista de acciones (modo <b>Ganancia Total</b>) y súbelas todas. La app lee ticker, inversión y ganancia, y calcula tu posición con el precio actual. Todo ocurre en tu teléfono; las fotos no se envían a ningún lado.</p>
+    <p class="small muted">En la pantalla <b>Inicio</b> de Racional, captura la lista de acciones en las <b>dos vistas</b> del menú de la derecha:</p>
+    <ul class="reasons small"><li><b>Último Precio</b> → entrega la cantidad exacta de acciones.</li>
+    <li><b>Ganancia Total</b> → entrega tu resultado, para calcular el precio promedio de compra.</li></ul>
+    <p class="tiny muted">Súbelas todas juntas. La app calcula el valor con el precio de mercado actual, no con el que muestra Racional. Todo ocurre en tu teléfono: las fotos no se envían a ningún lado.</p>
     <label class="btn" for="ocrFiles">Elegir capturas</label><input id="ocrFiles" type="file" accept="image/*" multiple hidden>
     <div id="ocrStatus" class="small muted" style="margin-top:10px"></div>
     <div id="ocrResult"></div>`);
@@ -882,27 +885,45 @@ function parseAmount(s) {
   return isNaN(v) ? null : v;
 }
 
-/** Extrae posiciones de las líneas OCR (ordenadas de arriba a abajo) de una captura de Racional. */
+/** Racional muestra siempre 8 decimales en la cantidad de acciones; el OCR a veces
+ *  se come el separador ("298048048" en vez de "2,98048048"). Se reconstruye. */
+function parseShares(s) {
+  const raw = String(s).replace(/[^\d.,]/g, '');
+  if (/[.,]/.test(raw)) return parseAmount(raw);
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length > 8) return parseFloat(digits.slice(0, digits.length - 8) + '.' + digits.slice(-8));
+  return parseFloat(digits) || null;
+}
+
+/** Extrae filas de una captura de Racional. Reconoce las dos vistas:
+ *  · "Último Precio": ticker / precio de la acción / "N acciones"      → cantidad exacta
+ *  · "Ganancia Total": ticker / ganancia / "USD X inversión"           → valor actual y ganancia
+ *  Ojo: en Racional "inversión" es el VALOR ACTUAL de la posición, no el costo.
+ */
 function parseRacionalLines(lines) {
   const known = new Set(S.data.tickers.map((t) => t.sym));
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].text.match(/USD\s*([\d.,]+)\s*invers/i);
-    if (!m) continue;
-    const cost = parseAmount(m[1]); if (cost == null) continue;
-    let gain = null, ticker = null;
+    const txt = lines[i].text;
+    const mShares = txt.match(/([\d.,]{3,})\s*acc?[il1]on/i);
+    const mValue = txt.match(/USD\s*([\d.,]+)\s*[il1]nvers/i);
+    if (!mShares && !mValue) continue;
+    let ticker = null, badge = null, badgeNeg = false;
     for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
-      const txt = lines[j].text;
-      if (/invers/i.test(txt)) break; // llegamos a la tarjeta anterior
-      if (gain == null) { const g = txt.match(/(-|−)?\s*USD\s*([\d.,]+)/i); if (g) { const v = parseAmount(g[2]); if (v != null) gain = g[1] ? -v : v; } }
-      if (ticker == null && !/USD/i.test(txt)) { // la línea de ganancia nunca contiene el ticker
-        const toks = (txt.match(/\b[A-Z][A-Z0-9]{1,5}\b/g) || []).filter((x) => !['USD', 'CLP', 'YTD'].includes(x));
-        const pick = toks.find((x) => known.has(x)) || toks.sort((a, b) => b.length - a.length)[0];
+      const t = lines[j].text;
+      if (/[il1]nvers|acc?[il1]on/i.test(t)) break;        // llegamos a la tarjeta anterior
+      if (badge == null) {
+        const g = t.match(/(-|−)?\s*USD\s*([\d.,]+)/i);
+        if (g) { badge = parseAmount(g[2]); badgeNeg = !!g[1] || /[-−]\s*USD/.test(t); }
+      }
+      if (ticker == null && !/USD/i.test(t)) {
+        const toks = (t.match(/\b[A-Z][A-Z0-9]{1,5}\b/g) || []).filter((x) => !['USD', 'CLP'].includes(x));
+        const pick = toks.find((x) => known.has(x)) || toks.sort((x, y) => y.length - x.length)[0];
         if (pick) ticker = pick;
       }
     }
-    // Sin ticker legible (logo encima, letra sola): fila vacía para que el usuario lo escriba.
-    out.push({ sym: ticker || '', cost, gain: gain ?? 0, known: !!ticker && known.has(ticker) });
+    if (mShares) out.push({ sym: ticker || '', qty: parseShares(mShares[1]), rprice: badge });
+    else out.push({ sym: ticker || '', value: parseAmount(mValue[1]), gain: badge == null ? null : (badgeNeg ? -badge : badge) });
   }
   return out;
 }
@@ -932,43 +953,75 @@ async function runOcr(files) {
     } catch (e) { console.warn('OCR', e); }
   }
   await worker.terminate();
-  // Consolidar duplicados (una acción puede aparecer cortada en dos capturas): conservar la de mayor inversión.
+
+  // Fusiona lo leído en todas las capturas: la vista de acciones aporta la cantidad
+  // exacta y la de ganancia aporta el valor y el resultado.
   const bySym = {}, noSym = [];
-  for (const f of found) { if (!f.sym) { noSym.push(f); continue; } if (!bySym[f.sym] || f.cost > bySym[f.sym].cost) bySym[f.sym] = f; }
-  const rows = [...Object.values(bySym), ...noSym].sort((a, b) => b.cost - a.cost);
-  S.ocr = rows.map((r) => ocrRow(r));
-  st.textContent = rows.length ? `Detectadas ${rows.length} posiciones. Revisa y corrige si algo no calza${noSym.length ? ` (${noSym.length} sin ticker legible: escríbelo)` : ''}:` : 'No se detectaron posiciones. Asegúrate de capturar la lista de acciones (ticker + "USD … inversión").';
+  for (const f of found) {
+    if (!f.sym) { noSym.push(f); continue; }
+    const cur = bySym[f.sym] || (bySym[f.sym] = { sym: f.sym });
+    for (const k of ['qty', 'value', 'gain', 'rprice']) if (f[k] != null) cur[k] = f[k];
+  }
+  const rows = [...Object.values(bySym), ...noSym].map(ocrRow).sort((a, b) => (b.value || 0) - (a.value || 0));
+  S.ocr = rows;
+  const conQty = rows.filter((r) => r.qty != null).length, conGain = rows.filter((r) => r.gain != null).length;
+  st.innerHTML = rows.length
+    ? `Detectadas <b>${rows.length}</b> posiciones · ${conQty} con cantidad de acciones · ${conGain} con ganancia.`
+      + (noSym.length ? ` <span style="color:var(--s)">${noSym.length} sin ticker legible: escríbelo.</span>` : '')
+    : 'No se detectaron posiciones. Captura la lista de acciones de la pantalla Inicio.';
   res.innerHTML = renderOcrTable();
 }
+
+/** Recalcula una fila: la cantidad manda y el valor sale del precio de mercado actual. */
 function ocrRow(r) {
-  const d = tk(r.sym); const value = r.cost + r.gain; const qty = d?.price ? value / d.price : null;
-  return { ...r, known: !!d, value, price: d?.price ?? null, qty, avg: qty ? r.cost / qty : null, on: r.on ?? true };
+  const d = tk(r.sym);
+  const price = d?.price ?? r.rprice ?? null;
+  let qty = r.qty;
+  if (qty == null && r.value != null && price) qty = r.value / price;      // sin cantidad: se deduce
+  const value = (qty != null && price) ? qty * price : (r.value ?? null);  // valor a precio de mercado
+  // El costo sale del valor calculado, no del número leído: si el OCR pierde la coma
+  // ("4913" en vez de "49,13") la cantidad de acciones sigue dando el valor correcto.
+  const cost = (value != null && r.gain != null) ? value - r.gain : null;
+  const avg = (qty && cost != null) ? cost / qty : null;
+  return { ...r, known: !!d, price, qty, value, cost, avg, on: r.on !== false };
 }
+
 function renderOcrTable() {
   if (!S.ocr?.length) return '';
-  const total = S.ocr.filter((r) => r.on).reduce((a, r) => a + r.value, 0);
-  return `<table class="ocr"><thead><tr><th></th><th>Ticker</th><th>Inversión</th><th>Ganancia</th><th>Cant. calc.</th></tr></thead><tbody>
+  const sel = S.ocr.filter((r) => r.on);
+  const total = sel.reduce((a, r) => a + (r.value || 0), 0);
+  const totalCost = sel.reduce((a, r) => a + (r.cost ?? r.value ?? 0), 0);
+  const faltaCosto = sel.some((r) => r.cost == null);
+  return `<table class="ocr"><thead><tr><th></th><th>Ticker</th><th>Acciones</th><th>Valor USD</th><th>Ganancia</th><th>Prom.</th></tr></thead><tbody>
     ${S.ocr.map((r, i) => `<tr class="${r.on ? '' : 'off'}"><td><input type="checkbox" data-ocr="on" data-i="${i}" ${r.on ? 'checked' : ''}></td>
-      <td><input data-ocr="sym" data-i="${i}" value="${esc(r.sym)}" placeholder="?" style="width:64px;${r.sym ? '' : 'border-color:var(--ss)'}" autocapitalize="characters">${r.known ? '' : `<div class="tiny" style="color:var(--s)">${r.sym ? 'fuera del radar' : 'escribe el ticker'}</div>`}</td>
-      <td><input data-ocr="cost" data-i="${i}" inputmode="decimal" value="${r.cost}" style="width:74px"></td>
-      <td><input data-ocr="gain" data-i="${i}" inputmode="decimal" value="${r.gain}" style="width:64px"></td>
-      <td class="tiny mono">${r.qty ? `${fmtQ(r.qty)}<br>@ ${fmtUSD(r.avg)}` : '<span class="muted">sin precio</span>'}</td></tr>`).join('')}</tbody></table>
-    <p class="small">Valor detectado: <b>${fmtUSD(total)}</b>. Los tickers fuera del radar se guardan por monto y quedan pendientes de agregar (Ajustes).</p>
-    <p class="tiny muted">Importar <b>reemplaza</b> la posición de cada ticker detectado con lo que dice Racional (los demás no se tocan). El historial manual de esos tickers se sustituye por una sola línea "importado".</p>
-    <button class="btn" data-action="ocrImport">Importar ${S.ocr.filter((r) => r.on).length} posiciones</button>`;
+      <td><input data-ocr="sym" data-i="${i}" value="${esc(r.sym)}" placeholder="?" style="width:58px;${r.sym ? '' : 'border-color:var(--ss)'}" autocapitalize="characters">${r.known ? '' : `<div class="tiny" style="color:var(--s)">${r.sym ? 'fuera del radar' : 'escribe el ticker'}</div>`}</td>
+      <td><input data-ocr="qty" data-i="${i}" inputmode="decimal" value="${r.qty != null ? +r.qty.toFixed(8) : ''}" placeholder="—" style="width:78px"></td>
+      <td class="mono">${fmtUSD(r.value)}<div class="tiny muted">${r.price ? '@ ' + fmtUSD(r.price) : 'sin precio'}</div></td>
+      <td><input data-ocr="gain" data-i="${i}" inputmode="decimal" value="${r.gain != null ? r.gain : ''}" placeholder="—" style="width:62px"></td>
+      <td class="tiny mono">${r.avg ? fmtUSD(r.avg) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table>
+    <p class="small">Valor de la cartera detectado: <b>${fmtUSD(total)}</b> · costo <b>${fmtUSD(totalCost)}</b> · resultado <b class="${cls(total - totalCost)}">${fmtUSD(total - totalCost)}</b></p>
+    ${faltaCosto ? `<p class="tiny" style="color:var(--s)">A algunas posiciones les falta la ganancia, así que su precio promedio se asume igual al de mercado. Sube también la vista <b>Ganancia Total</b> para que quede exacto.</p>` : ''}
+    <p class="tiny muted">Importar <b>reemplaza</b> la posición de cada ticker detectado; los demás no se tocan.</p>
+    <button class="btn" data-action="ocrImport">Importar ${sel.length} posiciones</button>`;
 }
+
 function ocrImport() {
-  const rows = (S.ocr || []).filter((r) => r.on && r.sym && r.cost > 0);
+  const rows = (S.ocr || []).filter((r) => r.on && r.sym && (r.qty > 0 || r.value > 0));
   if (!rows.length) return toast('Nada que importar');
   const d0 = today();
   for (const r of rows) {
     const sym = r.sym.toUpperCase();
     S.pf.tx = S.pf.tx.filter((t) => t.sym !== sym);
     const d = tk(sym);
-    const value = r.cost + r.gain;
-    const qty = d?.price ? value / d.price : null;
-    S.pf.tx.push({ id: uid(), sym, type: 'buy', qty: qty ? +qty.toFixed(6) : null, price: qty ? +(r.cost / qty).toFixed(4) : null, amount: r.cost, snapValue: value,
-      date: d0, note: 'Importado desde captura de Racional', src: 'ocr', sig: d?.signal || null, score: d?.score ?? null });
+    const avg = r.avg ?? r.price ?? null;
+    S.pf.tx.push({
+      id: uid(), sym, type: 'buy',
+      qty: r.qty != null ? +r.qty.toFixed(8) : null,
+      price: avg != null ? +avg.toFixed(4) : null,
+      amount: r.cost ?? r.value ?? null, snapValue: r.value ?? null,
+      date: d0, note: 'Importado desde captura de Racional', src: 'ocr',
+      sig: d?.signal || null, score: d?.score ?? null,
+    });
     if (!d) addPending(sym);
   }
   savePf(); closeSheet(); S.ocr = null; render(); toast(`Importadas ${rows.length} posiciones`);
@@ -1069,7 +1122,10 @@ document.addEventListener('input', (e) => {
   if (e.target.id === 'radarQ') { S.radar.q = e.target.value; S.radar.limit = RADAR_PAGE; const pos = e.target.selectionStart; render(); const q = $('#radarQ'); q.focus(); q.setSelectionRange(pos, pos); }
   if (e.target.dataset.ocr && S.ocr) {
     const i = +e.target.dataset.i, k = e.target.dataset.ocr, r = S.ocr[i]; if (!r) return;
-    if (k === 'on') r.on = e.target.checked; else if (k === 'sym') r.sym = e.target.value.toUpperCase().trim(); else r[k] = parseAmount(e.target.value) ?? 0;
+    if (k === 'on') r.on = e.target.checked;
+    else if (k === 'sym') r.sym = e.target.value.toUpperCase().trim();
+    else if (k === 'qty') r.qty = parseAmount(e.target.value);
+    else r[k] = parseAmount(e.target.value);
     S.ocr[i] = ocrRow(r);
     const btn = $('#ocrResult .btn'); if (btn) btn.textContent = `Importar ${S.ocr.filter((x) => x.on).length} posiciones`;
   }
