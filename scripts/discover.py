@@ -58,7 +58,7 @@ def load(path, default):
 
 
 def from_screeners() -> dict:
-    """{sym: motivo} desde los screeners de Yahoo."""
+    """{sym: [screeners en los que aparece]} desde los screeners de Yahoo."""
     import yfinance as yf
     found = {}
     for name in SCREENERS:
@@ -80,7 +80,7 @@ def from_screeners() -> dict:
                 continue
             if vol and vol < MIN_DOLLAR_VOL:
                 continue
-            found.setdefault(sym, name)
+            found.setdefault(sym, []).append(name)
         print(f"  screener {name}: {len(quotes)} resultados", flush=True)
     return found
 
@@ -158,17 +158,25 @@ def main():
     for sym in set(scr) | set(news):
         log["seen"][sym] = today
 
-    candidates = [s for s in ({**scr, **{k: 'noticias' for k in news}}) if s not in known]
-    candidates.sort(key=lambda s: (-(news.get(s, 0)), s))
+    # Relevancia: las menciones en noticias pesan más que aparecer en un screener,
+    # y aparecer en varios screeners a la vez pesa más que en uno solo.
+    def relevance(sym):
+        return news.get(sym, 0) * 3 + len(scr.get(sym, [])) * 2
+
+    candidates = sorted(set(scr) | set(news), key=lambda s: -relevance(s))
+    candidates = [s for s in candidates if s not in known]
     print(f"-- candidatos nuevos: {len(candidates)}", flush=True)
 
     add = []
     if candidates:
-        valid = validate(candidates[:120])
-        for s in candidates:
-            if s in valid and len(add) < args.max_new:
-                add.append(s)
-    print(f"-- validados para agregar: {add}", flush=True)
+        valid = validate(candidates[:150])
+        ranked = sorted((s for s in candidates if s in valid),
+                        key=lambda s: (-relevance(s), -valid[s]["dollar_vol"]))
+        add = ranked[:args.max_new]
+        for s in add:
+            why = ", ".join(scr.get(s, [])) or f"{news.get(s, 0)} menciones"
+            print(f"   + {s:<6} {why} · vol ${valid[s]['dollar_vol'] / 1e6:.0f}M", flush=True)
+    print(f"-- validados para agregar: {len(add)}", flush=True)
 
     # Poda: auto-agregados que llevan >21 días sin aparecer y no son core/watch.
     protected = set(uni.get("core", [])) | set(uni.get("watch", [])) | set(uni.get("etfs", []))
