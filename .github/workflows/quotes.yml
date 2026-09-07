@@ -1,4 +1,4 @@
-name: Cotizaciones intradía
+name: Cotizaciones y noticias intradía
 
 on:
   schedule:
@@ -6,7 +6,14 @@ on:
     # más una pasada al cierre (20:15 UTC).
     - cron: "35 13-20 * * 1-5"
     - cron: "15 20 * * 1-5"
+    # Noticias cada 3 horas, todos los días.
+    - cron: "10 */3 * * *"
   workflow_dispatch:
+    inputs:
+      news:
+        description: "Refrescar también los titulares"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -18,7 +25,7 @@ concurrency:
 jobs:
   quotes:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,12 +35,24 @@ jobs:
           cache-dependency-path: scripts/requirements.txt
       - run: pip install -r scripts/requirements.txt
       - run: python scripts/update_quotes.py
+
+      - name: Refrescar noticias
+        if: ${{ github.event.schedule == '10 */3 * * *' || github.event.inputs.news != 'false' }}
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_MODEL: ${{ vars.NEWS_MODEL }}
+          NEWS_AI_MAX: ${{ vars.NEWS_AI_MAX_INTRADAY }}
+          NEWS_TICKERS: ${{ vars.NEWS_TICKERS }}
+          WORKERS: ${{ vars.WORKERS }}
+        run: python scripts/update_data.py --mode news
+
       - name: Publicar
         run: |
           git config user.name "market-intelligence-bot"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
-          git add docs/data/quotes.json
+          git add docs/data/quotes.json docs/data/latest.json docs/data/history.json
           if git diff --cached --quiet; then echo "Sin cambios."; else
-            git commit -m "data: cotizaciones $(date -u +%Y-%m-%dT%H:%M) [skip ci]" && git push
+            git commit -m "data: intradía $(date -u +%Y-%m-%dT%H:%M) [skip ci]" && git push
           fi

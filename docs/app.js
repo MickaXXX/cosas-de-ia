@@ -4,12 +4,12 @@
  */
 'use strict';
 
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.4.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
 const QUOTES_URL = './data/quotes.json';
-const LS = { portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
+const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
 const SIG_LABEL = { strong_buy: 'Compra fuerte', buy: 'Compra', hold: 'Mantener', sell: 'Venta', strong_sell: 'Venta fuerte', neutral: 'Neutral' };
 const SIG_ICON = { strong_buy: '🟢', buy: '🟢', hold: '⚪', sell: '🔴', strong_sell: '🔴', neutral: '⚪' };
@@ -28,22 +28,39 @@ const RADAR_PAGE = 120;
 const S = {
   data: null, history: {}, quotes: null, live: {}, liveAt: null, tab: 'cartera', detail: null,
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
-  pf: loadJSON(LS.portfolio, { tx: [], fav: [], log: [], pending: [] }),
-  settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', ghToken: '' }),
-  ocr: null,
+  book: loadBook(),
+  settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', ghToken: '', aiKey: '', aiModel: 'claude-opus-5' }),
+  ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
+
+/** Carteras: una activa, varias guardadas. Las ajenas llegan por enlace y son de solo lectura. */
+function loadBook() {
+  const b = loadJSON(LS.book, null);
+  if (b && Array.isArray(b.list) && b.list.length) return b;
+  const old = loadJSON(LS.portfolio, null);           // migración desde la versión anterior
+  const first = { id: 'mia', name: 'Mi cartera', ro: false, tx: old?.tx || [], fav: old?.fav || [] };
+  return { active: first.id, list: [first], log: old?.log || [], pending: old?.pending || [] };
+}
+const PF = () => S.book.list.find((p) => p.id === S.book.active) || S.book.list[0];
+const isRO = () => !!PF().ro;
 
 function loadJSON(k, d) { try { const v = localStorage.getItem(k); return v ? { ...d, ...JSON.parse(v) } : d; } catch { return d; } }
 function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { toast('No se pudo guardar (almacenamiento lleno)'); } }
-function savePf() { pruneLocal(); saveJSON(LS.portfolio, S.pf); }
+function savePf() { pruneLocal(); saveJSON(LS.book, S.book); }
 function saveSettings() { saveJSON(LS.settings, S.settings); }
 
 /** Auto-gestión de almacenamiento local: límites suaves para no saturar el teléfono. */
 function pruneLocal() {
-  if (S.pf.log.length > 200) S.pf.log = S.pf.log.slice(-200);
-  if (S.pf.tx.length > 2000) S.pf.tx = S.pf.tx.slice(-2000);
-  if (!Array.isArray(S.pf.pending)) S.pf.pending = [];
-  if (S.pf.pending.length > 100) S.pf.pending = S.pf.pending.slice(-100);
+  if (!Array.isArray(S.book.log)) S.book.log = [];
+  if (!Array.isArray(S.book.pending)) S.book.pending = [];
+  if (S.book.log.length > 200) S.book.log = S.book.log.slice(-200);
+  if (S.book.pending.length > 100) S.book.pending = S.book.pending.slice(-100);
+  for (const p of S.book.list) {
+    if (!Array.isArray(p.tx)) p.tx = [];
+    if (!Array.isArray(p.fav)) p.fav = [];
+    if (p.tx.length > 2000) p.tx = p.tx.slice(-2000);
+  }
+  if (S.book.list.length > 12) S.book.list = S.book.list.slice(0, 12);
 }
 
 // ----------------------------------------------------------------------------
@@ -274,9 +291,11 @@ function updateStamp() {
 // ----------------------------------------------------------------------------
 // Cartera: posiciones a partir de transacciones
 // ----------------------------------------------------------------------------
-function positions() {
+const positions = () => positionsOf(PF());
+
+function positionsOf(pf) {
   const pos = {};
-  const txs = [...S.pf.tx].sort((a, b) => (a.date + a.id).localeCompare(b.date + b.id));
+  const txs = [...(pf.tx || [])].sort((a, b) => (a.date + a.id).localeCompare(b.date + b.id));
   for (const t of txs) {
     const p = pos[t.sym] || (pos[t.sym] = { sym: t.sym, qty: 0, cost: 0, realized: 0, txs: [], fixedValue: null });
     p.txs.push(t);
@@ -331,6 +350,14 @@ function viewCartera() {
       <div class="tiny muted">${liveOn ? '🟢 precios en vivo activos' : 'Precios: cierre diario + intradía cada hora'}</div></div>
       <button class="btn sm" data-action="updateMarket">⟳ Actualizar mercado</button></div></div>`;
 
+  if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b>, una cartera compartida en solo lectura.
+    <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
+
+  html += `<div class="seg" data-seg2="carteraView">${[['posiciones', 'Posiciones'], ['rendimiento', 'Rendimiento'], ['objetivos', 'Objetivos']]
+    .map(([k, l]) => `<button data-action="carteraView" data-v="${k}" class="${S.carteraView === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  if (open.length && S.carteraView === 'rendimiento') return html + viewRendimiento();
+  if (open.length && S.carteraView === 'objetivos') return html + viewObjetivos();
+
   if (!open.length) {
     html += `<div class="empty"><div class="big">💼</div>Tu cartera está vacía.<br>Sube capturas de la pantalla "Inicio" de Racional y la app lee tus posiciones sola, o agrégalas a mano.</div>
       <button class="btn" data-action="ocr">📷 Cargar capturas de Racional</button>
@@ -380,7 +407,7 @@ function viewCartera() {
       ${concentrationNote(parts, total)}</div>`;
   }
 
-  const evald = S.pf.tx.filter((t) => tk(t.sym) && t.price > 0 && t.src !== 'ocr').slice(-8).reverse();
+  const evald = PF().tx.filter((t) => tk(t.sym) && t.price > 0 && t.src !== 'ocr').slice(-8).reverse();
   if (evald.length) {
     html += `<h2>Mis decisiones vs. el modelo</h2><div class="card list">`;
     for (const t of evald) {
@@ -430,13 +457,229 @@ function portfolioAlerts(open) {
   return out.slice(0, 10);
 }
 
+// ---- ANALISTAS (estilo Google Finance) ---------------------------------------
+/** Anillo de recomendaciones + previsión de 12 meses, como en Google Finance. */
+function analystBlock(t, opts = {}) {
+  const a = t.analysts;
+  if (!a || !(a.count || a.target?.mean)) return '';
+  const d = a.dist;
+  const buy = d ? d.sb + d.b : null, hold = d ? d.h : null, sell = d ? d.s + d.ss : null;
+  const tot = d ? buy + hold + sell : (a.count || 0);
+  const parts = d ? [
+    { label: 'Compra', value: buy, color: 'var(--sb)' },
+    { label: 'Mantenimiento', value: hold, color: 'var(--h)' },
+    { label: 'Venta', value: sell, color: 'var(--ss)' },
+  ].filter((p) => p.value > 0) : [];
+  const veredicto = a.key ? SIG_LABEL[a.key] || a.key : (a.mean != null ? SIG_LABEL[scoreSig(scale5(a.mean))] : '—');
+  const ring = parts.length ? `<div class="an-ring">${donut(parts)}<div class="an-legend">
+      ${parts.map((p) => `<div><i style="background:${p.color}"></i>${p.label}<b>${p.value}</b></div>`).join('')}
+      <div class="an-verdict t-${sigClass(a.key || 'hold')}">${esc(veredicto)}</div></div></div>` : '';
+  const tg = a.target || {};
+  const bars = tg.mean ? targetBars(t.price, tg) : '';
+  const head = opts.head === false ? '' :
+    `<div class="between"><h2 style="margin:0">Valoración de analistas</h2>${a.key ? chip(a.key, 'sm') : ''}</div>
+     <div class="tiny muted">${a.count || tot} analistas en los últimos 3 meses${a.revisions ? ` · revisiones EPS 30d ${a.revisions.up}↑ ${a.revisions.down}↓` : ''}</div>`;
+  return `${head}${ring}${bars}`;
+}
+const scale5 = (mean) => Math.round(100 - ((mean - 1) / 4) * 100);   // 1 = compra fuerte → 100
+
+/** Barras de precio objetivo a 12 meses con la marca del precio actual. */
+function targetBars(price, tg) {
+  const vals = [tg.high, tg.mean, tg.low, price].filter((v) => v != null && v > 0);
+  if (!vals.length || !price) return '';
+  const max = Math.max(...vals) * 1.06;
+  const row = (label, v, strong) => v == null ? '' : `<div class="tb-row">
+    <span class="tb-l">${label}</span>
+    <div class="tb-track"><i class="${strong ? 'strong' : ''}" style="width:${Math.max((v / max) * 100, 14)}%"><b>${fmtUSD(v, v < 100 ? 2 : 0)}</b></i></div>
+    <span class="tb-p ${cls(v - price)}">${pct((v / price - 1) * 100, 0)}</span></div>`;
+  return `<h3>Previsión de 12 meses</h3><div class="tbars">
+    <div class="tb-cur" style="left:calc(76px + (100% - 122px) * ${(price / max).toFixed(4)})"><span>Actual ${fmtUSD(price, price < 100 ? 2 : 0)}</span></div>
+    ${row('El más alto', tg.high)}${row('Medio', tg.mean, true)}${row('El más bajo', tg.low)}</div>`;
+}
+
+/** Versión compacta para listas: barra de consenso + potencial. */
+function analystStrip(t) {
+  const a = t.analysts; if (!a || !a.dist) return '';
+  const d = a.dist, tot = d.sb + d.b + d.h + d.s + d.ss;
+  if (!tot) return '';
+  const w = (n) => `${(n / tot) * 100}%`;
+  return `<div class="an-strip"><div class="stack" style="height:8px">
+      ${d.sb + d.b ? `<i class="c-sb" style="width:${w(d.sb + d.b)}"></i>` : ''}
+      ${d.h ? `<i class="c-h" style="width:${w(d.h)}"></i>` : ''}
+      ${d.s + d.ss ? `<i class="c-ss" style="width:${w(d.s + d.ss)}"></i>` : ''}</div>
+    <div class="tiny muted">${d.sb + d.b} compra · ${d.h} mantener · ${d.s + d.ss} venta${a.upside != null ? ` · objetivo <b class="${cls(a.upside)}">${pct(a.upside, 0)}</b>` : ''}</div></div>`;
+}
+
+// ---- RENDIMIENTO DE LA CARTERA ------------------------------------------------
+/** Reconstruye el valor diario de la cartera con el historial de precios del radar.
+ *  Supone las posiciones actuales constantes: sirve como referencia de comportamiento. */
+function equityHistory(pf) {
+  const { open } = positionsOf(pf);
+  const holds = open.filter((p) => p.qty > 0 && S.history[p.sym]?.length);
+  if (!holds.length) return [];
+  const maps = holds.map((h) => ({ qty: h.qty, m: new Map((S.history[h.sym] || []).map((r) => [r.d, r.p])) }));
+  const dates = [...new Set(holds.flatMap((h) => (S.history[h.sym] || []).map((r) => r.d)))].sort();
+  const last = new Array(maps.length).fill(null);
+  const out = [];
+  for (const d of dates) {
+    let val = 0, known = 0;
+    maps.forEach((mm, i) => {
+      const p = mm.m.get(d); if (p) last[i] = p;
+      if (last[i]) { val += mm.qty * last[i]; known++; }
+    });
+    if (known >= Math.ceil(maps.length * 0.6)) out.push({ d, v: val });
+  }
+  return out;
+}
+/** Serie de variación diaria en dólares. */
+function dailyPnl(series) {
+  const out = [];
+  for (let i = 1; i < series.length; i++) out.push({ d: series[i].d, v: series[i].v - series[i - 1].v, pct: series[i - 1].v ? (series[i].v / series[i - 1].v - 1) * 100 : 0 });
+  return out;
+}
+function retOver(series, n) {
+  if (series.length < 2) return null;
+  const a = series[Math.max(0, series.length - 1 - n)], b = series[series.length - 1];
+  return a.v ? (b.v / a.v - 1) * 100 : null;
+}
+
+function calendarMonth(pnl, ym) {
+  const rows = pnl.filter((x) => x.d.startsWith(ym));
+  const byDay = new Map(rows.map((x) => [+x.d.slice(8, 10), x]));
+  const [y, m] = ym.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1, 1));
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const lead = (first.getUTCDay() + 6) % 7;                 // semana que empieza en lunes
+  const maxAbs = Math.max(1, ...rows.map((x) => Math.abs(x.v)));
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += '<div class="cal-d empty"></div>';
+  for (let day = 1; day <= days; day++) {
+    const x = byDay.get(day);
+    const alpha = x ? Math.min(0.85, 0.18 + Math.abs(x.v) / maxAbs * 0.67) : 0;
+    const bg = x ? `background:color-mix(in srgb, var(--${x.v >= 0 ? 'sb' : 'ss'}) ${Math.round(alpha * 100)}%, transparent)` : '';
+    cells += `<div class="cal-d ${x ? 'has' : ''}" style="${bg}"><span class="n">${day}</span>${x ? `<span class="v ${cls(x.v)}">${x.v >= 0 ? '+' : '−'}${fmtN(Math.abs(x.v), Math.abs(x.v) < 10 ? 1 : 0)}</span>` : ''}</div>`;
+  }
+  const mes = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const tot = rows.reduce((a, x) => a + x.v, 0);
+  const ganadores = rows.filter((x) => x.v > 0).length;
+  return `<div class="between"><b style="text-transform:capitalize">${mes}</b><span class="mono ${cls(tot)}">${fmtUSD(tot)}</span></div>
+    <div class="cal-head">${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => `<span>${d}</span>`).join('')}</div>
+    <div class="cal">${cells}</div>
+    <div class="tiny muted">${rows.length} días con datos · ${ganadores} al alza · ${rows.length - ganadores} a la baja</div>`;
+}
+
+function viewRendimiento() {
+  const pf = PF();
+  const series = equityHistory(pf);
+  if (series.length < 3) {
+    return `<div class="empty"><div class="big">📈</div>Aún no hay historial suficiente.<br>El rendimiento se reconstruye con el historial de precios del radar, que crece cada día.<br><br><span class="tiny">Si acabas de importar tu cartera, vuelve mañana.</span></div>`;
+  }
+  const pnl = dailyPnl(series);
+  const best = pnl.reduce((a, b) => (b.v > (a?.v ?? -Infinity) ? b : a), null);
+  const worst = pnl.reduce((a, b) => (b.v < (a?.v ?? Infinity) ? b : a), null);
+  const pos = pnl.filter((x) => x.v > 0).length;
+  const meses = [...new Set(pnl.map((x) => x.d.slice(0, 7)))].sort().reverse();
+  const mesSel = S.calMonth && meses.includes(S.calMonth) ? S.calMonth : meses[0];
+
+  // Semanas ISO recientes
+  const semanas = {};
+  for (const x of pnl) {
+    const dt = new Date(x.d + 'T00:00:00Z');
+    const monday = new Date(dt); monday.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+    const k = monday.toISOString().slice(0, 10);
+    semanas[k] = (semanas[k] || 0) + x.v;
+  }
+  const semList = Object.entries(semanas).sort().slice(-8);
+  const maxSem = Math.max(1, ...semList.map(([, v]) => Math.abs(v)));
+
+  const porMes = {};
+  for (const x of pnl) porMes[x.d.slice(0, 7)] = (porMes[x.d.slice(0, 7)] || 0) + x.v;
+
+  let html = `<div class="card"><h2 style="margin-top:0">Evolución del valor <small>${series.length} días</small></h2>
+    ${spark(series.map((x) => x.v), { big: true, color: 'var(--accent)' })}
+    <div class="between tiny muted mono"><span>${series[0].d} · ${fmtUSD(series[0].v)}</span><span>${series[series.length - 1].d} · ${fmtUSD(series[series.length - 1].v)}</span></div>
+    <div class="grid3" style="margin-top:10px">
+      ${[['1 semana', retOver(series, 5)], ['2 semanas', retOver(series, 10)], ['30 días', retOver(series, 21)]].map(([k, v]) =>
+        `<div class="stat"><div class="k">${k}</div><div class="v mono ${cls(v)}">${pct(v)}</div></div>`).join('')}
+    </div></div>
+
+    <div class="card"><h2 style="margin-top:0">Mejores y peores días</h2>
+    <div class="grid2">
+      <div class="stat"><div class="k">🟢 Mejor día</div><div class="v mono up">${fmtUSD(best.v)}</div><div class="tiny muted">${best.d} · ${pct(best.pct)}</div></div>
+      <div class="stat"><div class="k">🔴 Peor día</div><div class="v mono down">${fmtUSD(worst.v)}</div><div class="tiny muted">${worst.d} · ${pct(worst.pct)}</div></div>
+    </div>
+    <div class="tiny muted" style="margin-top:8px">${pos} de ${pnl.length} días al alza (${fmtN((pos / pnl.length) * 100, 0)}% de acierto diario)</div></div>
+
+    <div class="card"><div class="between"><h2 style="margin:0">Calendario</h2>
+      <select id="calMonth" style="width:auto;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px">
+        ${meses.map((m) => `<option value="${m}" ${m === mesSel ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
+    ${calendarMonth(pnl, mesSel)}</div>
+
+    <div class="card"><h2 style="margin-top:0">Últimas 8 semanas</h2>
+    <div class="wbars">${semList.map(([k, v]) => `<div class="wb"><div class="wb-bar ${v >= 0 ? 'up' : 'down'}" style="height:${Math.max(4, Math.abs(v) / maxSem * 60)}px"></div>
+      <div class="tiny mono ${cls(v)}">${v >= 0 ? '+' : '−'}${fmtN(Math.abs(v), 0)}</div><div class="tiny muted">${k.slice(5)}</div></div>`).join('')}</div></div>
+
+    <div class="card"><h2 style="margin-top:0">Por mes</h2><div class="kv">
+    ${Object.entries(porMes).sort().reverse().map(([m, v]) => `<div><span>${m}</span><b class="mono ${cls(v)}">${fmtUSD(v)}</b></div>`).join('')}</div></div>
+
+    <p class="tiny muted center">El histórico se reconstruye aplicando tus posiciones actuales a los precios pasados. Sirve para ver comportamiento y tendencia, no como estado de cuenta.</p>`;
+  return html;
+}
+
+// ---- OBJETIVOS DE PRECIO -----------------------------------------------------
+function aggregateTargets(open) {
+  let value = 0, mean = 0, high = 0, low = 0, covered = 0, n = 0;
+  for (const p of open) {
+    const a = p.data?.analysts;
+    if (!p.qty || !a?.target?.mean) continue;
+    value += p.value || 0; covered += p.value || 0; n++;
+    mean += p.qty * a.target.mean;
+    high += p.qty * (a.target.high || a.target.mean);
+    low += p.qty * (a.target.low || a.target.mean);
+  }
+  return n ? { value, mean, high, low, n, covered } : null;
+}
+
+function viewObjetivos() {
+  const { open } = positions();
+  const agg = aggregateTargets(open);
+  const total = open.reduce((a, p) => a + (p.value || 0), 0);
+  let html = '';
+  if (!agg) {
+    html += `<div class="empty">Ninguna de tus posiciones tiene precio objetivo de analistas todavía.</div>`;
+  } else {
+    html += `<div class="card"><h2 style="margin-top:0">Potencial de mi cartera <small>a 12 meses</small></h2>
+      <div class="tiny muted">Suma de los precios objetivo de ${agg.n} posiciones (${fmtN(agg.covered / total * 100, 0)}% del valor)</div>
+      ${targetBars(agg.value, { mean: agg.mean, high: agg.high, low: agg.low })}
+      <div class="grid3" style="margin-top:12px">
+        <div class="stat"><div class="k">Hoy</div><div class="v mono">${fmtUSD(agg.value, 0)}</div></div>
+        <div class="stat"><div class="k">Objetivo medio</div><div class="v mono ${cls(agg.mean - agg.value)}">${fmtUSD(agg.mean, 0)}</div><div class="tiny muted">${pct((agg.mean / agg.value - 1) * 100, 0)}</div></div>
+        <div class="stat"><div class="k">Escenario alto</div><div class="v mono up">${fmtUSD(agg.high, 0)}</div><div class="tiny muted">${pct((agg.high / agg.value - 1) * 100, 0)}</div></div>
+      </div></div>`;
+
+    const rows = open.filter((p) => p.data?.analysts?.upside != null).sort((a, b) => b.data.analysts.upside - a.data.analysts.upside);
+    html += `<h2>Posición por posición</h2><div class="card list">`;
+    for (const p of rows) {
+      const a = p.data.analysts;
+      html += `<div class="item" data-action="detail" data-sym="${p.sym}"><div class="grow">
+        <div class="row"><b>${p.sym}</b>${chip(p.data.signal, 'sm')}</div>
+        <div class="tiny muted mono">${fmtUSD(p.data.price)} → objetivo ${fmtUSD(a.target.mean)}</div>
+        ${analystStrip(p.data)}</div>
+        <div class="price mono ${cls(a.upside)}">${pct(a.upside, 0)}<div class="tiny muted">${a.count} analistas</div></div></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `<p class="tiny muted center">Los precios objetivo son el consenso de Wall Street a 12 meses, no una promesa. Úsalos como referencia de expectativas.</p>`;
+  return html;
+}
+
 // ---- RADAR ------------------------------------------------------------------
 function viewRadar() {
   const R = S.radar;
   let list = S.data.tickers.slice();
   if (R.type !== 'all') list = list.filter((t) => (R.type === 'etf') === !!t.etf);
   if (R.signal !== 'all') list = list.filter((t) => (R.horizon === 'score' ? t.signal : t.h[R.horizon].sig) === R.signal);
-  if (R.fav) { const mine = held(); list = list.filter((t) => S.pf.fav.includes(t.sym) || mine.has(t.sym)); }
+  if (R.fav) { const mine = held(); list = list.filter((t) => PF().fav.includes(t.sym) || mine.has(t.sym)); }
   if (R.guru) list = list.filter((t) => t.gurus && t.gurus.length);
   if (R.q) { const q = R.q.toUpperCase(); list = list.filter((t) => t.sym.includes(q) || (t.name || '').toUpperCase().includes(q)); }
   const key = (t) => (R.horizon === 'score' ? t.score : t.h[R.horizon].s) ?? -1;
@@ -459,6 +702,25 @@ function viewRadar() {
     html += `</div>`;
   }
 
+  html += `<div class="seg" style="margin-top:6px">${[['lista', '📋 Lista'], ['analistas', '🎯 Analistas']]
+    .map(([k, l]) => `<button data-action="radarView" data-v="${k}" class="${S.radarView === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+
+  if (S.radarView === 'analistas') {
+    const top = list.filter((t) => t.analysts?.count).slice(0, 20);
+    html += `<h2>Top ${top.length} por valoración de analistas</h2>
+      <p class="tiny muted">Consenso de Wall Street y previsión de 12 meses de las mejores señales del filtro actual.</p>`;
+    for (const t of top) {
+      html += `<div class="card"><div class="between tap" data-action="detail" data-sym="${t.sym}">
+        <div><div class="row"><span class="sym">${t.sym}</span>${chip(t.signal, 'sm')}</div>
+          <div class="name ellipsis">${esc(t.name)}</div></div>
+        <div style="text-align:right"><div class="mono" style="font-weight:700">${fmtUSD(t.price)}</div>
+          <div class="tiny mono ${cls(t.chg1d)}">${pct(t.chg1d)}</div></div></div>
+        ${analystBlock(t, { head: false })}</div>`;
+    }
+    if (!top.length) html += `<div class="empty">Ningún activo del filtro tiene cobertura de analistas.</div>`;
+    return html;
+  }
+
   const shown = list.slice(0, R.limit);
   html += `<h2>${list.length} activos <small>ordenados por ${R.horizon === 'score' ? 'score global' : HZ[R.horizon]}</small></h2><div class="card list">`;
   if (!list.length) html += `<div class="empty">Nada que mostrar con estos filtros.${R.q ? `<br><br>¿No está <b>${esc(R.q.toUpperCase())}</b>? <button class="btn secondary sm" data-action="requestTicker" data-sym="${esc(R.q.toUpperCase())}">Pedir que se agregue al radar</button>` : ''}</div>`;
@@ -466,7 +728,7 @@ function viewRadar() {
     const sig = R.horizon === 'score' ? t.signal : t.h[R.horizon].sig;
     html += `<div class="item" data-action="detail" data-sym="${t.sym}">
       <div style="width:44px;text-align:center"><div class="hero mono t-${sigClass(sig)}" style="font-size:20px">${key(t) ?? '—'}</div><div class="tiny muted">${t.conf === 'baja' ? 'conf. baja' : t.risk.label}</div></div>
-      <div class="grow"><div class="row"><span class="sym">${t.sym}</span>${S.pf.fav.includes(t.sym) ? '<span class="t-s">★</span>' : ''}${chip(sig, 'sm')}</div>
+      <div class="grow"><div class="row"><span class="sym">${t.sym}</span>${PF().fav.includes(t.sym) ? '<span class="t-s">★</span>' : ''}${chip(sig, 'sm')}</div>
         <div class="name ellipsis">${esc(t.name)}${t.sector ? ` · ${esc(t.sector)}` : ''}</div>
         <div class="mini-scores"><b>C ${t.h.short.s ?? '—'}</b><b>M ${t.h.medium.s ?? '—'}</b><b>L ${t.h.long.s ?? '—'}</b>${t.analysts?.upside != null ? `<b class="${cls(t.analysts.upside)}">obj ${pct(t.analysts.upside, 0)}</b>` : ''}${t.gurus ? `<b class="guru">🏆 ${t.gurus.length}</b>` : ''}</div></div>
       <div style="width:64px">${spark(t.tech.spark?.slice(-20))}<div class="price mono small">${fmtUSD(t.price)}</div><div class="tiny mono ${cls(t.chg1d)}" style="text-align:right">${pct(t.chg1d)}</div></div>
@@ -489,11 +751,11 @@ function newsRank(n, mine, favs, changed) {
 function newsLevel(p) { return p >= 60 ? 'alta' : p >= 38 ? 'media' : 'baja'; }
 function collectNews() {
   const { open } = positions();
-  const mine = new Set(open.map((p) => p.sym)), favs = new Set(S.pf.fav), changed = new Set((S.data.changes || []).filter((c) => c.since === '1d').map((c) => c.sym));
+  const mine = new Set(open.map((p) => p.sym)), favs = new Set(PF().fav), changed = new Set((S.data.changes || []).filter((c) => c.since === '1d').map((c) => c.sym));
   const seen = new Set(), out = [];
   const push = (n, sym) => { if (!n.t || seen.has(n.t)) return; seen.add(n.t); const r = newsRank({ ...n, sym }, mine, favs, changed); out.push({ ...n, sym, rank: r, lvl: newsLevel(r), mine: mine.has(sym) }); };
   for (const p of open) for (const n of p.data?.news || []) push(n, p.sym);
-  for (const f of S.pf.fav) for (const n of tk(f)?.news || []) push(n, f);
+  for (const f of PF().fav) for (const n of tk(f)?.news || []) push(n, f);
   for (const n of S.data.market_news || []) push(n, n.sym);
   out.sort((a, b) => b.rank - a.rank || (b.d || '').localeCompare(a.d || ''));
   return out;
@@ -553,20 +815,137 @@ function viewHoy() {
   return html;
 }
 
-// ---- IA ---------------------------------------------------------------------
-function viewIA() {
+// ---- IA (chat con Claude) -----------------------------------------------------
+const AI_URL = 'https://api.anthropic.com/v1/messages';
+
+function loadChat() {
+  const c = loadJSON('mia.chat.v1', null);
+  return (c && c.d === today() && Array.isArray(c.m)) ? c.m : [];   // se limpia cada día
+}
+function saveChat() { saveJSON('mia.chat.v1', { d: today(), m: S.chat.slice(-24) }); }
+
+/** Contexto que acompaña a cada pregunta: cartera, régimen y mejores señales del día. */
+function aiSystemPrompt() {
+  const d = S.data;
   const { open } = positions();
+  const top = d.tickers.filter((t) => !t.etf && t.conf !== 'baja').slice(0, 12)
+    .map((t) => `${t.sym} ${SIG_LABEL[t.signal]} ${t.score}/100 (C${t.h.short.s} M${t.h.medium.s} L${t.h.long.s}, riesgo ${t.risk.label}${t.analysts?.upside != null ? `, objetivo ${pct(t.analysts.upside, 0)}` : ''})`).join('; ');
+  const cambios = (d.changes || []).slice(0, 6).map((c) => `${c.sym} ${SIG_LABEL[c.from]}→${SIG_LABEL[c.to]}`).join('; ');
+  const noticias = collectNews().filter((n) => n.lvl === 'alta').slice(0, 8).map((n) => `[${n.sym}] ${n.t_es || n.t}`).join(' | ');
+  return `Eres el analista cuantitativo de cabecera de un inversionista minorista chileno que invierte en acciones y ETFs de EE.UU. a través de Racional. Respondes en español de Chile, directo, sin relleno y sin prometer rentabilidades. Latency-sensitive; begin your visible answer immediately.
+
+Trabajas sobre los datos de su app "Market Intelligence AI" (fuente: Yahoo Finance, ${d.date}):
+
+RÉGIMEN: ${d.regime?.label} — ${d.regime?.desc} ${(d.regime?.notes || []).join('. ')}
+
+SU CARTERA (${PF().name}${isRO() ? ', compartida' : ''}):
+${portfolioText()}
+
+MEJORES SEÑALES DEL MODELO HOY: ${top}
+CAMBIOS DE SEÑAL: ${cambios || 'ninguno'}
+TITULARES IMPORTANTES: ${noticias || 'sin titulares relevantes'}
+
+El modelo puntúa 0-100 en tres horizontes (corto 1d-1m, mediano 1-12m, largo 1-5a) y emite Compra fuerte / Compra / Mantener / Venta / Venta fuerte. Cuando te pregunten por un activo que no esté arriba, dilo y responde con lo que sepas, aclarando que no tienes su ficha delante. Cierra siempre recordando que son señales cuantitativas, no asesoría financiera personalizada.`;
+}
+
+async function aiSend(text) {
+  const key = (S.settings.aiKey || '').trim();
+  if (!key) return toast('Falta la clave de Claude (Ajustes)');
+  if (S.chatBusy || !text.trim()) return;
+  S.chat.push({ role: 'user', content: text.trim() });
+  S.chatBusy = true; saveChat(); render(); scrollChat();
+  try {
+    const r = await fetch(AI_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'server-side-fallback-2026-07-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: S.settings.aiModel || 'claude-opus-5',
+        max_tokens: 4000,
+        fallbacks: 'default',
+        system: aiSystemPrompt(),
+        output_config: { effort: 'low' },
+        messages: S.chat.map((m) => ({ role: m.role, content: m.content })),
+      }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${r.status}`);
+    }
+    const j = await r.json();
+    if (j.stop_reason === 'refusal') {
+      S.chat.push({ role: 'assistant', content: 'No puedo responder esa consulta. Reformúlala o pregunta por otro activo.' });
+    } else {
+      const txt = (j.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
+      S.chat.push({ role: 'assistant', content: txt || '(respuesta vacía)' });
+    }
+  } catch (e) {
+    S.chat.push({ role: 'assistant', content: `⚠️ No se pudo consultar a Claude: ${e.message}` });
+  } finally {
+    S.chatBusy = false; saveChat(); render(); scrollChat();
+  }
+}
+function scrollChat() { setTimeout(() => { const el = $('#chatEnd'); if (el) el.scrollIntoView({ block: 'end' }); }, 60); }
+
+/** Markdown mínimo: negritas, viñetas y saltos. */
+function mdLite(t) {
+  return esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/^### (.+)$/gm, '<b>$1</b>')
+    .replace(/^[-•*] (.+)$/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
+
+function briefCard() {
+  const b = S.data.brief;
+  if (!b?.text) return '';
+  return `<div class="card"><div class="between"><h2 style="margin:0">🗞️ Resumen del día</h2>
+      <span class="tag">${b.ai ? 'IA · ' : ''}${S.data.date}</span></div>
+    <p class="small">${esc(b.text)}</p>
+    ${(b.bullets || []).length ? `<h3>Qué vigilar</h3><ul class="reasons">${b.bullets.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${b.riesgo ? `<p class="small" style="color:var(--s)">⚠️ ${esc(b.riesgo)}</p>` : ''}</div>`;
+}
+
+function viewIA() {
+  const hasKey = !!(S.settings.aiKey || '').trim();
   const syms = S.data.tickers.map((t) => t.sym);
+  const { open } = positions();
   const sel = S.iaSym || open[0]?.sym || syms[0];
-  let html = `<div class="card"><h2 style="margin-top:0">🤖 Superprompt de análisis</h2>
-    <p class="small muted">Genera un prompt con TODOS los datos del activo (técnico, fundamental, analistas, riesgo, tu posición) para pegarlo en ChatGPT, Claude o Gemini y obtener un informe tipo Goldman / Morgan Stanley / Citadel con veredicto final.</p>
-    <label class="field">Activo<select id="iaSym">${syms.map((s) => `<option ${s === sel ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
-    <button class="btn" data-action="copyPrompt" data-kind="super">📋 Copiar superprompt de ${sel}</button>
-    <details style="margin-top:8px"><summary class="small">Ver prompt</summary><pre class="prompt">${esc(buildSuperPrompt(sel))}</pre></details></div>`;
-  html += `<div class="card"><h2 style="margin-top:0">🧠 Análisis de mi cartera</h2><p class="small muted">Prompt estilo Bridgewater/BlackRock con tus posiciones reales: correlación, concentración, estrés, rebalanceo.</p>
-    <button class="btn secondary" data-action="copyPrompt" data-kind="portfolio" ${open.length ? '' : 'disabled'}>📋 Copiar prompt de cartera</button></div>`;
-  html += `<h2>Biblioteca de prompts institucionales</h2><p class="small muted">Se rellenan automáticamente con el activo seleccionado y tu cartera.</p>`;
-  for (const p of PROMPTS) html += `<div class="card"><div class="between"><b>${p.n}. ${esc(p.t)}</b><button class="btn secondary sm" data-action="copyPrompt" data-kind="lib" data-n="${p.n}">Copiar</button></div><div class="tiny muted">${esc(p.s)}</div></div>`;
+  let html = briefCard();
+
+  if (!hasKey) {
+    html += `<div class="card"><h2 style="margin-top:0">🤖 Activa el chat</h2>
+      <p class="small muted">Con una clave de la API de Claude, esta pestaña se convierte en un analista que ya conoce tu cartera, el régimen del mercado y las señales del día. Consíguela en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. La clave se guarda solo en este teléfono.</p>
+      <label class="field">Clave de Claude<input id="aiKey" type="password" autocomplete="off" placeholder="sk-ant-..." value=""></label>
+      <button class="btn" data-action="saveAiKey">Guardar y activar</button>
+      <p class="tiny muted">Mientras tanto puedes copiar los prompts y pegarlos en ChatGPT, Claude o Gemini.</p></div>`;
+  } else {
+    const starters = ['¿Qué hago hoy con mi cartera?', `Analiza ${sel} a fondo`, '¿Dónde estoy demasiado concentrado?', '¿Qué oportunidad me estoy perdiendo?'];
+    html += `<div class="card chat"><div class="between"><h2 style="margin:0">🤖 Chat con Claude</h2>
+        <button class="btn secondary sm" data-action="chatClear">Limpiar</button></div>
+      <div class="tiny muted">Conoce tu cartera y los datos de hoy. Se reinicia cada día.</div>
+      <div id="chatBox">${S.chat.length ? S.chat.map((m) => `<div class="msg ${m.role}">${m.role === 'assistant' ? mdLite(m.content) : esc(m.content)}</div>`).join('')
+        : '<div class="empty small">Pregúntale lo que quieras sobre tu cartera o el mercado.</div>'}
+        ${S.chatBusy ? '<div class="msg assistant pending">Pensando…</div>' : ''}<div id="chatEnd"></div></div>
+      <div class="chips">${starters.map((q) => `<span class="chip" data-action="chatAsk" data-q="${esc(q)}">${esc(q)}</span>`).join('')}</div>
+      <div class="chat-input"><textarea id="chatText" rows="1" placeholder="Escribe tu pregunta…"></textarea>
+        <button class="btn sm" data-action="chatSend" ${S.chatBusy ? 'disabled' : ''}>➤</button></div></div>`;
+  }
+
+  html += `<div class="card"><h2 style="margin-top:0">📚 Prompts institucionales</h2>
+    <p class="small muted">${hasKey ? 'Tócalos para que Claude los responda con los datos de tu cartera.' : 'Cópialos y pégalos en el chat de IA que uses.'}</p>
+    <label class="field">Activo de referencia<select id="iaSym">${syms.map((x) => `<option ${x === sel ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+    ${PROMPTS.map((p) => `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
+      <div class="grow"><b class="small">${p.n}. ${esc(p.t)}</b><div class="tiny muted">${esc(p.s)}</div></div>
+      ${hasKey ? `<button class="btn sm" data-action="chatPrompt" data-n="${p.n}">Preguntar</button>`
+        : `<button class="btn secondary sm" data-action="copyPrompt" data-kind="lib" data-n="${p.n}">Copiar</button>`}</div>`).join('')}
+    <div class="btn-row" style="margin-top:10px"><button class="btn secondary sm" data-action="copyPrompt" data-kind="super">📋 Copiar superprompt de ${sel}</button>
+      <button class="btn secondary sm" data-action="copyPrompt" data-kind="portfolio" ${open.length ? '' : 'disabled'}>📋 Copiar prompt de cartera</button></div></div>`;
   return html;
 }
 
@@ -664,7 +1043,7 @@ function portfolioText() {
 function viewAjustes() {
   const used = (() => { try { let n = 0; for (const k in localStorage) if (Object.prototype.hasOwnProperty.call(localStorage, k)) n += (localStorage.getItem(k) || '').length * 2; return n; } catch { return 0; } })();
   const d = S.data;
-  const pending = (S.pf.pending || []).filter((s) => !tk(s));
+  const pending = (S.book.pending || []).filter((s) => !tk(s));
   const hasToken = !!(S.settings.ghToken || '').trim();
   return `<div class="card"><h2 style="margin-top:0">📡 Datos</h2>
     <div class="kv"><div><span>Análisis diario</span><b>${esc(fmtStamp(d.generated_at))}</b></div><div><span>Precios intradía</span><b>${S.quotes ? esc(fmtStamp(S.quotes.generated_at)) : '—'}</b></div>
@@ -694,7 +1073,7 @@ function viewAjustes() {
     <p class="small muted">Para que las noticias lleguen <b>traducidas, resumidas y priorizadas por Claude</b>, agrega en GitHub → Settings → Secrets and variables → Actions un secreto llamado <code>ANTHROPIC_API_KEY</code>. El run diario clasifica hasta 250 titulares (costo aproximado US$0,5/día con claude-opus-5; la variable <code>NEWS_MODEL</code> permite elegir otro modelo).</p></div>
 
     <div class="card"><h2 style="margin-top:0">💾 Mi información</h2>
-    <div class="kv"><div><span>Transacciones</span><b>${S.pf.tx.length}</b></div><div><span>Favoritos</span><b>${S.pf.fav.length}</b></div><div><span>Bitácora</span><b>${S.pf.log.length}</b></div><div><span>Uso local</span><b>${fmtN(used / 1024, 0)} KB</b></div></div>
+    <div class="kv"><div><span>Transacciones</span><b>${PF().tx.length}</b></div><div><span>Favoritos</span><b>${PF().fav.length}</b></div><div><span>Bitácora</span><b>${S.book.log.length}</b></div><div><span>Uso local</span><b>${fmtN(used / 1024, 0)} KB</b></div></div>
     <p class="small muted">Tu cartera vive solo en este teléfono (localStorage). Haz un respaldo periódico: el archivo sirve para restaurar en otro dispositivo.</p>
     <div class="btn-row"><button class="btn secondary" data-action="export">⬇️ Exportar respaldo</button><button class="btn secondary" data-action="import">⬆️ Importar</button></div>
     <label class="field row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="showClp" ${S.settings.showClp ? 'checked' : ''} style="width:auto;margin:0"> Mostrar equivalente en pesos chilenos (USD/CLP)</label>
@@ -704,8 +1083,8 @@ function viewAjustes() {
     <p class="small muted">Anota aquí lo que quieres cambiar de la app o del modelo. Luego cópiala y pégamela en el chat: cada versión aprende de tu feedback.</p>
     <label class="field">Nueva nota<textarea id="logText" placeholder="Ej: el score de largo plazo castiga demasiado a las empresas con deuda…"></textarea></label>
     <button class="btn secondary" data-action="addLog">＋ Guardar nota</button>
-    ${S.pf.log.slice().reverse().slice(0, 10).map((l) => `<div class="small" style="padding:6px 0;border-top:1px solid var(--border)"><span class="muted tiny">${l.d}</span><br>${esc(l.t)}</div>`).join('')}
-    ${S.pf.log.length ? `<button class="btn secondary sm" data-action="copyLog" style="margin-top:8px">📋 Copiar bitácora</button>` : ''}</div>
+    ${S.book.log.slice().reverse().slice(0, 10).map((l) => `<div class="small" style="padding:6px 0;border-top:1px solid var(--border)"><span class="muted tiny">${l.d}</span><br>${esc(l.t)}</div>`).join('')}
+    ${S.book.log.length ? `<button class="btn secondary sm" data-action="copyLog" style="margin-top:8px">📋 Copiar bitácora</button>` : ''}</div>
 
     <div class="card"><h2 style="margin-top:0">📐 Cómo se calcula la señal</h2>
     <ul class="reasons"><li><b>Corto plazo</b>: tendencia (SMA20/50), RSI y momentum 1M, MACD, volumen, Bandas de Bollinger.</li>
@@ -729,7 +1108,7 @@ function openDetail(sym, silent = false) {
   S.detail = sym;
   const a = t.analysts, hist = S.history[sym] || [];
   const { open } = positions(); const pos = open.find((p) => p.sym === sym);
-  const fav = S.pf.fav.includes(sym);
+  const fav = PF().fav.includes(sym);
   const cov = t.tech.rating;
   let html = `<div class="page-head"><button class="icon-btn" data-action="closePage" aria-label="Volver">←</button>
     <div class="grow"><div class="row"><span class="sym" style="font-size:18px">${t.sym}</span>${t.etf ? '<span class="tag">ETF</span>' : ''}${t.src === 'vivo' ? '<span class="tag live">vivo</span>' : t.src === 'intradia' ? '<span class="tag">intradía</span>' : ''}</div><div class="name ellipsis">${esc(t.name)}${t.sector ? ` · ${esc(t.sector)}` : ''}</div></div>
@@ -753,14 +1132,8 @@ function openDetail(sym, silent = false) {
     ${['short', 'medium', 'long'].map((h) => { const parts = Object.entries(t.h[h].parts || {}).filter(([, v]) => v != null); return parts.length ? `<details><summary class="small">Desglose ${HZ[h].toLowerCase()}</summary><div class="hbars" style="margin:6px 0">${parts.map(([k, v]) => scoreBar(v, PART_LABEL[k] || k)).join('')}</div></details>` : ''; }).join('')}
     ${t.reasons.length ? `<h3>Por qué</h3><ul class="reasons">${t.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</div>`;
 
-  if (a && (a.count || a.target?.mean)) {
-    const d = a.dist, tot = d ? d.sb + d.b + d.h + d.s + d.ss : 0;
-    html += `<div class="card"><div class="between"><h2 style="margin:0">Wall Street</h2>${a.key ? chip(a.key) : ''}</div><div class="small muted">${a.count} analistas · media ${a.mean ?? '—'} (1 = compra fuerte, 5 = venta fuerte)</div>
-      ${tot ? `<div class="stack" style="margin-top:8px">${[['sb', 'sb'], ['b', 'b'], ['h', 'h'], ['s', 's'], ['ss', 'ss']].map(([k, c2]) => d[k] ? `<i class="c-${c2}" style="width:${(d[k] / tot) * 100}%"></i>` : '').join('')}</div>
-      <div class="legend"><span><i class="c-sb"></i>Compra fuerte ${d.sb}</span><span><i class="c-b"></i>Compra ${d.b}</span><span><i class="c-h"></i>Mantener ${d.h}</span><span><i class="c-s"></i>Venta ${d.s}</span><span><i class="c-ss"></i>Venta fuerte ${d.ss}</span></div>` : ''}
-      ${a.target?.mean ? targetRange(t.price, a.target) : ''}
-      ${a.revisions ? `<div class="small" style="margin-top:6px">Revisiones EPS (30 días): <b class="up">${a.revisions.up} ↑</b> · <b class="down">${a.revisions.down} ↓</b></div>` : ''}</div>`;
-  }
+  const an = analystBlock(t);
+  if (an) html += `<div class="card">${an}</div>`;
 
   html += `<div class="card"><div class="between"><h2 style="margin:0">Técnico</h2>${cov ? chip(cov.label) : ''}</div>
     ${cov ? `<div class="small muted">${cov.buy} indicadores compran · ${cov.neutral} neutrales · ${cov.sell} venden (estilo TradingView)</div>` : ''}
@@ -784,7 +1157,7 @@ function openDetail(sym, silent = false) {
     <div class="between tiny muted mono"><span>${hist[0].d}: ${hist[0].s} (${SIG_LABEL[hist[0].sig]})</span><span>${hist[hist.length - 1].d}: ${hist[hist.length - 1].s}</span></div></div>`;
 
   if (t.news?.length) {
-    const mine = held(), favs = new Set(S.pf.fav);
+    const mine = held(), favs = new Set(PF().fav);
     const items = t.news.map((n) => { const r = newsRank({ ...n, sym }, mine, favs, new Set()); return { ...n, sym, rank: r, lvl: newsLevel(r), mine: mine.has(sym) }; }).sort((x, y2) => y2.rank - x.rank);
     html += `<div class="card news"><h2 style="margin-top:0">Noticias</h2>${items.map(newsItem).join('')}</div>`;
   }
@@ -816,7 +1189,7 @@ function positionAdvice(t, pos) {
 
 // ---- TRANSACCIONES ------------------------------------------------------------
 function openTxSheet({ type = 'buy', sym = '', id = null } = {}) {
-  const t = id ? S.pf.tx.find((x) => x.id === id) : null;
+  const t = id ? PF().tx.find((x) => x.id === id) : null;
   if (t) { type = t.type; sym = t.sym; }
   const d = tk(sym);
   const { open } = positions(); const pos = open.find((p) => p.sym === sym);
@@ -854,12 +1227,88 @@ function saveTx(id) {
   const d = tk(sym);
   if (!d) addPending(sym);
   const rec = { id: id || uid(), sym, type, qty, price, date, note, sig: d?.signal || null, score: d?.score ?? null };
-  if (id) { const i = S.pf.tx.findIndex((x) => x.id === id); const old = S.pf.tx[i]; S.pf.tx[i] = { ...old, qty, price, date, note, type, amount: undefined, snapValue: undefined }; }
-  else S.pf.tx.push(rec);
+  if (id) { const i = PF().tx.findIndex((x) => x.id === id); const old = PF().tx[i]; PF().tx[i] = { ...old, qty, price, date, note, type, amount: undefined, snapValue: undefined }; }
+  else PF().tx.push(rec);
   savePf(); closeSheet(); toast(type === 'buy' ? 'Compra registrada' : 'Venta registrada');
   if (!$('#page').hidden && S.detail) openDetail(S.detail); render();
 }
-function addPending(sym) { if (!S.pf.pending) S.pf.pending = []; if (!S.pf.pending.includes(sym)) { S.pf.pending.push(sym); savePf(); } }
+function addPending(sym) { if (!S.book.pending) S.book.pending = []; if (!S.book.pending.includes(sym)) { S.book.pending.push(sym); savePf(); } }
+
+// ----------------------------------------------------------------------------
+// Carteras: cambiar, crear, renombrar, compartir
+// ----------------------------------------------------------------------------
+function openBookSheet() {
+  const rows = S.book.list.map((p) => {
+    const { open } = positionsOf(p);
+    const val = open.reduce((a, x) => a + (x.value || 0), 0);
+    return `<div class="pf-row ${p.id === S.book.active ? 'on' : ''}" data-action="pfSwitch" data-id="${p.id}">
+      <span class="dot"></span>
+      <div class="grow"><b>${esc(p.name)}</b>${p.ro ? ' <span class="tag">solo lectura</span>' : ''}
+        <div class="tiny muted">${open.length} posiciones · ${fmtUSD(val)}</div></div>
+      ${p.id === S.book.active ? '<span class="chip accent sm">activa</span>' : ''}</div>`;
+  }).join('');
+  openSheet(`<h2 style="margin-top:4px">Mis carteras</h2>
+    <p class="tiny muted">Todo se guarda en este teléfono. Puedes seguir varias carteras y comparar; la app se ajusta a la que tengas activa.</p>
+    ${rows}
+    <div class="btn-row" style="margin-top:12px"><button class="btn" data-action="pfNew">＋ Nueva cartera</button>
+      <button class="btn secondary" data-action="pfShare">🔗 Compartir</button></div>
+    <div class="btn-row"><button class="btn secondary sm" data-action="pfRename">Renombrar</button>
+      ${S.book.list.length > 1 ? `<button class="btn danger sm" data-action="pfDelete">Eliminar esta</button>` : ''}</div>`);
+}
+
+function pfSwitch(id) {
+  if (!S.book.list.some((p) => p.id === id)) return;
+  S.book.active = id; savePf(); closeSheet(); S.detail = null; render(); syncHeader();
+  toast(`Cartera: ${PF().name}`);
+}
+function pfNew(name, tx = [], ro = false) {
+  const p = { id: uid(), name: (name || 'Nueva cartera').slice(0, 40), ro, tx, fav: [] };
+  S.book.list.push(p); S.book.active = p.id; savePf(); render(); syncHeader();
+  return p;
+}
+function syncHeader() { const el = $('#pfName'); if (el) el.textContent = PF().name; }
+
+/** Enlace compartible: la cartera viaja comprimida en el # de la URL, sin servidores. */
+function encodePortfolio(p) {
+  const { open } = positionsOf(p);
+  const rows = open.map((x) => [x.sym, +(x.qty || 0).toFixed(6), +(x.avg || 0).toFixed(4)].join(':')).join(';');
+  const payload = `${p.name.replace(/[|;]/g, ' ')}|${rows}`;
+  return btoa(unescape(encodeURIComponent(payload))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function decodePortfolio(code) {
+  try {
+    const json = decodeURIComponent(escape(atob(code.replace(/-/g, '+').replace(/_/g, '/'))));
+    const [name, rows] = json.split('|');
+    const tx = (rows || '').split(';').filter(Boolean).map((r, i) => {
+      const [sym, qty, price] = r.split(':');
+      return { id: 'sh' + i, sym, type: 'buy', qty: +qty, price: +price, date: today(), note: 'Cartera compartida' };
+    });
+    return tx.length ? { name: name || 'Cartera compartida', tx } : null;
+  } catch { return null; }
+}
+function pfShare() {
+  const p = PF();
+  const url = `${location.origin}${location.pathname}#p=${encodePortfolio(p)}`;
+  openSheet(`<h2 style="margin-top:4px">Compartir "${esc(p.name)}"</h2>
+    <p class="small muted">Quien abra este enlace verá tu cartera <b>en modo solo lectura</b>: no puede editarla ni afecta la tuya, y podrá crear la suya propia. El enlace lleva los datos dentro; si cambias posiciones, genera uno nuevo.</p>
+    <textarea id="shareUrl" style="width:100%;height:110px;font-size:11px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:8px">${esc(url)}</textarea>
+    <div class="btn-row"><button class="btn" data-action="copyText" data-target="shareUrl">📋 Copiar enlace</button>
+      ${navigator.share ? '<button class="btn secondary" data-action="shareUrlNative">Compartir…</button>' : ''}</div>`);
+}
+/** Si la URL trae una cartera compartida, se ofrece agregarla. */
+function checkSharedLink() {
+  const m = location.hash.match(/[#&]p=([A-Za-z0-9\-_]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  const p = decodePortfolio(m[1]);
+  if (!p) return toast('El enlace compartido no se pudo leer');
+  if (S.book.list.some((x) => x.ro && x.name === p.name && x.tx.length === p.tx.length)) return;
+  openSheet(`<h2 style="margin-top:4px">🔗 Cartera compartida</h2>
+    <p class="small">Alguien compartió <b>${esc(p.name)}</b> con ${p.tx.length} posiciones. Se agregará en <b>solo lectura</b>: podrás verla y compararla, pero no editarla. Tu cartera no se toca.</p>
+    <div class="btn-row"><button class="btn" data-action="pfAcceptShare">Agregar y ver</button>
+      <button class="btn secondary" data-action="closeSheet">Ahora no</button></div>`);
+  S.pendingShare = p;
+}
 
 // ----------------------------------------------------------------------------
 // OCR: importar posiciones desde capturas de Racional
@@ -1011,10 +1460,10 @@ function ocrImport() {
   const d0 = today();
   for (const r of rows) {
     const sym = r.sym.toUpperCase();
-    S.pf.tx = S.pf.tx.filter((t) => t.sym !== sym);
+    PF().tx = PF().tx.filter((t) => t.sym !== sym);
     const d = tk(sym);
     const avg = r.avg ?? r.price ?? null;
-    S.pf.tx.push({
+    PF().tx.push({
       id: uid(), sym, type: 'buy',
       qty: r.qty != null ? +r.qty.toFixed(8) : null,
       price: avg != null ? +avg.toFixed(4) : null,
@@ -1030,12 +1479,22 @@ function ocrImport() {
 // ----------------------------------------------------------------------------
 // Sheet / page helpers
 // ----------------------------------------------------------------------------
+/** Las carteras compartidas no se editan: se ofrece copiarlas a una propia. */
+function roGuard() {
+  if (!isRO()) return false;
+  openSheet(`<h2 style="margin-top:4px">Cartera de solo lectura</h2>
+    <p class="small">"${esc(PF().name)}" llegó por un enlace compartido, así que no se puede editar. Puedes duplicarla para trabajar sobre una copia tuya, o crear una cartera nueva desde cero.</p>
+    <div class="btn-row"><button class="btn" data-action="pfDuplicate">Duplicar como mía</button>
+      <button class="btn secondary" data-action="pfNew">Crear una vacía</button></div>`);
+  return true;
+}
+
 function openSheet(html) { $('#sheetContent').innerHTML = html; $('#sheet').hidden = false; }
 function closeSheet() { $('#sheet').hidden = true; }
 function closePage() { $('#page').hidden = true; document.body.classList.remove('locked'); S.detail = null; render(); }
 
 function exportBackup() {
-  const payload = { app: 'market-intelligence-ai', version: APP_VERSION, exported: new Date().toISOString(), portfolio: S.pf, settings: { showClp: S.settings.showClp } };
+  const payload = { app: 'market-intelligence-ai', version: APP_VERSION, exported: new Date().toISOString(), book: S.book, settings: { showClp: S.settings.showClp } };
   const text = JSON.stringify(payload, null, 1);
   openSheet(`<h2 style="margin-top:4px">Respaldo</h2><p class="small muted">Copia este texto y guárdalo (Notas, correo, Drive). Para restaurar: Ajustes → Importar → pegar. No incluye tus claves.</p>
     <textarea id="bk" style="width:100%;height:220px;font-size:11px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:8px">${esc(text)}</textarea>
@@ -1048,12 +1507,17 @@ function importBackup() {
 }
 function doImport() {
   try {
-    const j = JSON.parse($('#bkIn').value); const pf = j.portfolio || j;
+    const j = JSON.parse($('#bkIn').value);
+    if (j.book?.list?.length) {                        // respaldo v1.4: reemplaza el libro completo
+      S.book = j.book; savePf(); saveSettings(); closeSheet(); render();
+      return toast(`Restauradas ${j.book.list.length} cartera(s)`);
+    }
+    const pf = j.portfolio || j;
     if (!Array.isArray(pf.tx)) throw new Error('formato');
-    const ids = new Set(S.pf.tx.map((t) => t.id));
-    let n = 0; for (const t of pf.tx) if (t && t.sym && !ids.has(t.id)) { S.pf.tx.push({ ...t, id: t.id || uid() }); n++; }
-    S.pf.fav = [...new Set([...(S.pf.fav || []), ...(pf.fav || [])])];
-    S.pf.log = [...(S.pf.log || []), ...(pf.log || []).filter((l) => !S.pf.log.some((x) => x.d === l.d && x.t === l.t))];
+    const ids = new Set(PF().tx.map((t) => t.id));
+    let n = 0; for (const t of pf.tx) if (t && t.sym && !ids.has(t.id)) { PF().tx.push({ ...t, id: t.id || uid() }); n++; }
+    PF().fav = [...new Set([...(PF().fav || []), ...(pf.fav || [])])];
+    S.book.log = [...(S.book.log || []), ...(pf.log || []).filter((l) => !S.book.log.some((x) => x.d === l.d && x.t === l.t))];
     if (j.settings?.showClp != null) S.settings.showClp = j.settings.showClp;
     savePf(); saveSettings(); closeSheet(); render(); toast(`Importados ${n} movimientos`);
   } catch { toast('JSON inválido'); }
@@ -1077,38 +1541,57 @@ document.addEventListener('click', async (e) => {
   const a = el.dataset.action, sym = el.dataset.sym;
   switch (a) {
     case 'detail': if (sym) openDetail(sym); break;
+    case 'book': openBookSheet(); break;
+    case 'pfSwitch': pfSwitch(el.dataset.id); break;
+    case 'pfNew': { const n = prompt('Nombre de la nueva cartera', 'Cartera ' + (S.book.list.length + 1)); if (n) { pfNew(n); closeSheet(); toast('Cartera creada'); } break; }
+    case 'pfRename': { const n = prompt('Nuevo nombre', PF().name); if (n) { PF().name = n.slice(0, 40); savePf(); closeSheet(); render(); syncHeader(); } break; }
+    case 'pfDelete': if (S.book.list.length > 1 && confirm(`¿Eliminar la cartera "${PF().name}"?`)) { S.book.list = S.book.list.filter((x) => x.id !== S.book.active); S.book.active = S.book.list[0].id; savePf(); closeSheet(); render(); syncHeader(); toast('Cartera eliminada'); } break;
+    case 'pfShare': pfShare(); break;
+    case 'pfDuplicate': { const src = PF(); pfNew(src.name + ' (mi copia)', src.tx.map((t) => ({ ...t, id: uid() })), false); closeSheet(); render(); toast('Cartera duplicada'); break; }
+    case 'shareUrlNative': try { await navigator.share({ title: 'Mi cartera', url: $('#shareUrl').value }); } catch { /* cancelado */ } break;
+    case 'pfAcceptShare': { const p = S.pendingShare;
+      if (p) { let n = p.name; if (S.book.list.some((x) => x.name === n)) n = `${n} (compartida)`; pfNew(n, p.tx, true); S.pendingShare = null; }
+      closeSheet(); render(); syncHeader(); break; }
+    case 'carteraView': S.carteraView = el.dataset.v; render(); break;
+    case 'saveAiKey': { const k = ($('#aiKey')?.value || '').trim(); if (!k) return toast('Pega la clave'); S.settings.aiKey = k; saveSettings(); render(); toast('Chat activado'); break; }
+    case 'chatSend': { const el2 = $('#chatText'); const q = el2?.value || ''; if (el2) el2.value = ''; aiSend(q); break; }
+    case 'chatAsk': aiSend(el.dataset.q); break;
+    case 'chatClear': S.chat = []; saveChat(); render(); break;
+    case 'chatPrompt': { const pr = PROMPTS.find((x) => x.n === +el.dataset.n); const sy = $('#iaSym')?.value || S.iaSym; const t = tk(sy);
+      S.tab = 'ia'; aiSend(pr.b(t ? tickerBrief(t) : sy, portfolioText())); break; }
+    case 'radarView': S.radarView = el.dataset.v; render(); break;
     case 'closePage': closePage(); break;
     case 'closeSheet': closeSheet(); break;
-    case 'addTx': openTxSheet({ type: el.dataset.type || 'buy', sym: sym || '' }); break;
-    case 'editTx': openTxSheet({ id: el.dataset.id }); break;
+    case 'addTx': if (roGuard()) break; openTxSheet({ type: el.dataset.type || 'buy', sym: sym || '' }); break;
+    case 'editTx': if (roGuard()) break; openTxSheet({ id: el.dataset.id }); break;
     case 'saveTx': saveTx(el.dataset.id || null); break;
-    case 'deleteTx': if (confirm('¿Eliminar este movimiento?')) { S.pf.tx = S.pf.tx.filter((t) => t.id !== el.dataset.id); savePf(); closeSheet(); render(); if (S.detail) openDetail(S.detail); } break;
-    case 'fav': { const i = S.pf.fav.indexOf(sym); if (i >= 0) S.pf.fav.splice(i, 1); else S.pf.fav.push(sym); savePf(); openDetail(sym, true); break; }
+    case 'deleteTx': if (confirm('¿Eliminar este movimiento?')) { PF().tx = PF().tx.filter((t) => t.id !== el.dataset.id); savePf(); closeSheet(); render(); if (S.detail) openDetail(S.detail); } break;
+    case 'fav': { const i = PF().fav.indexOf(sym); if (i >= 0) PF().fav.splice(i, 1); else PF().fav.push(sym); savePf(); openDetail(sym, true); break; }
     case 'reload': loadData(true); break;
     case 'updateMarket': updateMarket(); break;
     case 'runFull': { const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { mode: 'full' }); toast(ok ? 'Análisis completo lanzado (~20 min)' : 'No se pudo lanzar (revisa el token)'); break; }
-    case 'ocr': openOcrSheet(); break;
+    case 'ocr': if (roGuard()) break; openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
     case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} quedó pendiente de agregar al radar (Ajustes)`); } break;
     case 'saveKeys': S.settings.finnhubKey = ($('#finnhubKey')?.value ?? S.settings.finnhubKey ?? '').trim(); S.settings.ghToken = ($('#ghToken')?.value ?? S.settings.ghToken ?? '').trim(); saveSettings(); toast('Guardado'); render({ keepScroll: true }); break;
     case 'testLive': { S.settings.finnhubKey = ($('#finnhubKey')?.value || '').trim(); saveSettings(); await refreshLive(['AAPL']); toast(S.live.AAPL ? `OK: AAPL ${fmtUSD(S.live.AAPL.p)}` : 'Sin respuesta: revisa la clave'); break; }
     case 'addPending': {
-      const syms = (S.pf.pending || []).filter((s) => !tk(s)); if (!syms.length) break;
-      try { const n = await addToUniverse(S.settings.ghToken.trim(), syms); S.pf.pending = []; savePf(); const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { only: syms.join(','), mode: 'full', discover: 'false' }); toast(`${n} ticker(s) agregados${ok ? '; análisis lanzado (~3 min)' : ''}`); render({ keepScroll: true }); }
+      const syms = (S.book.pending || []).filter((s) => !tk(s)); if (!syms.length) break;
+      try { const n = await addToUniverse(S.settings.ghToken.trim(), syms); S.book.pending = []; savePf(); const ok = await dispatchWorkflow(S.settings.ghToken.trim(), REPO.workflow, { only: syms.join(','), mode: 'full', discover: 'false' }); toast(`${n} ticker(s) agregados${ok ? '; análisis lanzado (~3 min)' : ''}`); render({ keepScroll: true }); }
       catch (err) { toast('Error: ' + err.message); }
       break;
     }
-    case 'copyPending': copy((S.pf.pending || []).join(', ')); break;
-    case 'clearPending': S.pf.pending = []; savePf(); render({ keepScroll: true }); break;
+    case 'copyPending': copy((S.book.pending || []).join(', ')); break;
+    case 'clearPending': S.book.pending = []; savePf(); render({ keepScroll: true }); break;
     case 'export': exportBackup(); break;
     case 'import': importBackup(); break;
     case 'doImport': doImport(); break;
     case 'copyText': copy($('#' + el.dataset.target).value); break;
     case 'shareBk': try { await navigator.share({ title: 'Respaldo Market IA', text: $('#bk').value }); } catch { /* cancelado */ } break;
-    case 'reset': if (confirm('Se borrará tu cartera, favoritos y bitácora de este dispositivo. ¿Continuar?')) { localStorage.removeItem(LS.portfolio); S.pf = { tx: [], fav: [], log: [], pending: [] }; render(); toast('Información borrada'); } break;
-    case 'addLog': { const t = $('#logText').value.trim(); if (!t) return; S.pf.log.push({ d: today(), t }); savePf(); render(); toast('Nota guardada'); break; }
-    case 'copyLog': copy(S.pf.log.map((l) => `[${l.d}] ${l.t}`).join('\n')); break;
+    case 'reset': if (confirm(`Se borrarán los movimientos y favoritos de "${PF().name}". ¿Continuar?`)) { PF().tx = []; PF().fav = []; savePf(); render(); toast('Cartera vaciada'); } break;
+    case 'addLog': { const t = $('#logText').value.trim(); if (!t) return; S.book.log.push({ d: today(), t }); savePf(); render(); toast('Nota guardada'); break; }
+    case 'copyLog': copy(S.book.log.map((l) => `[${l.d}] ${l.t}`).join('\n')); break;
     case 'copyPrompt': {
       const kind = el.dataset.kind; const s = sym || $('#iaSym')?.value || S.iaSym;
       if (kind === 'super') copy(buildSuperPrompt(s));
@@ -1132,13 +1615,19 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', (e) => {
   if (e.target.id === 'iaSym') { S.iaSym = e.target.value; render(); }
+  if (e.target.id === 'calMonth') { S.calMonth = e.target.value; render({ keepScroll: true }); }
   if (e.target.id === 'showClp') { S.settings.showClp = e.target.checked; saveSettings(); }
   if (e.target.dataset.ocr && S.ocr) $('#ocrResult').innerHTML = renderOcrTable(); // recalcula cantidades al terminar de editar
 });
 $('#btnRefresh').addEventListener('click', () => updateMarket());
+document.addEventListener('keydown', (e) => {
+  if (e.target.id === 'chatText' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const q = e.target.value; e.target.value = ''; aiSend(q); }
+});
 window.addEventListener('popstate', () => { if (!$('#page').hidden) closePage(); else if (!$('#sheet').hidden) closeSheet(); });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 loadData.at = 0;
+syncHeader();
 loadData();
+checkSharedLink();

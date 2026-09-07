@@ -526,14 +526,14 @@ def batch_history(symbols: list, chunk=120, period="1y") -> dict:
     return out
 
 
-def fetch_meta(sym: str, want_news: bool = True) -> dict:
+def fetch_meta(sym: str, want_news: bool = True, want_qs: bool = True) -> dict:
     """Un request de quoteSummary (+ noticias) por activo."""
     from yfinance.data import YfData
     from yfinance.scrapers.quote import _QUOTE_SUMMARY_URL_
     out = {"sym": sym, "errors": [], "mods": {}}
     params = {"modules": ",".join(QS_MODULES), "corsDomain": "finance.yahoo.com",
               "formatted": "false", "symbol": sym}
-    for attempt in range(3):
+    for attempt in range(3 if want_qs else 0):
         try:
             j = YfData().get_raw_json(f"{_QUOTE_SUMMARY_URL_}/{sym}", params=params, timeout=20)
             res = (j.get("quoteSummary") or {}).get("result") or []
@@ -887,7 +887,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true", help="datos sintéticos, sin internet")
     ap.add_argument("--only", help="lista de tickers separada por comas")
-    ap.add_argument("--mode", choices=["fast", "daily", "full"], default="daily")
+    ap.add_argument("--mode", choices=["fast", "news", "daily", "full"], default="daily")
     ap.add_argument("--workers", type=int, default=env_int("WORKERS", 8))
     ap.add_argument("--refresh-days", type=float, default=3.0, help="antigüedad máxima de los metadatos")
     ap.add_argument("--max-meta", type=int, default=0, help="0 = automático según el modo")
@@ -950,9 +950,15 @@ def main():
         priority.add(c["sym"])
     priority &= set(all_syms)
 
+    news_only = args.mode == "news"
     if args.mode == "fast":
         need = sorted(s for s in all_syms if meta_age_days(s) > 30)  # solo los que no tienen nada
         cap = 60
+    elif news_only:
+        # Refresco barato cada pocas horas: solo titulares de lo que te importa.
+        need = sorted(priority) + [t["sym"] for t in prev.get("tickers", [])[:120]]
+        need = list(dict.fromkeys(need))
+        cap = env_int("NEWS_TICKERS", 260)
     elif args.mode == "full":
         need, cap = all_syms, len(all_syms)
     else:
@@ -960,25 +966,30 @@ def main():
         stale.sort(key=meta_age_days, reverse=True)
         need = list(dict.fromkeys(list(priority) + stale))
         cap = args.max_meta or env_int("MAX_META", 420)
-    need = [s for s in need if s in hists or args.demo][:max(cap, 0)]
+    universe_set = set(all_syms)
+    need = [s for s in need if s in universe_set and (s in hists or args.demo)][:max(cap, 0)]
     print(f"-- metadatos a refrescar: {len(need)} de {len(all_syms)} "
           f"(prioritarios {len(priority)}, resto por antigüedad)", flush=True)
 
-    metas = {}
+    metas, news_map = {}, {}
     if args.demo:
         metas = {s: demo_meta[s] for s in need}
+        news_map = {s: demo_meta[s].get("news") or [] for s in need}
     elif need:
         t1 = time.time()
         done = 0
         with ThreadPoolExecutor(max_workers=args.workers) as ex:
-            futs = {ex.submit(fetch_meta, s): s for s in need}
+            futs = {ex.submit(fetch_meta, s, True, not news_only): s for s in need}
             for fut in as_completed(futs):
                 s = futs[fut]
                 try:
                     raw = fut.result()
+                    news_map[s] = raw.get("news") or []
+                    if news_only:
+                        done += 1
+                        continue
                     parsed = parse_modules(raw.get("mods") or {},
                                            price_hint=float(hists[s]["Close"].iloc[-1]) if s in hists else None)
-                    parsed["news"] = raw.get("news") or []
                     parsed["errors"] = raw.get("errors") or []
                     metas[s] = parsed
                 except Exception as e:
@@ -1004,11 +1015,13 @@ def main():
             continue
         if fresh and not (fresh["fund"].get("name") or fresh["fund"].get("market_cap") or fresh["fund"].get("price")):
             fresh = None                             # respuesta vacía: mejor conservar la caché
+        cutoff_news = (now - timedelta(days=W["retention"]["news_max_age_days"])).isoformat()[:16]
+        fresh_news = (parse_news(news_map[sym], W["retention"]["news_max_age_days"],
+                                 W["retention"]["news_per_ticker"]) if sym in news_map else None)
         if fresh:
             meta = {"fund": fresh["fund"], "analysts": fresh["analysts"],
                     "earnings_date": fresh["earnings_date"], "meta_at": now.isoformat(timespec="minutes"),
-                    "news_parsed": parse_news(fresh.get("news"), W["retention"]["news_max_age_days"],
-                                              W["retention"]["news_per_ticker"])}
+                    "news_parsed": fresh_news if fresh_news is not None else []}
         elif p:                                      # reutiliza metadatos del snapshot anterior
             f = dict(p.get("fund") or {})
             f.update({"name": p.get("name"), "sector": p.get("sector"), "industry": p.get("industry"),
@@ -1021,8 +1034,8 @@ def main():
                                  "target_low": (a.get("target") or {}).get("low"),
                                  "upside": None, "dist": a.get("dist"), "revisions": a.get("revisions")} if a else {},
                     "earnings_date": p.get("earnings_date"),
-                    "news_parsed": [n for n in (p.get("news") or [])
-                                    if n.get("d", "") >= (now - timedelta(days=W["retention"]["news_max_age_days"])).isoformat()[:16]]}
+                    "news_parsed": fresh_news if fresh_news is not None
+                    else [n for n in (p.get("news") or []) if n.get("d", "") >= cutoff_news]}
         else:
             meta = {"fund": {}, "analysts": {}, "earnings_date": None, "meta_at": None, "news_parsed": []}
         try:
@@ -1038,7 +1051,7 @@ def main():
     changes = signal_changes(tickers, history)
 
     # ---------------- noticias ----------------
-    from news_ai import classify_all
+    from news_ai import classify_all, market_brief
     news_by_tk = {t["sym"]: t["news"] for t in tickers if t.get("news")}
     max_ai = 0 if args.demo else env_int("NEWS_AI_MAX", 250)
     news_stats = classify_all(news_by_tk, max_ai=max_ai)
@@ -1055,6 +1068,10 @@ def main():
     market_news = market_news[: W["retention"]["market_news"]]
 
     tickers.sort(key=lambda x: -(x["score"] or 0))
+    brief = market_brief(regime, tickers, changes, market_news,
+                         portfolio_syms=universe.get("core") or None) if not args.demo else {
+        "text": "Resumen de demostración.", "bullets": [], "ai": False}
+    print(f"== resumen del día: {'IA' if brief.get('ai') else 'heurístico'}", flush=True)
     latest = {
         "generated_at": now.isoformat(timespec="minutes"), "date": today, "demo": bool(args.demo),
         "version": 3, "mode": args.mode, "elapsed_s": round(time.time() - t0),
@@ -1063,8 +1080,9 @@ def main():
         "changes": changes[:40], "tickers": tickers, "failed": failed,
         "investors": {i["short"]: i.get("name", i["short"]) for i in investors.get("investors", [])},
         "investors_note": investors.get("_note", ""),
-        "news_stats": news_stats,
-        "stats": {"ok": len(tickers), "failed": len(failed), "meta_refreshed": len(metas)},
+        "news_stats": news_stats, "brief": brief,
+        "stats": {"ok": len(tickers), "failed": len(failed), "meta_refreshed": len(metas),
+                  "news_refreshed": len(news_map)},
     }
     save_json(DATA_DIR / "latest.json", latest)
     save_json(DATA_DIR / "history.json", history)
