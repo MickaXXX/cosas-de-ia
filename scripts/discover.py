@@ -50,6 +50,24 @@ STOPWORDS = {
 }
 
 
+def held_symbols() -> list:
+    """Símbolos con posición abierta en las carteras publicadas. Son intocables:
+    lo que el dueño compra entra al radar y la poda nunca lo saca."""
+    book = load(DATA / "portfolios.json", {})
+    saldo = {}
+    for pf in book.get("list", []):
+        for t in pf.get("tx", []):
+            sym = str(t.get("sym") or "").strip().upper()
+            if not sym:
+                continue
+            try:
+                q = float(t.get("qty") or 0)
+            except (TypeError, ValueError):
+                continue
+            saldo[sym] = saldo.get(sym, 0) + (-q if t.get("type") == "sell" else q)
+    return sorted(s for s, q in saldo.items() if q > 1e-9)
+
+
 def load(path, default):
     try:
         return json.load(open(path, encoding="utf-8"))
@@ -147,6 +165,21 @@ def main():
     log = load(CONFIG / "discovered.json", {"added": {}, "seen": {}, "fails": {}})
     log.setdefault("fails", {})
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Antes que nada: el radar se pone al día con lo que hay en las carteras.
+    tenidos = held_symbols()
+    if tenidos:
+        antes = set(uni.get("core", []))
+        conocidos = antes | set(uni.get("stocks", [])) | set(uni.get("etfs", []))
+        entran = [s for s in tenidos if s not in conocidos]
+        salen = [s for s in antes if s not in tenidos]
+        uni["core"] = tenidos
+        if salen:                       # lo vendido deja de ser core pero sigue en el radar
+            uni["stocks"] = list(dict.fromkeys(list(uni.get("stocks", [])) + salen))
+        if entran:
+            print(f"-- compras nuevas al radar: {', '.join(entran)}", flush=True)
+        if salen:
+            print(f"-- salen de core (vendidas): {', '.join(salen)}", flush=True)
 
     known = set(uni.get("stocks", [])) | set(uni.get("etfs", [])) | set(uni.get("core", []))
     print(f"== descubridor :: universo actual {len(known)}", flush=True)

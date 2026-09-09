@@ -55,6 +55,13 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
 ## Novedades v1.5 — las mesas de análisis
 
+### Lo que compras entra solo al radar (v1.5.1)
+
+- **El radar sigue a tu cartera.** En cada análisis, `discover.py` lee las carteras publicadas y pone todas sus posiciones en `core` de `config/universe.json`: se analizan completas todos los días y la poda automática nunca las toca. Lo que vendes sale de `core` pero sigue en el radar general.
+- **Tus compras nuevas llegan sin credenciales.** Si tienes una acción que el radar no cubre, la app lo avisa en Cartera y con un toque abre un issue de GitHub **ya rellenado** con tu cartera; basta pulsar *Submit new issue*. El workflow `portfolio.yml` la publica, mete los símbolos nuevos al radar, los analiza al momento, recalcula las mesas y cierra el issue con el resumen. Solo acepta issues del dueño del repositorio, y valida cada símbolo antes de escribir nada.
+- De paso, la cartera queda publicada, así que el teléfono y el computador ven lo mismo.
+- **Corregido**: `update_data.py --only` reescribía `latest.json` con solo esos tickers y borraba el resto del radar. Ahora fusiona lo analizado con el snapshot anterior.
+
 La pestaña IA deja de ser un chat que hay que activar. Ahora son **diez mesas institucionales que revisan tu cartera todos los días y ya están escritas cuando abres la app**, sin claves ni configuración:
 
 | Mesa | Qué responde con tus datos |
