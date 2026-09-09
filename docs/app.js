@@ -4,13 +4,14 @@
  */
 'use strict';
 
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
 const QUOTES_URL = './data/quotes.json';
 const PUB_URL = './data/portfolios.json';
 const DESKS_URL = './data/desks.json';
+
 const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
 const SIG_LABEL = { strong_buy: 'Compra fuerte', buy: 'Compra', hold: 'Mantener', sell: 'Venta', strong_sell: 'Venta fuerte', neutral: 'Neutral' };
@@ -341,6 +342,15 @@ function viewCartera() {
   if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
     ${PF().pub ? 'Se actualiza sola desde el enlace. Si editas algo, se copia a este dispositivo automáticamente.' : ''}
     <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
+
+  // Compras que el radar todavía no analiza: se agregan al radar con un toque.
+  const faltan = missingFromRadar();
+  if (faltan.length && !isRO()) html += `<div class="card" style="border-color:var(--s)">
+      <div class="between"><b>🎯 ${faltan.length === 1 ? 'Una acción tuya no está' : `${faltan.length} acciones tuyas no están`} en el radar</b></div>
+      <div class="chips wrap" style="margin:6px 0">${faltan.map((x) => `<span class="chip gray">${esc(x)}</span>`).join('')}</div>
+      <p class="small muted">Sin ficha en el radar no tienen señal, ni objetivo de analistas, ni aparecen en las mesas. Agrégalas y el propio sitio las analiza en unos minutos.</p>
+      <button class="btn" data-action="syncRadar">➕ Agregar al radar</button>
+      <p class="tiny muted">Se abre GitHub con tu cartera ya escrita: pulsa "Submit new issue" y listo. Además queda publicada, así la ves igual en el teléfono y en el computador.</p></div>`;
 
   html += `<div class="seg" data-seg2="carteraView">${[['posiciones', 'Posiciones'], ['rendimiento', 'Rendimiento'], ['objetivos', 'Objetivos']]
     .map(([k, l]) => `<button data-action="carteraView" data-v="${k}" class="${S.carteraView === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
@@ -1182,9 +1192,10 @@ function viewAjustes() {
     <div class="btn-row"><button class="btn secondary sm" data-action="saveKeys">Guardar</button><button class="btn secondary sm" data-action="testLive">Probar</button></div></div>
 
     ${pending.length ? `<div class="card"><h2 style="margin-top:0">🎯 Tickers pendientes</h2>
-    <p class="small muted">Estos símbolos aún no están en el radar. El robot que descubre acciones los agrega solo en el próximo análisis diario si aparecen en noticias o en carteras de gurús.</p>
+    <p class="small muted">Símbolos que pediste desde el buscador y todavía no están en el radar.</p>
     <div class="chips wrap">${pending.map((s) => `<span class="chip gray">${esc(s)}</span>`).join('')}</div>
-    <div class="btn-row"><button class="btn secondary sm" data-action="copyPending">Copiar lista</button><button class="btn secondary sm" data-action="clearPending">Limpiar</button></div></div>` : ''}
+    <div class="btn-row"><button class="btn sm" data-action="syncRadar">➕ Agregar al radar</button><button class="btn secondary sm" data-action="copyPending">Copiar lista</button><button class="btn secondary sm" data-action="clearPending">Limpiar</button></div>
+    <p class="tiny muted">Se abre GitHub con la lista ya escrita: pulsa "Submit new issue" y el sitio los analiza en unos minutos.</p></div>` : ''}
 
     <div class="card"><h2 style="margin-top:0">💬 Chat con Claude <small>opcional</small></h2>
     <p class="small muted">Las mesas de análisis y el asistente funcionan sin ninguna clave. Si además quieres conversar en vivo con Claude sobre tu cartera, pega una clave de <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. Se guarda solo en este dispositivo y el cobro corre por tu cuenta.</p>
@@ -1354,6 +1365,36 @@ function saveTx(id) {
   savePf(); closeSheet(); toast(type === 'buy' ? 'Compra registrada' : 'Venta registrada');
   if (!$('#page').hidden && S.detail) openDetail(S.detail); render();
 }
+/** Posiciones abiertas cuyo símbolo todavía no está en el radar. */
+function missingFromRadar() {
+  return positions().open.filter((p) => !tk(p.sym)).map((p) => p.sym);
+}
+
+/** Abre un issue de GitHub ya rellenado con la cartera. El propio repositorio
+ *  la publica, mete los símbolos nuevos al radar y los analiza. Sin credenciales:
+ *  basta con la sesión de GitHub del navegador. */
+function syncToRadar() {
+  const repo = `${REPO.owner}/${REPO.name}`;
+  const pf = PF();
+  const tx = pf.tx.map((t) => ({ s: t.sym, t: t.type === 'sell' ? 'sell' : undefined, q: +(+t.qty).toFixed(6), p: +(+t.price).toFixed(4), d: t.date }))
+    .map((t) => (t.t ? t : { s: t.s, q: t.q, p: t.p, d: t.d }));
+  const watch = (S.book.pending || []).filter((x) => !tk(x)).slice(0, 20);
+  const payload = { app: 'mia', v: 1, watch, pf: { id: (pf.id || 'mia').replace(/^pub:/, ''), name: pf.name, fav: pf.fav || [], tx } };
+  const faltan = missingFromRadar();
+  const body = `La app generó esto. Publica \`Submit new issue\` y el repositorio hace el resto.\n\n`
+    + `Posiciones: ${positions().open.length}${faltan.length ? ` · nuevas para el radar: ${faltan.join(', ')}` : ''}`
+    + `${watch.length ? ` · en observación: ${watch.join(', ')}` : ''}\n\n`
+    + '```json\n' + JSON.stringify(payload) + '\n```';
+  const url = `https://github.com/${repo}/issues/new?title=${encodeURIComponent('cartera: ' + pf.name)}&body=${encodeURIComponent(body)}`;
+  if (url.length > 7500) {                      // URL demasiado larga: se va por el portapapeles
+    copy('```json\n' + JSON.stringify(payload) + '\n```');
+    window.open(`https://github.com/${repo}/issues/new?title=${encodeURIComponent('cartera: ' + pf.name)}`, '_blank', 'noopener');
+    return toast('Cartera copiada: pégala en el cuerpo del issue');
+  }
+  window.open(url, '_blank', 'noopener');
+  toast('Pulsa "Submit new issue" y listo');
+}
+
 function addPending(sym) { if (!S.book.pending) S.book.pending = []; if (!S.book.pending.includes(sym)) { S.book.pending.push(sym); savePf(); } }
 
 // ----------------------------------------------------------------------------
@@ -1726,7 +1767,8 @@ document.addEventListener('click', async (e) => {
     case 'ocr': if (roGuard()) break; openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
-    case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} quedó pendiente de agregar al radar (Ajustes)`); } break;
+    case 'syncRadar': syncToRadar(); break;
+    case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} anotado. Agrégalo al radar desde Ajustes`); } break;
     case 'saveKeys': S.settings.finnhubKey = ($('#finnhubKey')?.value ?? S.settings.finnhubKey ?? '').trim();
       S.settings.aiKey = ($('#aiKey')?.value ?? S.settings.aiKey ?? '').trim(); saveSettings(); toast('Guardado'); render({ keepScroll: true }); break;
     case 'clearAiKey': S.settings.aiKey = ''; saveSettings(); toast('Clave eliminada'); render({ keepScroll: true }); break;

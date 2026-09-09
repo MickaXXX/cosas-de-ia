@@ -1,0 +1,81 @@
+name: Sincronizar cartera
+
+# La app no guarda credenciales: cuando el dueño pulsa "Agregar al radar",
+# abre un issue titulado "cartera:" con sus posiciones en JSON. Aquí se publica
+# la cartera, los símbolos nuevos entran al radar y se analizan de inmediato.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: portfolio-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # Solo el dueño del repositorio puede cambiar la cartera publicada.
+    if: startsWith(github.event.issue.title, 'cartera:') && github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Aplicar la cartera
+        id: sync
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python scripts/sync_portfolio.py
+
+      - name: Analizar los símbolos nuevos
+        if: steps.sync.outputs.new_symbols != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_MODEL: ${{ vars.NEWS_MODEL }}
+        run: python scripts/update_data.py --mode full --only "${{ steps.sync.outputs.new_symbols }}"
+
+      - name: Recalcular mesas
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DESKS_MODEL: ${{ vars.DESKS_MODEL }}
+        run: python scripts/desks.py
+
+      - name: Publicar
+        run: |
+          git config user.name "market-intelligence-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
+          git add docs/data/portfolios.json docs/data/latest.json docs/data/history.json docs/data/desks.json config/universe.json
+          if git diff --cached --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "cartera: sincronizada desde la app [skip ci]"
+            git push
+          fi
+
+      - name: Cerrar el issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUEVOS: ${{ steps.sync.outputs.new_symbols }}
+          POSICIONES: ${{ steps.sync.outputs.positions }}
+        run: |
+          if [ -n "$NUEVOS" ]; then
+            MSG="Listo: $POSICIONES posiciones publicadas. Al radar entraron **$NUEVOS**, ya analizados. Abre la app y recarga."
+          else
+            MSG="Listo: $POSICIONES posiciones publicadas. Todas ya estaban en el radar. Abre la app y recarga."
+          fi
+          gh issue comment ${{ github.event.issue.number }} --body "$MSG"
+          gh issue close ${{ github.event.issue.number }} --reason completed

@@ -1,7 +1,7 @@
 /* Service worker: la app siempre intenta la red primero (así las versiones nuevas
  * llegan al instante); la caché solo entra si no hay conexión. Los archivos grandes
  * del OCR y los íconos sí se sirven desde caché porque no cambian. */
-const VERSION = 'mia-v1.5.0';
+const VERSION = 'mia-v1.5.1';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {

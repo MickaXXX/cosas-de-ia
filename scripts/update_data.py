@@ -1047,7 +1047,8 @@ def main():
     regime = market_regime(market)
 
     history = load_json(DATA_DIR / "history.json", {})
-    history = update_history(history, tickers, today, W["retention"]["history_days"], set(all_syms))
+    keep_hist = set(all_syms) if not args.only else set(all_syms) | {t["sym"] for t in prev.get("tickers", [])}
+    history = update_history(history, tickers, today, W["retention"]["history_days"], keep_hist)
     changes = signal_changes(tickers, history)
 
     # ---------------- noticias ----------------
@@ -1066,6 +1067,19 @@ def main():
             market_news.append(dict(nw))
     market_news.sort(key=lambda x: (-(x.get("prio") or 0), x.get("d") or ""))
     market_news = market_news[: W["retention"]["market_news"]]
+
+    # Con --only se analiza un puñado de tickers: el resto del radar se conserva
+    # tal como estaba en vez de desaparecer del snapshot.
+    if args.only:
+        analizados = {t["sym"] for t in tickers}
+        tickers += [t for t in prev.get("tickers", []) if t["sym"] not in analizados]
+        market = market or prev.get("market") or {}
+        regime = regime if market else (prev.get("regime") or regime)
+        vistos = {n["t"] for n in market_news}
+        market_news += [n for n in prev.get("market_news", []) if n["t"] not in vistos]
+        market_news = market_news[: W["retention"]["market_news"]]
+        cambios_prev = [c for c in prev.get("changes", []) if c["sym"] not in analizados]
+        changes = (changes + cambios_prev)[:40]
 
     tickers.sort(key=lambda x: -(x["score"] or 0))
     brief = market_brief(regime, tickers, changes, market_news,
