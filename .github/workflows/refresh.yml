@@ -1,0 +1,60 @@
+name: Actualizar precios a pedido
+
+# El botón "Actualizar mercado" de la app abre un issue titulado "actualizar:".
+# Aquí se bajan las cotizaciones del universo completo y se recalculan las
+# mesas, para no esperar al run de la hora siguiente.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: quotes-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: startsWith(github.event.issue.title, 'actualizar:') && github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Cotizaciones
+        run: python scripts/update_quotes.py
+
+      - name: Recalcular mesas
+        continue-on-error: true
+        run: python scripts/desks.py
+
+      - name: Publicar
+        run: |
+          git config user.name "market-intelligence-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
+          git add docs/data/quotes.json docs/data/desks.json
+          if git diff --cached --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "data: precios a pedido $(date -u +%Y-%m-%dT%H:%M) [skip ci]"
+            git push
+          fi
+
+      - name: Cerrar el issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "Precios actualizados. La app los recoge sola en unos segundos."
+          gh issue close ${{ github.event.issue.number }} --reason completed

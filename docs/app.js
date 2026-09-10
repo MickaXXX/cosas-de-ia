@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.5.2';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -33,7 +33,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, ocr: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
+  pub: [], pubAt: null, desks: null, ocr: null, ocrTx: null, refreshing: null, refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
 /** Carteras: una activa, varias guardadas. Las ajenas llegan por enlace y son de solo lectura. */
@@ -239,16 +239,65 @@ async function refreshLive(symbols) {
 setInterval(() => { if (document.visibilityState === 'visible') refreshLive(); }, 60000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.data && Date.now() - loadData.at > 10 * 60e3) loadData(true); });
 
-/** Botón "Actualizar mercado": recarga lo último publicado. Las actualizaciones
- *  corren solas en GitHub: precios cada hora en sesión, noticias cada 3 h y el
- *  análisis completo al cierre. */
+/** Botón "Actualizar mercado". Primero recarga lo publicado; si eso ya está
+ *  viejo, pide al repositorio que baje precios nuevos ahora (un issue de un
+ *  toque, sin credenciales) y se queda esperando a que aparezcan. */
 async function updateMarket() {
-  toast('Recargando…');
-  const before = (S.quotes?.generated_at || '') + (S.data?.generated_at || '');
+  if (S.refreshing) return toast('Ya estoy esperando los precios nuevos…');
+  const antes = stampKey();
+  toast('Buscando datos nuevos…');
   await loadData(true);
-  const after = (S.quotes?.generated_at || '') + (S.data?.generated_at || '');
-  toast(after !== before ? 'Datos nuevos cargados' : `Ya tienes lo último. ${nextRefreshText()}`);
+  if (stampKey() !== antes) return toast('Datos nuevos cargados');
+
+  const min = quotesAgeMin();
+  if (min != null && min < 12) return toast(`Ya tienes lo último (hace ${min} min). ${nextRefreshText()}`);
+  requestRefresh();
 }
+
+const stampKey = () => (S.quotes?.generated_at || '') + (S.data?.generated_at || '');
+function quotesAgeMin() {
+  const at = S.quotes?.generated_at || S.data?.generated_at;
+  if (!at) return null;
+  const m = Math.round((Date.now() - new Date(at).getTime()) / 60000);
+  return m >= 0 ? m : null;
+}
+
+/** Pide un run de cotizaciones y espera a que se publique. */
+function requestRefresh() {
+  const repo = `${REPO.owner}/${REPO.name}`;
+  const body = 'Pedido desde la app: bajar cotizaciones del universo y recalcular las mesas.';
+  window.open(`https://github.com/${repo}/issues/new?title=${encodeURIComponent('actualizar: precios')}&body=${encodeURIComponent(body)}`,
+    '_blank', 'noopener');
+  toast('Pulsa "Submit new issue": los precios llegan en ~1 minuto');
+  waitForRefresh();
+}
+
+/** Reintenta cada 15 s hasta 4 minutos; en cuanto cambia el sello, recarga. */
+function waitForRefresh() {
+  clearInterval(S.refreshTimer);
+  const antes = stampKey();
+  S.refreshing = Date.now();
+  render({ keepScroll: true });
+  let intentos = 0;
+  S.refreshTimer = setInterval(async () => {
+    intentos++;
+    await loadData(true);
+    if (stampKey() !== antes) {
+      stopRefreshWait();
+      toast('Precios nuevos ya cargados');
+    } else if (intentos >= 16) {
+      stopRefreshWait();
+      toast('No llegaron datos nuevos. Revisa el issue en GitHub.');
+    } else {
+      render({ keepScroll: true });
+    }
+  }, 15000);
+}
+function stopRefreshWait() {
+  clearInterval(S.refreshTimer); S.refreshTimer = null; S.refreshing = null;
+  render({ keepScroll: true });
+}
+
 /** Cuándo llega la próxima actualización automática (hora de Chile aproximada). */
 function nextRefreshText() {
   const now = new Date();
@@ -337,7 +386,8 @@ function viewCartera() {
 
   let html = `<div class="card stamp"><div class="between"><div class="small"><b>Actualizado</b><div class="tiny muted">${esc(updateStamp())}</div>
       <div class="tiny muted">${liveOn ? '🟢 precios en vivo activos' : 'Precios: cierre diario + intradía cada hora'}</div></div>
-      <button class="btn sm" data-action="updateMarket">⟳ Actualizar mercado</button></div></div>`;
+      <button class="btn sm" data-action="updateMarket" ${S.refreshing ? 'disabled' : ''}>${S.refreshing ? '⏳ Esperando…' : '⟳ Actualizar mercado'}</button></div>
+      ${S.refreshing ? `<div class="tiny" style="color:var(--accent);margin-top:6px">Pedí precios nuevos al servidor. Llegan en ~1 minuto y la app los carga sola.</div>` : ''}</div>`;
 
   if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
     ${PF().pub ? 'Se actualiza sola desde el enlace. Si editas algo, se copia a este dispositivo automáticamente.' : ''}
@@ -1491,10 +1541,11 @@ function checkSharedLink() {
 // ----------------------------------------------------------------------------
 function openOcrSheet() {
   openSheet(`<h2 style="margin-top:4px">📷 Cargar capturas de Racional</h2>
-    <p class="small muted">En la pantalla <b>Inicio</b> de Racional, captura la lista de acciones en las <b>dos vistas</b> del menú de la derecha:</p>
+    <p class="small muted"><b>Lo más simple: cada vez que compres o vendas, sube la captura del comprobante</b> ("Mi compra de SKHY", "Mi venta de CAT"). De ahí salen el ticker, las acciones exactas, el precio y la fecha, y el movimiento se suma a tu cartera sin borrar nada.</p>
+    <p class="small muted">También sirven las capturas de la pantalla <b>Inicio</b> para rehacer la cartera completa, en sus <b>dos vistas</b>:</p>
     <ul class="reasons small"><li><b>Último Precio</b> → entrega la cantidad exacta de acciones.</li>
     <li><b>Ganancia Total</b> → entrega tu resultado, para calcular el precio promedio de compra.</li></ul>
-    <p class="tiny muted">Súbelas todas juntas. La app calcula el valor con el precio de mercado actual, no con el que muestra Racional. Todo ocurre en tu teléfono: las fotos no se envían a ningún lado.</p>
+    <p class="tiny muted">Puedes subir varias juntas y mezclar comprobantes con la lista. El mismo comprobante dos veces no se duplica: se reconoce por su número de orden. Todo ocurre en tu teléfono: las fotos no se envían a ningún lado.</p>
     <label class="btn" for="ocrFiles">Elegir capturas</label><input id="ocrFiles" type="file" accept="image/*" multiple hidden>
     <div id="ocrStatus" class="small muted" style="margin-top:10px"></div>
     <div id="ocrResult"></div>`);
@@ -1518,6 +1569,72 @@ function parseShares(s) {
   const digits = raw.replace(/\D/g, '');
   if (digits.length > 8) return parseFloat(digits.slice(0, digits.length - 8) + '.' + digits.slice(-8));
   return parseFloat(digits) || null;
+}
+
+/** Lee un comprobante de orden de Racional ("Mi compra de SKHY" / "Mi venta de CAT").
+ *  Saca tipo, ticker, acciones, precio, monto, fecha y número de orden.
+ *  El monto sirve de juez: acciones × precio tiene que dar el monto, y si no da,
+ *  se recalculan las acciones (el OCR a veces se come la coma). */
+function parseRacionalReceipt(lines) {
+  const txt = lines.map((l) => l.text).join('\n');
+  const flat = txt.replace(/\s+/g, ' ');
+  const mTipo = flat.match(/\b(?:mi\s+)?(compra|venta)\s+de\s+([A-Z][A-Z0-9.-]{0,9})\b/i);
+  if (!mTipo) return null;
+  const type = /venta/i.test(mTipo[1]) ? 'sell' : 'buy';
+  const sym = mTipo[2].toUpperCase();
+
+  const nums = (re) => [...flat.matchAll(re)].map((m) => m[m.length - 1]);
+  const dec = (x) => { const s2 = String(x); const i = Math.max(s2.lastIndexOf(','), s2.lastIndexOf('.')); return i < 0 ? 0 : s2.length - i - 1; };
+  // De todos los candidatos gana el que trae más decimales: es el de la fila
+  // "Acciones compradas", no el de la línea de progreso.
+  // Gana el candidato con separador decimal: una fecha sin barras ("1170872026")
+  // no puede hacerse pasar por la cantidad de acciones.
+  const qCands = nums(/acc?[il1]ones?\s+(?:compradas|vendidas)\D{0,12}(\d[\d.,]{2,})/gi)
+    .sort((a, b) => (dec(b) > 0) - (dec(a) > 0) || dec(b) - dec(a));
+  const price = parseAmount((nums(/prec[il1]o\s+de\s+(?:compra|venta)\D{0,12}(\d[\d.,]*)/gi)[0]) || '');
+  const monto = parseAmount((nums(/\bmonto\D{0,12}(\d[\d.,]*)/gi)[0]) || nums(/\btotal\D{0,12}(\d[\d.,]*)/gi)[0] || '');
+
+  let qty = qCands.length ? parseAmount(qCands[0]) : null;
+  let fix = null;
+  if (price && monto) {
+    const teorica = monto / price;
+    if (qty == null || !(Math.abs(qty * price - monto) / monto <= 0.05)) {
+      fix = qty == null ? 'acciones deducidas del monto' : `acciones corregidas (leí ${qty})`;
+      qty = teorica;
+    }
+  }
+  if (!qty || !price) return null;
+
+  // Fecha de la línea de ejecución. El OCR suele leer las barras de "09/09/2026"
+  // como 7 o 1, así que se aceptan separadores basura y se valida el resultado.
+  const armar = (d, mo, y) => {
+    d = +d; mo = +mo; y = +y;
+    if (mo > 12 && d <= 12) { const t2 = d; d = mo; mo = t2; }          // por si viene mm/dd
+    if (!(d >= 1 && d <= 31 && mo >= 1 && mo <= 12 && y >= 2015 && y <= 2035)) return null;
+    const iso = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    return iso <= today() ? iso : null;                                  // nunca en el futuro
+  };
+  const fechaDe = (t) => {
+    const estricta = t.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/);
+    if (estricta) { const f = armar(estricta[1], estricta[2], estricta[3]); if (f) return f; }
+    for (const m of t.matchAll(/(\d{1,2})\D?[71]?\D?(\d{1,2})\D?[71]?\D?(20\d{2})/g)) {
+      const f = armar(m[1], m[2], m[3]);
+      if (f) return f;
+    }
+    return null;
+  };
+  const conFecha = lines.filter((l) => /(acc?[il1]ones?\s+(?:compradas|vendidas)|orden\s+(?:creada|enviada))/i.test(l.text));
+  let date = null;
+  for (const l of conFecha) { date = fechaDe(l.text); if (date) break; }
+  date = date || fechaDe(flat) || today();
+
+  // El número de orden viene con almohadilla (#F7F6CA1C666A). Sin ella no se
+  // acepta cualquier palabra: "Tipo de orden Mercado" no es un número.
+  const mOrd = flat.match(/#\s*([A-Z0-9]{6,20})/i)
+    || flat.match(/n[uú]?mero\s+de\s+orden\D{0,4}([A-Z0-9]{6,20})/i);
+  let ord = mOrd ? mOrd[1].toUpperCase().replace(/[IL]/g, '1').replace(/O/g, '0') : null;
+  if (ord && !/\d/.test(ord)) ord = null;
+  return { kind: 'tx', type, sym, qty, price, amount: monto, date, ord, fix, on: true };
 }
 
 /** Extrae filas de una captura de Racional. Reconoce las dos vistas:
@@ -1568,13 +1685,15 @@ async function runOcr(files) {
       logger: (m) => { if (m.status && m.progress != null) st.textContent = `${m.status === 'recognizing text' ? 'Leyendo' : 'Preparando'}… ${Math.round(m.progress * 100)}%`; } });
     await worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáéíóúñ0123456789.,-+ ' });
   } catch (e) { st.textContent = 'Error iniciando OCR: ' + e.message; return; }
-  const found = [];
+  const found = [], txs = [];
   for (let k = 0; k < files.length; k++) {
     st.textContent = `Leyendo captura ${k + 1} de ${files.length}…`;
     try {
       const { data } = await worker.recognize(files[k]);
       const lines = (data.lines || []).map((l) => ({ text: l.text.trim(), y: l.bbox.y0 })).filter((l) => l.text).sort((a, b) => a.y - b.y);
-      found.push(...parseRacionalLines(lines));
+      const rec = parseRacionalReceipt(lines);      // ¿comprobante de una orden?
+      if (rec) txs.push(rec);
+      else found.push(...parseRacionalLines(lines));
     } catch (e) { console.warn('OCR', e); }
   }
   await worker.terminate();
@@ -1589,11 +1708,15 @@ async function runOcr(files) {
   }
   const rows = [...Object.values(bySym), ...noSym].map(ocrRow).sort((a, b) => (b.value || 0) - (a.value || 0));
   S.ocr = rows;
+  S.ocrTx = txs.map((t) => (yaRegistrado(t) ? { ...t, dup: true, on: false } : t));
+
   const conQty = rows.filter((r) => r.qty != null).length, conGain = rows.filter((r) => r.gain != null).length;
-  st.innerHTML = rows.length
-    ? `Detectadas <b>${rows.length}</b> posiciones · ${conQty} con cantidad de acciones · ${conGain} con ganancia.`
-      + (noSym.length ? ` <span style="color:var(--s)">${noSym.length} sin ticker legible: escríbelo.</span>` : '')
-    : 'No se detectaron posiciones. Captura la lista de acciones de la pantalla Inicio.';
+  const partes = [];
+  if (S.ocrTx.length) partes.push(`<b>${S.ocrTx.length}</b> ${S.ocrTx.length === 1 ? 'movimiento' : 'movimientos'} de compra/venta`);
+  if (rows.length) partes.push(`<b>${rows.length}</b> posiciones (${conQty} con cantidad, ${conGain} con ganancia)`);
+  st.innerHTML = partes.length
+    ? `Leído: ${partes.join(' y ')}.` + (noSym.length ? ` <span style="color:var(--s)">${noSym.length} sin ticker legible: escríbelo.</span>` : '')
+    : 'No reconocí nada. Sirven los comprobantes de una orden ("Mi compra de…") y la lista de acciones de la pantalla Inicio.';
   res.innerHTML = renderOcrTable();
 }
 
@@ -1611,13 +1734,37 @@ function ocrRow(r) {
   return { ...r, known: !!d, price, qty, value, cost, avg, on: r.on !== false };
 }
 
+/** Tabla de los movimientos leídos de comprobantes de orden. */
+function renderTxTable() {
+  const txs = S.ocrTx || [];
+  if (!txs.length) return '';
+  const sel = txs.filter((t) => t.on);
+  const abiertas = positions().open;
+  const ventasHuerfanas = txs.filter((t) => t.on && t.type === 'sell'
+    && !(abiertas.find((p) => p.sym === t.sym)?.qty > 0)).map((t) => t.sym);
+  return `<h3 style="margin:14px 0 4px">🧾 Movimientos detectados</h3>
+    <div class="scroll-x"><table class="ocr"><thead><tr><th></th><th>Tipo</th><th>Ticker</th><th>Acciones</th><th>Precio</th><th>Fecha</th></tr></thead><tbody>
+    ${txs.map((t, i) => `<tr class="${t.on ? '' : 'off'}"><td><input type="checkbox" data-otx="on" data-i="${i}" ${t.on ? 'checked' : ''}></td>
+      <td><select data-otx="type" data-i="${i}" style="width:78px"><option value="buy" ${t.type === 'buy' ? 'selected' : ''}>Compra</option><option value="sell" ${t.type === 'sell' ? 'selected' : ''}>Venta</option></select></td>
+      <td><input data-otx="sym" data-i="${i}" value="${esc(t.sym)}" style="width:58px" autocapitalize="characters">${tk(t.sym) ? '' : '<div class="tiny" style="color:var(--s)">fuera del radar</div>'}</td>
+      <td><input data-otx="qty" data-i="${i}" inputmode="decimal" value="${t.qty != null ? +t.qty.toFixed(8) : ''}" style="width:82px"></td>
+      <td><input data-otx="price" data-i="${i}" inputmode="decimal" value="${t.price != null ? t.price : ''}" style="width:70px"></td>
+      <td><input data-otx="date" data-i="${i}" value="${esc(t.date || '')}" style="width:88px"></td></tr>
+      ${t.dup || t.fix ? `<tr class="${t.on ? '' : 'off'}"><td></td><td colspan="5" class="tiny" style="color:var(--s);padding-top:0">${t.dup ? 'Ya estaba importado (orden ' + esc(t.ord) + '): queda desmarcado.' : esc(t.fix)}</td></tr>` : ''}`).join('')}
+    </tbody></table></div>
+    <p class="tiny muted">Monto de cada orden = acciones × precio. Si el número leído no cuadra con el monto del comprobante, se corrige solo.</p>
+    ${ventasHuerfanas.length ? `<p class="tiny" style="color:var(--s)">No tengo la compra de ${esc([...new Set(ventasHuerfanas)].join(', '))} registrada, así que la venta queda como historial y su ganancia realizada no se puede calcular. Si quieres el resultado, sube también el comprobante de la compra.</p>` : ''}
+    <button class="btn" data-action="ocrTxImport" ${sel.length ? '' : 'disabled'}>Registrar ${sel.length} ${sel.length === 1 ? 'movimiento' : 'movimientos'}</button>`;
+}
+
 function renderOcrTable() {
-  if (!S.ocr?.length) return '';
+  if (!S.ocr?.length) return renderTxTable();
   const sel = S.ocr.filter((r) => r.on);
   const total = sel.reduce((a, r) => a + (r.value || 0), 0);
   const totalCost = sel.reduce((a, r) => a + (r.cost ?? r.value ?? 0), 0);
   const faltaCosto = sel.some((r) => r.cost == null);
-  return `<table class="ocr"><thead><tr><th></th><th>Ticker</th><th>Acciones</th><th>Valor USD</th><th>Ganancia</th><th>Prom.</th></tr></thead><tbody>
+  return renderTxTable() + `${S.ocrTx?.length ? '<h3 style="margin:14px 0 4px">📋 Posiciones detectadas</h3>' : ''}
+    <table class="ocr"><thead><tr><th></th><th>Ticker</th><th>Acciones</th><th>Valor USD</th><th>Ganancia</th><th>Prom.</th></tr></thead><tbody>
     ${S.ocr.map((r, i) => `<tr class="${r.on ? '' : 'off'}"><td><input type="checkbox" data-ocr="on" data-i="${i}" ${r.on ? 'checked' : ''}></td>
       <td><input data-ocr="sym" data-i="${i}" value="${esc(r.sym)}" placeholder="?" style="width:58px;${r.sym ? '' : 'border-color:var(--ss)'}" autocapitalize="characters">${r.known ? '' : `<div class="tiny" style="color:var(--s)">${r.sym ? 'fuera del radar' : 'escribe el ticker'}</div>`}</td>
       <td><input data-ocr="qty" data-i="${i}" inputmode="decimal" value="${r.qty != null ? +r.qty.toFixed(8) : ''}" placeholder="—" style="width:78px"></td>
@@ -1628,6 +1775,40 @@ function renderOcrTable() {
     ${faltaCosto ? `<p class="tiny" style="color:var(--s)">A algunas posiciones les falta la ganancia, así que su precio promedio se asume igual al de mercado. Sube también la vista <b>Ganancia Total</b> para que quede exacto.</p>` : ''}
     <p class="tiny muted">Importar <b>reemplaza</b> la posición de cada ticker detectado; los demás no se tocan.</p>
     <button class="btn" data-action="ocrImport">Importar ${sel.length} posiciones</button>`;
+}
+
+/** ¿Este movimiento ya está en la cartera? Vale el número de orden y, si el OCR
+ *  lo leyó mal, que coincida el movimiento completo. */
+function yaRegistrado(t, lista) {
+  const tx = lista || PF().tx;
+  const cerca = (a, b) => a != null && b != null && Math.abs(a - b) <= Math.abs(b) * 0.005 + 1e-9;
+  return tx.some((x) => (t.ord && x.ord === t.ord)
+    || (x.sym === t.sym && (x.type || 'buy') === t.type && x.date === t.date
+        && cerca(+x.qty, +t.qty) && cerca(+x.price, +t.price)));
+}
+
+/** Registra los movimientos leídos: los suma a la cartera sin borrar nada. */
+function ocrTxImport() {
+  const sel = (S.ocrTx || []).filter((t) => t.on && t.sym && t.qty > 0 && t.price >= 0);
+  if (!sel.length) return toast('Nada que registrar');
+  let n = 0, saltados = 0, nuevos = [];
+  for (const t of sel) {
+    if (yaRegistrado(t)) { saltados++; continue; }
+    const sym = t.sym.toUpperCase(), d = tk(sym);
+    PF().tx.push({
+      id: uid(), sym, type: t.type === 'sell' ? 'sell' : 'buy',
+      qty: +(+t.qty).toFixed(8), price: +(+t.price).toFixed(4),
+      amount: t.amount ?? +(t.qty * t.price).toFixed(2),
+      date: t.date || today(), ord: t.ord || null,
+      note: 'Leído del comprobante de Racional', src: 'ocr-tx',
+      sig: d?.signal || null, score: d?.score ?? null,
+    });
+    if (!d) { addPending(sym); nuevos.push(sym); }
+    n++;
+  }
+  savePf(); closeSheet(); S.ocr = null; S.ocrTx = null; render();
+  toast(`${n} ${n === 1 ? 'movimiento registrado' : 'movimientos registrados'}${saltados ? ` · ${saltados} repetidos` : ''}`);
+  if (nuevos.length) setTimeout(() => toast(`${nuevos.join(', ')} no está en el radar: agrégalo desde Cartera`), 2600);
 }
 
 function ocrImport() {
@@ -1766,6 +1947,7 @@ document.addEventListener('click', async (e) => {
 
     case 'ocr': if (roGuard()) break; openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
+    case 'ocrTxImport': ocrTxImport(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
     case 'syncRadar': syncToRadar(); break;
     case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} anotado. Agrégalo al radar desde Ajustes`); } break;
@@ -1795,6 +1977,16 @@ document.addEventListener('click', async (e) => {
 });
 document.addEventListener('input', (e) => {
   if (e.target.id === 'radarQ') { S.radar.q = e.target.value; S.radar.limit = RADAR_PAGE; const pos = e.target.selectionStart; render(); const q = $('#radarQ'); q.focus(); q.setSelectionRange(pos, pos); }
+  if (e.target.dataset.otx && S.ocrTx) {
+    const i = +e.target.dataset.i, k = e.target.dataset.otx, t = S.ocrTx[i]; if (!t) return;
+    if (k === 'on') t.on = e.target.checked;
+    else if (k === 'sym') t.sym = e.target.value.toUpperCase().trim();
+    else if (k === 'qty' || k === 'price') t[k] = parseAmount(e.target.value);
+    else t[k] = e.target.value.trim();
+    const btn = $('#ocrResult [data-action="ocrTxImport"]');
+    if (btn) { const nsel = S.ocrTx.filter((x) => x.on).length; btn.textContent = `Registrar ${nsel} ${nsel === 1 ? 'movimiento' : 'movimientos'}`; btn.disabled = !nsel; }
+    return;
+  }
   if (e.target.dataset.ocr && S.ocr) {
     const i = +e.target.dataset.i, k = e.target.dataset.ocr, r = S.ocr[i]; if (!r) return;
     if (k === 'on') r.on = e.target.checked;
@@ -1809,7 +2001,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'iaSym') { S.iaSym = e.target.value; render(); }
   if (e.target.id === 'calMonth') { S.calMonth = e.target.value; render({ keepScroll: true }); }
   if (e.target.id === 'showClp') { S.settings.showClp = e.target.checked; saveSettings(); }
-  if (e.target.dataset.ocr && S.ocr) $('#ocrResult').innerHTML = renderOcrTable(); // recalcula cantidades al terminar de editar
+  if ((e.target.dataset.ocr && S.ocr) || e.target.dataset.otx) $('#ocrResult').innerHTML = renderOcrTable(); // recalcula cantidades al terminar de editar
 });
 $('#btnRefresh').addEventListener('click', () => updateMarket());
 document.addEventListener('keydown', (e) => {

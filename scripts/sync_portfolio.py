@@ -114,23 +114,34 @@ def main():
     uni = json.load(open(CONFIG / "universe.json", encoding="utf-8"))
     tenidos = sorted({s for p in lista for s in held(p.get("tx", []))})
     antes = set(uni.get("core", []))
-    conocidos = antes | set(uni.get("stocks", [])) | set(uni.get("etfs", [])) | set(uni.get("watch", []))
-    nuevos = [s for s in tenidos if s not in conocidos]
+
+    # "Nuevo" es lo que no tiene ficha en el radar, no lo que falta en el archivo:
+    # así un símbolo que quedó a medio agregar se vuelve a analizar en vez de
+    # darse por hecho para siempre.
+    analizados = set()
+    try:
+        latest = json.load(open(DATA / "latest.json", encoding="utf-8"))
+        analizados = {t["sym"] for t in latest.get("tickers", [])}
+    except Exception:
+        pass
+    nuevos = [s for s in tenidos if s not in analizados]
 
     # Tickers pedidos desde el buscador del radar: entran en observación.
     pedidos = [s.strip().upper() for s in (payload.get("watch") or []) if isinstance(s, str)]
-    pedidos = [s for s in pedidos if SYM_RE.match(s) and s not in conocidos and s not in tenidos][:20]
+    pedidos = [s for s in pedidos if SYM_RE.match(s) and s not in analizados and s not in tenidos][:20]
     if pedidos:
         uni["watch"] = list(dict.fromkeys(list(uni.get("watch", [])) + pedidos))
         nuevos += pedidos
 
     uni["core"] = tenidos
-    # Lo que se vendió sale de core pero sigue en el radar general.
-    vendidos = [s for s in antes if s not in tenidos]
-    if vendidos:
-        uni["stocks"] = list(dict.fromkeys(list(uni.get("stocks", [])) + vendidos))
+    # El motor arma el radar con stocks + etfs: core es solo una prioridad. Si un
+    # símbolo vive solo en core, se analiza una vez y desaparece al run siguiente.
+    etfs = set(uni.get("etfs", []))
+    uni["stocks"] = list(dict.fromkeys(
+        list(uni.get("stocks", [])) + [s for s in tenidos + pedidos if s not in etfs] + sorted(antes - set(tenidos))))
     json.dump(uni, open(CONFIG / "universe.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
+    vendidos = sorted(antes - set(tenidos))
     print(f"Cartera '{name}': {len(tx)} movimientos, {len(tenidos)} posiciones abiertas.")
     print(f"Nuevos en el radar: {', '.join(nuevos) if nuevos else 'ninguno'}")
     if pedidos:
