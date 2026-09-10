@@ -170,12 +170,14 @@ def main():
     tenidos = held_symbols()
     if tenidos:
         antes = set(uni.get("core", []))
-        conocidos = antes | set(uni.get("stocks", [])) | set(uni.get("etfs", []))
-        entran = [s for s in tenidos if s not in conocidos]
-        salen = [s for s in antes if s not in tenidos]
+        etfs_set = set(uni.get("etfs", []))
+        entran = [s for s in tenidos if s not in set(uni.get("stocks", [])) | etfs_set]
+        salen = sorted(antes - set(tenidos))
         uni["core"] = tenidos
-        if salen:                       # lo vendido deja de ser core pero sigue en el radar
-            uni["stocks"] = list(dict.fromkeys(list(uni.get("stocks", [])) + salen))
+        # El radar se arma con stocks + etfs; core solo marca prioridad. Las
+        # posiciones tienen que estar también en stocks o no se analizan.
+        uni["stocks"] = list(dict.fromkeys(
+            list(uni.get("stocks", [])) + [s for s in tenidos if s not in etfs_set] + salen))
         if entran:
             print(f"-- compras nuevas al radar: {', '.join(entran)}", flush=True)
         if salen:

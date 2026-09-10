@@ -55,6 +55,12 @@ Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
 ## Novedades v1.5 — las mesas de análisis
 
+### Comprobantes, botón de actualizar y radar (v1.5.2)
+
+- **Sube la captura del comprobante y listo.** De "Mi compra de SKHY" o "Mi venta de CAT" la app saca tipo, ticker, acciones exactas, precio, fecha y número de orden, y **suma el movimiento** a la cartera sin borrar nada. El monto del comprobante hace de juez: si acciones × precio no cuadra con el monto, las acciones se recalculan (el OCR pierde comas y lee las barras de las fechas como sietes). El mismo comprobante dos veces no se duplica: se reconoce por su número de orden y, si el OCR lo leyó mal, por el movimiento completo.
+- **El botón "Actualizar mercado" ahora actualiza.** Primero recarga lo publicado; si eso ya está viejo, pide al repositorio un run de cotizaciones (un issue de un toque, sin credenciales) y espera: reintenta cada 15 segundos y carga los precios nuevos en cuanto aparecen, sin que haya que hacer nada más.
+- **Corregido el fallo que dejaba las compras nuevas fuera del radar.** El motor arma el universo con `stocks` + `etfs`; `core` solo marca prioridad. Al agregar una compra solo a `core`, se analizaba una vez y desaparecía en el run siguiente (NKTX entró y se perdió). Ahora las posiciones entran también en `stocks`, y "nuevo" pasó a significar *sin ficha en el radar* en vez de *ausente del archivo*, así que un símbolo a medio agregar se reintenta solo.
+
 ### Lo que compras entra solo al radar (v1.5.1)
 
 - **El radar sigue a tu cartera.** En cada análisis, `discover.py` lee las carteras publicadas y pone todas sus posiciones en `core` de `config/universe.json`: se analizan completas todos los días y la poda automática nunca las toca. Lo que vendes sale de `core` pero sigue en el radar general.
