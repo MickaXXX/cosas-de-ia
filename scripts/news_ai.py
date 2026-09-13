@@ -13,6 +13,7 @@ Modelo: NEWS_MODEL (por defecto claude-opus-5). Costo estimado del run diario co
 """
 from __future__ import annotations
 
+import html
 import json
 import os
 import re
@@ -34,6 +35,12 @@ RULES = [
     (r"\b(ai|artificial intelligence|data ?center|gpu|chip[s]?|semiconductor|nuclear|uranium|lithium|copper|bitcoin|crypto)\b", 8, "tema", "Tema sectorial"),
     (r"\b(should you buy|is .* a buy|top stocks|best stocks|motley fool|3 stocks|5 stocks|stocks to watch|why .* stock)\b", -18, "opinion", "Opinión / listado"),
 ]
+
+
+def clean_title(t: str) -> str:
+    """Yahoo entrega los titulares con entidades HTML (&#39;, &amp;): la app los
+    escapa otra vez y quedan a la vista. Se decodifican en el origen."""
+    return html.unescape(t or "").replace("\u00a0", " ").strip()
 
 
 def heuristic(item: dict) -> dict:
@@ -145,6 +152,9 @@ def classify_all(news_by_ticker: dict, max_ai: int) -> dict:
     flat = []
     for sym, items in news_by_ticker.items():
         for it in items:
+            it["t"] = clean_title(it.get("t"))
+            if it.get("s"):
+                it["s"] = clean_title(it["s"])
             it.update(heuristic(it))
             it["nivel"] = level(it["prio"])
             it["sym"] = sym
