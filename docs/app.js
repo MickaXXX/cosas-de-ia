@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.6.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -33,7 +33,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, ocr: null, ocrTx: null, refreshing: null, refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
+  pub: [], pubAt: null, desks: null, ocr: null, ocrTx: null, loadError: null, historyAt: null, refreshing: null, refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
 /** Carteras: una activa, varias guardadas. Las ajenas llegan por enlace y son de solo lectura. */
@@ -60,6 +60,13 @@ function loadJSON(k, d) { try { const v = localStorage.getItem(k); return v ? { 
 function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { toast('No se pudo guardar (almacenamiento lleno)'); } }
 function savePf() { pruneLocal(); saveJSON(LS.book, S.book); }
 function saveSettings() { saveJSON(LS.settings, S.settings); }
+/** v1.6: el snapshot completo (2,7 MB) se guardaba en localStorage en cada carga.
+ *  Eso llenaba la cuota del navegador y congelaba el hilo principal al serializar;
+ *  ahora la copia sin conexión la mantiene el service worker. */
+(function borrarCacheVieja() {
+  try { localStorage.removeItem(LS.cache); } catch { /* nada que borrar */ }
+})();
+
 /** v1.4.2: la app ya no usa token de GitHub. Se borra el que hubiera guardado. */
 (function limpiarCredencialesViejas() {
   if (S.settings.ghToken === undefined) return;
@@ -165,23 +172,26 @@ const CAT = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '
 // ----------------------------------------------------------------------------
 // Carga de datos (diario + intradía + en vivo)
 // ----------------------------------------------------------------------------
-async function fetchJSON(url, force) {
-  const r = await fetch(url + (force ? `?t=${Date.now()}` : ''), { cache: force ? 'reload' : 'default' });
+async function fetchJSON(url, fresh) {
+  const r = await fetch(url + (fresh ? '?fresh=1' : ''), { cache: 'default' });
   if (!r.ok) throw new Error(`${url}: ${r.status}`);
   return r.json();
 }
 
-async function loadData(force = false) {
+/** Carga en dos tramos: primero lo que hace falta para pintar la pantalla, y el
+ *  historial de precios después (son 380 KB que solo usan Rendimiento y las
+ *  fichas). El service worker entrega lo guardado al instante, así que con mala
+ *  señal la app abre igual y los datos nuevos entran cuando llegan. */
+async function loadData(fresh = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
   try {
-    const [d, h, q, pub, desks] = await Promise.all([
-      fetchJSON(DATA_URL, force),
-      fetchJSON(HIST_URL, force).catch(() => ({})),
-      fetchJSON(QUOTES_URL, force).catch(() => null),
+    const [d, q, pub, desks] = await Promise.all([
+      fetchJSON(DATA_URL, fresh),
+      fetchJSON(QUOTES_URL, fresh).catch(() => null),
       fetchJSON(PUB_URL, true).catch(() => null),
-      fetchJSON(DESKS_URL, force).catch(() => null),
+      fetchJSON(DESKS_URL, fresh).catch(() => null),
     ]);
-    S.data = d; S.history = h || {}; S.quotes = q; S.desks = desks;
+    S.data = d; S.quotes = q; S.desks = desks; S.loadError = null;
     S.pub = (pub?.list || []).map((p) => ({
       ...p, baseId: p.id, id: 'pub:' + p.id, fav: p.fav || [],
       tx: (p.tx || []).map((t, i) => ({ ...t, id: t.id || `${p.id}-${i}`, type: t.type || 'buy', date: t.date || today() })),
@@ -189,19 +199,29 @@ async function loadData(force = false) {
     S.pubAt = pub?.updated || null;
     if (S.book.active && !allPortfolios().some((p) => p.id === S.book.active)) S.book.active = S.book.list[0].id;
     // Si en este dispositivo no hay nada cargado, se abre directamente la cartera publicada.
-    if (!PF().tx.length && !PF().pub) { const pub = allPortfolios().find((p) => p.pub && p.tx.length); if (pub) S.book.active = pub.id; }
+    if (!PF().tx.length && !PF().pub) { const pb = allPortfolios().find((p) => p.pub && p.tx.length); if (pb) S.book.active = pb.id; }
     syncHeader();
     applyQuotes();
-    try { localStorage.setItem(LS.cache, JSON.stringify({ d, h, q, desks })); } catch { /* caché opcional (puede no caber) */ }
+    loadData.at = Date.now();
+    renderStatus(); render({ keepScroll: !!S.data });
+    loadHistory(fresh);
   } catch (e) {
-    const c = loadJSON(LS.cache, null);
-    if (c && c.d) { S.data = c.d; S.history = c.h || {}; S.quotes = c.q || null; S.desks = c.desks || null; applyQuotes(); toast('Sin conexión: mostrando datos guardados'); }
+    S.loadError = String(e.message || e).slice(0, 120);
+    renderStatus(); render();
   } finally { btn.classList.remove('spin'); }
-  renderStatus(); render();
   refreshLive();
 }
 
-/** Fusiona cotizaciones intradía (quotes.json) sobre el snapshot diario. */
+/** El historial llega aparte y no bloquea el primer pintado. */
+async function loadHistory(fresh = false) {
+  if (S.historyAt && !fresh) return;
+  try {
+    S.history = (await fetchJSON(HIST_URL, fresh)) || {};
+    S.historyAt = Date.now();
+    if (S.tab === 'cartera' && S.carteraView !== 'posiciones') render({ keepScroll: true });
+  } catch { /* sin historial la app funciona; solo faltan los gráficos largos */ }
+}
+
 function applyQuotes() {
   if (!S.data || !S.quotes?.q) return;
   const qAt = new Date(S.quotes.generated_at).getTime(), dAt = new Date(S.data.generated_at).getTime();
@@ -310,7 +330,6 @@ function nextRefreshText() {
 
 function renderStatus() {
   const st = $('#dataStatus'), b = $('#banner');
-  loadData.at = Date.now();
   if (!S.data) { st.textContent = 'Sin datos. Ejecuta el workflow "Actualizar datos".'; b.hidden = false; b.className = 'banner error'; b.textContent = 'No se encontraron datos (docs/data/latest.json). Ejecuta el workflow de GitHub Actions o el script update_data.py.'; return; }
   const age = Math.round((Date.now() - new Date(S.data.generated_at).getTime()) / 36e5);
   st.textContent = `Análisis ${S.data.date} · ${S.data.stats?.ok ?? S.data.tickers.length} activos · v${APP_VERSION}`;
@@ -364,7 +383,14 @@ function positionsOf(pf) {
 // ----------------------------------------------------------------------------
 function render(opts = {}) {
   const v = $('#view');
-  if (!S.data) { v.innerHTML = `<div class="empty"><div class="big">📡</div>Aún no hay datos.<br>Ejecuta <b>Actions → Actualizar datos de mercado → Run workflow</b> en GitHub.</div>`; return; }
+  if (!S.data) {
+    v.innerHTML = `<div class="empty"><div class="big">${S.loadError ? '📴' : '⏳'}</div>
+      ${S.loadError ? `No se pudieron cargar los datos.<br><span class="tiny muted">${esc(S.loadError)}</span>` : 'Cargando los datos del mercado…'}
+      <div class="btn-row" style="justify-content:center;margin-top:14px">
+        <button class="btn" data-action="retryLoad">${S.loadError ? '↻ Reintentar' : '↻ Recargar'}</button></div>
+      ${S.loadError ? '<p class="tiny muted" style="margin-top:10px">Si sigue fallando, revisa la conexión: la app guarda una copia y abre sin internet una vez que cargó al menos una vez.</p>' : ''}</div>`;
+    return;
+  }
   const y = window.scrollY;
   const views = { cartera: viewCartera, radar: viewRadar, hoy: viewHoy, ia: viewIA, ajustes: viewAjustes };
   v.innerHTML = views[S.tab]();
@@ -392,6 +418,8 @@ function viewCartera() {
   if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
     ${PF().pub ? 'Se actualiza sola desde el enlace. Si editas algo, se copia a este dispositivo automáticamente.' : ''}
     <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
+
+  html += sinceCard();
 
   // Compras que el radar todavía no analiza: se agregan al radar con un toque.
   const faltan = missingFromRadar();
@@ -496,21 +524,87 @@ function concentrationNote(parts, total) {
   return '';
 }
 
+/** Las alertas se ordenan por lo accionable que son: un cambio de señal o un
+ *  stop roto importan más que un titular. Antes ganaba el orden de llegada y las
+ *  noticias tapaban lo demás. */
+const ALERT_W = { senal: 100, stop: 95, venta: 90, objetivo: 80, resultados: 75, ganancia: 70, perdida: 65, rsi: 50, noticia: 40 };
 function portfolioAlerts(open) {
   const out = [];
   const changes = S.data.changes || [];
+  const titulares = new Set();          // un mismo titular no ocupa tres alertas
   for (const p of open) {
     const d = p.data; if (!d) continue;
     const ch = changes.find((c) => c.sym === p.sym);
-    if (ch) out.push({ sym: p.sym, good: ch.dir === 'up', chip: chip(ch.to, 'sm'), text: `Cambio de señal (${ch.since === '1d' ? 'hoy' : 'esta semana'}): ${SIG_LABEL[ch.from]} ${ch.score_from} → <b>${SIG_LABEL[ch.to]} ${ch.score_to}</b>` });
-    else if (d.signal === 'sell' || d.signal === 'strong_sell') out.push({ sym: p.sym, chip: chip(d.signal, 'sm'), text: `El modelo indica ${SIG_LABEL[d.signal]} (${d.score}/100). Motivos: ${d.reasons.slice(0, 2).join('; ') || 'ver detalle'}.` });
-    if (d.earnings_date) { const days = Math.round((new Date(d.earnings_date) - Date.now()) / 864e5); if (days >= 0 && days <= 10) out.push({ sym: p.sym, good: true, chip: '<span class="tag">resultados</span>', text: `Reporta resultados ${days === 0 ? 'hoy' : `en ${days} días`} (${d.earnings_date}). Espera volatilidad.` }); }
-    if (d.tech?.rsi >= 78) out.push({ sym: p.sym, chip: '<span class="tag">RSI</span>', text: `RSI ${d.tech.rsi}: sobrecomprado. Considera tomar ganancias parciales o no aumentar.` });
-    if (p.pnlPct != null && p.pnlPct <= -15) out.push({ sym: p.sym, chip: '<span class="tag">−15%</span>', text: `Pérdida de ${pct(p.pnlPct)}. Revisa si la tesis sigue vigente (largo plazo ${d.h.long.s}/100).` });
-    const hot = (d.news || []).find((n) => n.nivel === 'alta');
-    if (hot) out.push({ sym: p.sym, good: hot.accion === 'oportunidad', chip: `<span class="tag">${esc(hot.tag || 'noticia')}</span>`, text: `📰 ${esc(hot.t_es || hot.t)}${hot.r_es ? `<br><span class="muted">${esc(hot.r_es)}</span>` : ''}` });
+    if (ch) out.push({ w: ALERT_W.senal, sym: p.sym, good: ch.dir === 'up', chip: chip(ch.to, 'sm'), text: `Cambio de señal (${ch.since === '1d' ? 'hoy' : 'esta semana'}): ${SIG_LABEL[ch.from]} ${ch.score_from} → <b>${SIG_LABEL[ch.to]} ${ch.score_to}</b>` });
+    else if (d.signal === 'sell' || d.signal === 'strong_sell') out.push({ w: ALERT_W.venta, sym: p.sym, chip: chip(d.signal, 'sm'), text: `El modelo indica ${SIG_LABEL[d.signal]} (${d.score}/100). Motivos: ${d.reasons.slice(0, 2).join('; ') || 'ver detalle'}.` });
+    if (d.earnings_date) { const days = Math.round((new Date(d.earnings_date) - Date.now()) / 864e5); if (days >= 0 && days <= 10) out.push({ w: ALERT_W.resultados, sym: p.sym, good: true, chip: '<span class="tag">resultados</span>', text: `Reporta resultados ${days === 0 ? 'hoy' : `en ${days} días`} (${d.earnings_date}). Espera volatilidad.` }); }
+    if (d.tech?.rsi >= 78) out.push({ w: ALERT_W.rsi, sym: p.sym, chip: '<span class="tag">RSI</span>', text: `RSI ${d.tech.rsi}: sobrecomprado. Considera tomar ganancias parciales o no aumentar.` });
+    if (p.pnlPct != null && p.pnlPct <= -15) out.push({ w: ALERT_W.perdida, sym: p.sym, chip: '<span class="tag">−15%</span>', text: `Pérdida de ${pct(p.pnlPct)}. Revisa si la tesis sigue vigente (largo plazo ${d.h.long.s}/100).` });
+    // Stop técnico: cuánto puede caer antes de dejar de ser ruido del activo.
+    const atr = d.tech?.atr_pct;
+    if (p.avg > 0 && atr && d.price && p.pnlPct < 0 && d.price < p.avg * (1 - 2.5 * atr / 100)) {
+      out.push({ w: ALERT_W.stop, sym: p.sym, chip: '<span class="tag">stop</span>',
+        text: `Cayó bajo tu stop técnico (${fmtUSD(p.avg * (1 - 2.5 * atr / 100))}, 2,5 ATR bajo tu promedio de ${fmtUSD(p.avg)}). A este nivel la caída dejó de ser el vaivén normal del activo.` });
+    }
+    // Objetivo de analistas alcanzado: el consenso ya no ve recorrido.
+    const tgt = d.analysts?.target?.mean;
+    if (tgt && d.price >= tgt * 0.97) {
+      out.push({ w: ALERT_W.objetivo, sym: p.sym, chip: '<span class="tag">objetivo</span>',
+        text: `Está a ${pct((d.price / tgt - 1) * 100, 1)} del objetivo medio de analistas (${fmtUSD(tgt)}). El consenso ya casi no le ve recorrido a 12 meses.` });
+    }
+    if (p.pnlPct >= 25 && ['hold', 'sell', 'strong_sell'].includes(d.signal)) {
+      out.push({ w: ALERT_W.ganancia, sym: p.sym, good: true, chip: '<span class="tag">ganancia</span>',
+        text: `Ganas ${pct(p.pnlPct)} (${fmtUSD(p.pnl)}) y el modelo ya no dice compra: es el caso de libro para tomar una parte y dejar correr el resto.` });
+    }
+    const hot = (d.news || []).find((n) => n.nivel === 'alta' && !titulares.has(n.t));
+    if (hot) titulares.add(hot.t);
+    if (hot) out.push({ w: ALERT_W.noticia, sym: p.sym, good: hot.accion === 'oportunidad', chip: `<span class="tag">${esc(hot.tag || 'noticia')}</span>`, text: `📰 ${esc(hot.t_es || hot.t)}${hot.r_es ? `<br><span class="muted">${esc(hot.r_es)}</span>` : ''}` });
   }
-  return out.slice(0, 10);
+  return out.sort((a, b) => (b.w || 0) - (a.w || 0)).slice(0, 10);
+}
+
+/** Marcador de la última visita: sirve para contar qué cambió desde entonces.
+ *  Ocupa unos pocos cientos de bytes, no el snapshot completo. */
+const SEEN_KEY = 'mia.seen.v1';
+function saveSeen() {
+  const { open } = positions();
+  saveJSON(SEEN_KEY, {
+    at: new Date().toISOString(), date: S.data.date,
+    value: +open.reduce((a, p) => a + (p.value || 0), 0).toFixed(2),
+    sigs: Object.fromEntries(open.filter((p) => p.data).map((p) => [p.sym, p.data.signal])),
+  });
+}
+
+/** Diferencias entre lo que dejaste la última vez y lo de ahora. */
+function sinceLastVisit() {
+  const prev = loadJSON(SEEN_KEY, null);
+  if (!prev?.sigs) { saveSeen(); return null; }                 // primera vez: solo se marca
+  const horas = (Date.now() - new Date(prev.at).getTime()) / 36e5;
+  if (!(horas >= 5)) return null;                               // hace un rato, no hay nada que contar
+  const { open } = positions();
+  const value = open.reduce((a, p) => a + (p.value || 0), 0);
+  const cambios = open.filter((p) => p.data && prev.sigs[p.sym] && prev.sigs[p.sym] !== p.data.signal)
+    .map((p) => ({ sym: p.sym, de: prev.sigs[p.sym], a: p.data.signal }));
+  const nuevas = open.filter((p) => !(p.sym in prev.sigs)).map((p) => p.sym);
+  const dv = prev.value ? value - prev.value : null;
+  const movidas = open.filter((p) => p.data?.chg1d != null).sort((a, b) => Math.abs(b.data.chg1d) - Math.abs(a.data.chg1d)).slice(0, 2);
+  if (!cambios.length && !nuevas.length && (dv == null || Math.abs(dv) < 1)) return null;
+  return { horas, dv, dvPct: prev.value ? (value / prev.value - 1) * 100 : null, cambios, nuevas, movidas };
+}
+
+function sinceCard() {
+  const c = sinceLastVisit();
+  if (!c) return '';
+  const dias = Math.round(c.horas / 24);
+  const cuando = c.horas < 24 ? `hace ${Math.round(c.horas)} h` : `hace ${dias} ${dias === 1 ? 'día' : 'días'}`;
+  const lineas = [];
+  if (c.dv != null) lineas.push(`<li>Tu cartera ${c.dv >= 0 ? 'subió' : 'bajó'} <b class="${cls(c.dv)}">${fmtUSD(Math.abs(c.dv))}</b>${c.dvPct != null ? ` (${pct(c.dvPct)})` : ''}.</li>`);
+  for (const x of c.cambios) lineas.push(`<li><b>${x.sym}</b>: ${SIG_LABEL[x.de]} → <b>${SIG_LABEL[x.a]}</b>.</li>`);
+  if (c.nuevas.length) lineas.push(`<li>Posiciones nuevas: <b>${c.nuevas.join(', ')}</b>.</li>`);
+  if (c.movidas.length) lineas.push(`<li>Las que más se movieron hoy: ${c.movidas.map((p) => `${p.sym} <span class="${cls(p.data.chg1d)}">${pct(p.data.chg1d)}</span>`).join(' · ')}.</li>`);
+  return `<div class="card" style="border-color:var(--accent)"><div class="between"><b>👋 Desde tu última visita (${cuando})</b>
+      <button class="btn secondary sm" data-action="seenOk">Listo</button></div>
+    <ul class="reasons" style="margin-bottom:0">${lineas.join('')}</ul></div>`;
 }
 
 // ---- ANALISTAS (estilo Google Finance) ---------------------------------------
@@ -1944,6 +2038,9 @@ document.addEventListener('click', async (e) => {
     case 'fav': { const i = PF().fav.indexOf(sym); if (i >= 0) PF().fav.splice(i, 1); else PF().fav.push(sym); savePf(); openDetail(sym, true); break; }
     case 'reload': loadData(true); break;
     case 'updateMarket': updateMarket(); break;
+    case 'retryLoad': loadData(true); break;
+    case 'seenOk': saveSeen(); render({ keepScroll: true }); break;
+    case 'reloadApp': location.reload(); break;
 
     case 'ocr': if (roGuard()) break; openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
@@ -2009,7 +2106,18 @@ document.addEventListener('keydown', (e) => {
 });
 window.addEventListener('popstate', () => { if (!$('#page').hidden) closePage(); else if (!$('#sheet').hidden) closeSheet(); });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // El service worker avisa cuando descargó una versión nueva de la app.
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data?.type === 'shell-updated' && !S.updateAvisado) {
+      S.updateAvisado = true;
+      const b = $('#banner');
+      b.hidden = false; b.className = 'banner';
+      b.innerHTML = 'Hay una versión nueva de la app. <button class="btn sm" data-action="reloadApp" style="margin-left:8px">Recargar</button>';
+    }
+  });
+}
 
 loadData.at = 0;
 syncHeader();

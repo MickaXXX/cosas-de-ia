@@ -1081,6 +1081,17 @@ def main():
         cambios_prev = [c for c in prev.get("changes", []) if c["sym"] not in analizados]
         changes = (changes + cambios_prev)[:40]
 
+    # Adelgazar lo publicado: la app carga este archivo en cada apertura.
+    # "s" es el resumen en inglés que solo usa el clasificador de noticias, y de
+    # los motivos del modelo se muestran tres como máximo.
+    for t in tickers:
+        for nw in t.get("news") or []:
+            nw.pop("s", None)
+        if len(t.get("reasons") or []) > 3:
+            t["reasons"] = t["reasons"][:3]
+    for nw in market_news:
+        nw.pop("s", None)
+
     tickers.sort(key=lambda x: -(x["score"] or 0))
     brief = market_brief(regime, tickers, changes, market_news,
                          portfolio_syms=universe.get("core") or None) if not args.demo else {

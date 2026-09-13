@@ -53,6 +53,23 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.6 — la app abre al instante
+
+El service worker de la v1.4.2 pedía **todo por red antes de pintar nada**: cada apertura descargaba los 2,9 MB del snapshot completo, y con señal débil la app se quedaba colgada en blanco. Además guardaba una copia de 2,7 MB en `localStorage`, al filo de la cuota del navegador.
+
+- **Shell desde caché, datos en segundo plano.** El armazón (html/js/css) se sirve de caché y se revalida detrás; si hay versión nueva, la app avisa con un botón para recargar. Los datos usan *stale-while-revalidate*: se muestra lo guardado al instante y se actualiza solo. Medido en pruebas: **primer contenido en 0,2 s** contra los ~3,5 s de antes, y la app abre sin internet.
+- **Carga en dos tramos.** Primero lo necesario para pintar (análisis, cotizaciones, cartera, mesas) y después el historial de precios de 380 KB, que solo usan Rendimiento y las fichas.
+- **Se eliminó la copia gigante en `localStorage`** (ahora la mantiene el service worker): sin riesgo de llenar la cuota ni de congelar el teléfono serializando 2,7 MB en cada carga.
+- **Si algo falla, se ve.** En vez de una pantalla muerta, aparece el error concreto y un botón de reintentar.
+- **Snapshot 18% más liviano** (596 → 491 KB comprimido): se quita el resumen en inglés de cada noticia, que la app nunca mostraba, y los motivos del modelo se limitan a tres.
+
+### Lo nuevo que ayuda a decidir
+
+- **"Desde tu última visita"**: al abrir, una tarjeta resume cuánto subió o bajó la cartera, qué señales cambiaron de veredicto, qué posiciones son nuevas y cuáles se movieron más hoy.
+- **Alertas de stop y objetivo**: avisa cuando una posición cae bajo su stop técnico (2,5 ATR bajo tu precio promedio), cuando llega al objetivo medio de los analistas, y cuando ganas más de 25% y el modelo ya dejó de decir compra.
+- **Alertas ordenadas por lo accionable**: antes ganaba el orden de llegada y los titulares tapaban los cambios de señal. Además un mismo titular ya no ocupa tres alertas.
+- Titulares con entidades HTML (`Kratos&#39;`) ahora se decodifican en el origen.
+
 ## Novedades v1.5 — las mesas de análisis
 
 ### Comprobantes, botón de actualizar y radar (v1.5.2)
