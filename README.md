@@ -53,6 +53,25 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.7 — Radar de disrupción
+
+La pestaña IA cambia de pregunta. El modelo de señales responde *"¿qué está bien hoy?"*; el radar de disrupción responde *"¿dónde hay un cambio grande que el mercado todavía no puso en precio?"*. Son cosas distintas y a menudo opuestas: una acción que ya subió y gusta a todos los analistas puntúa alto en el modelo y bajo aquí, porque ya no queda sorpresa.
+
+**Metodología — cuatro pilares sobre datos** (`scripts/disruption.py`, 775 acciones evaluadas cada día):
+
+| Pilar | Peso | Qué mide |
+|---|---|---|
+| **Asimetría** | 35% | Cuánto se puede ganar frente a lo que ya está en el precio: escenario alcista de los analistas, distancia al máximo de 52 semanas y desacuerdo entre analistas (cuando no se ponen de acuerdo, hay algo sin resolver). |
+| **Desapercibida** | 25% | Pocos analistas cubriéndola, capitalización chica, ningún gurú dentro, poca prensa. Lo que todos miran ya no esconde nada. |
+| **Catalizador** | 25% | Que el cambio esté empezando: revisiones al alza, crecimiento fuerte, volumen inusual, giro de tendencia, resultados cerca. |
+| **Tema** | 15% | En qué ola estructural está: computación cuántica, biotecnología, defensa y espacio, nuclear de nueva generación, litio, movilidad aérea, drones… |
+
+- **El riesgo de ruina se calcula aparte y nunca se promedia con el puntaje.** Quema de caja, ausencia de beneficios, deuda, volatilidad, caída desde máximos y tamaño mínimo. Una idea puede ser "asimetría 3,5:1" y "riesgo extremo" al mismo tiempo: las dos cosas son ciertas y el que decide tiene que ver las dos.
+- **Horizontes de verdad**: cada idea se clasifica donde su evidencia es más fuerte —corto (un catalizador con fecha), mediano (una inflexión en marcha), largo (una ola estructural)— y el filtro por plazo ordena combinando disrupción con encaje temporal. Ordenar solo por encaje devolvería NVDA en "largo", que de desapercibida no tiene nada.
+- **"Tu cartera bajo esta lente"**: tus posiciones con su puntaje de disrupción, destacando las **discrepancias**: cuando el modelo dice vender y la tesis dice lo contrario. Es el caso de MDCX: el modelo la marca Venta 36/100 por tendencia y momentum, mientras el radar la pone en 71/100 por capitalización de US$10M, cuatro analistas, volumen 2,9× lo normal y un acuerdo con Pfizer — y al mismo tiempo avisa riesgo extremo, objetivo de analistas desactualizado y revisiones a la baja.
+- Máximo tres ideas por tema, para que la lista no se llene de biotecnológicas.
+- Las mesas institucionales siguen ahí, como segundo bloque.
+
 ## Novedades v1.6.1 — candado con PIN y arranque a prueba de cuelgues
 
 - **PIN de 4 dígitos para editar.** Cualquiera que abra el enlace ve todo en solo lectura; para editar hay que desbloquear con el PIN, y el dispositivo queda desbloqueado (no lo vuelve a pedir). Candado en la barra superior: 🔒 solo lectura, 🔓 desbloqueada, y se puede volver a bloquear cuando se quiera. Todas las acciones que escriben datos pasan por el candado, así que no hay puertas laterales; navegar, cambiar de cartera o leer las mesas siguen libres.

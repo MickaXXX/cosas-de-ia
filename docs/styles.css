@@ -336,3 +336,18 @@ table.grid td:first-child, table.grid th:first-child { position: sticky; left: 0
 table.grid tr.mine td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 table.grid tr.mine td:first-child { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
 .lnk { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--accent); cursor: pointer; }
+
+/* v1.7 — radar de disrupción */
+.ideas { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.idea {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font: inherit;
+}
+.idea:active { transform: scale(.995); }
+.idea .pts { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 34px; text-align: center; flex: none; }
+.idea .grow { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.idea .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.idea b { font-size: 15px; letter-spacing: .3px; }
+.idea .caret { color: var(--muted); font-size: 18px; flex: none; }
+.idea .ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
