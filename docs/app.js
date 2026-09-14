@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -33,7 +33,8 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, ocr: null, ocrTx: null, loadError: null, historyAt: null, refreshing: null, refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
+  pub: [], pubAt: null, desks: null, ocr: null, ocrTx: null, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
+  unlocked: (() => { try { return localStorage.getItem('mia.pin.ok.v1') === '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1'; } catch { return false; } })(), refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
 /** Carteras: una activa, varias guardadas. Las ajenas llegan por enlace y son de solo lectura. */
@@ -169,13 +170,110 @@ function donut(parts) {
 }
 const CAT = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#7c8392'];
 
+
+// ----------------------------------------------------------------------------
+// Candado con PIN
+// ----------------------------------------------------------------------------
+/* La app es de lectura para cualquiera que abra el enlace. Para editar hay que
+ * desbloquear con un PIN de 4 dígitos, y queda desbloqueado en ese dispositivo.
+ *
+ * El PIN no está escrito aquí: lo que se guarda es su derivación PBKDF2-SHA256
+ * (200.000 iteraciones). Ojo con qué protege esto y qué no: sirve para que nadie
+ * toque la cartera por accidente ni desde el teléfono de otro, pero un PIN de 4
+ * dígitos se puede probar por fuerza bruta contra este hash. La cartera que vive
+ * en el enlace solo se cambia desde GitHub con la cuenta del dueño, así que lo
+ * más que podría hacer un intruso es editar su propia copia local.
+ */
+const PIN_HASH = '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1';
+const PIN_SALT = 'mia.pin.v1';
+const PIN_ITER = 200000;
+const LS_PIN = 'mia.pin.ok.v1';
+
+async function derivarPin(pin) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(String(pin)), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: enc.encode(PIN_SALT), iterations: PIN_ITER, hash: 'SHA-256' }, key, 256);
+  return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+const unlocked = () => S.unlocked;
+const locked = () => !S.unlocked;
+
+/** Acciones que cambian datos: todas pasan por el candado. */
+const ACCIONES_PROTEGIDAS = new Set([
+  'addTx', 'saveTx', 'deleteTx', 'editTx', 'ocr', 'ocrImport', 'ocrTxImport', 'syncRadar',
+  'pfNew', 'pfRename', 'pfDelete', 'pfDuplicate', 'pfAcceptShare',
+  'import', 'doImport', 'reset', 'addLog', 'saveKeys', 'clearAiKey', 'fav',
+  'clearPending',
+]);
+// Quedan libres a propósito: cambiar de cartera, marcar como leído el resumen y
+// anotar un ticker pendiente son cosas de este dispositivo, no ediciones.
+
+/** Pide el PIN. Si se acierta, se ejecuta lo que quedó pendiente. */
+function askPin(pendiente) {
+  S.pinPend = pendiente || null;
+  openSheet(`<h2 style="margin-top:4px">🔒 Desbloquear para editar</h2>
+    <p class="small muted">Esta app es de solo lectura para quien abra el enlace. Ingresa tu PIN de 4 dígitos para poder editar; queda desbloqueada en este dispositivo y no te la vuelve a pedir.</p>
+    <label class="field">PIN<input id="pinInput" type="password" inputmode="numeric" autocomplete="off"
+      maxlength="8" placeholder="••••" style="letter-spacing:6px;font-size:22px;text-align:center"></label>
+    <div id="pinMsg" class="small" style="color:var(--ss);min-height:18px"></div>
+    <button class="btn" data-action="pinSend">Desbloquear</button>
+    <p class="tiny muted">Solo abre la edición en este teléfono o computador. La cartera publicada en el enlace se cambia únicamente desde GitHub con tu cuenta.</p>`);
+  setTimeout(() => $('#pinInput')?.focus(), 120);
+}
+
+async function pinSend() {
+  const el = $('#pinInput'), msg = $('#pinMsg');
+  const pin = (el?.value || '').trim();
+  if (!pin) return;
+  if (msg) msg.textContent = 'Comprobando…';
+  let ok = false;
+  try { ok = (await derivarPin(pin)) === PIN_HASH; } catch (e) { if (msg) msg.textContent = 'Este navegador no puede comprobar el PIN.'; return; }
+  if (!ok) {
+    S.pinFails = (S.pinFails || 0) + 1;
+    if (msg) { msg.style.color = 'var(--ss)'; msg.textContent = `PIN incorrecto (${S.pinFails}).`; }
+    if (el) { el.value = ''; el.focus(); }
+    return;
+  }
+  S.unlocked = true;
+  try { localStorage.setItem(LS_PIN, PIN_HASH); } catch { /* modo privado: vale para esta sesión */ }
+  const pend = S.pinPend; S.pinPend = null;
+  closeSheet(); syncHeader(); render();
+  toast('Desbloqueado en este dispositivo');
+  if (pend) setTimeout(() => runAction(pend.a, pend.el), 60);
+}
+
+function pinLock() {
+  S.unlocked = false;
+  try { localStorage.removeItem(LS_PIN); } catch { /* nada */ }
+  closeSheet(); syncHeader(); render();
+  toast('Bloqueado: la app quedó en solo lectura');
+}
+
+function toggleLock() {
+  if (unlocked()) {
+    openSheet(`<h2 style="margin-top:4px">🔓 Desbloqueada</h2>
+      <p class="small muted">Puedes editar la cartera en este dispositivo. Si prestas el teléfono o lo pierdes, bloquéala y volverá a pedir el PIN.</p>
+      <button class="btn danger" data-action="pinLock">🔒 Bloquear ahora</button>`);
+  } else askPin();
+}
+
 // ----------------------------------------------------------------------------
 // Carga de datos (diario + intradía + en vivo)
 // ----------------------------------------------------------------------------
 async function fetchJSON(url, fresh) {
-  const r = await fetch(url + (fresh ? '?fresh=1' : ''), { cache: 'default' });
-  if (!r.ok) throw new Error(`${url}: ${r.status}`);
-  return r.json();
+  // Con tiempo límite: una petición que nunca responde (service worker colgado,
+  // red que se cae a medias) dejaba la app en blanco para siempre.
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const reloj = setTimeout(() => ctl && ctl.abort(), 15000);
+  try {
+    const r = await fetch(url + (fresh ? '?fresh=1' : ''), { cache: 'default', signal: ctl?.signal });
+    if (!r.ok) throw new Error(`${url.split('/').pop()}: HTTP ${r.status}`);
+    return await r.json();
+  } catch (e) {
+    throw new Error(e.name === 'AbortError' ? `${url.split('/').pop()}: sin respuesta en 15 s` : (e.message || 'error de red'));
+  } finally { clearTimeout(reloj); }
 }
 
 /** Carga en dos tramos: primero lo que hace falta para pintar la pantalla, y el
@@ -184,6 +282,7 @@ async function fetchJSON(url, fresh) {
  *  señal la app abre igual y los datos nuevos entran cuando llegan. */
 async function loadData(fresh = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
+  if (!S.data) render();          // pinta "cargando" antes de esperar la red
   try {
     const [d, q, pub, desks] = await Promise.all([
       fetchJSON(DATA_URL, fresh),
@@ -415,7 +514,9 @@ function viewCartera() {
       <button class="btn sm" data-action="updateMarket" ${S.refreshing ? 'disabled' : ''}>${S.refreshing ? '⏳ Esperando…' : '⟳ Actualizar mercado'}</button></div>
       ${S.refreshing ? `<div class="tiny" style="color:var(--accent);margin-top:6px">Pedí precios nuevos al servidor. Llegan en ~1 minuto y la app los carga sola.</div>` : ''}</div>`;
 
-  if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
+  if (locked()) html += `<div class="ro-banner">🔒 <b>Solo lectura.</b> Puedes ver todo, pero para editar hace falta el PIN.
+    <button class="btn secondary sm" style="margin-top:6px" data-action="lock">Desbloquear</button></div>`;
+  else if (isRO()) html += `<div class="ro-banner">👁️ Estás viendo <b>${esc(PF().name)}</b> en solo lectura${PF().pub ? ', publicada en este enlace' : ', compartida contigo'}.
     ${PF().pub ? 'Se actualiza sola desde el enlace. Si editas algo, se copia a este dispositivo automáticamente.' : ''}
     <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
 
@@ -1586,7 +1687,14 @@ function pfNew(name, tx = [], ro = false) {
   S.book.list.push(p); S.book.active = p.id; savePf(); render(); syncHeader();
   return p;
 }
-function syncHeader() { const el = $('#pfName'); if (el) el.textContent = PF().name; }
+function syncHeader() {
+  const el = $('#pfName'); if (el) el.textContent = PF().name;
+  const lock = $('#btnLock');
+  if (lock) {
+    lock.textContent = unlocked() ? '🔓' : '🔒';
+    lock.title = unlocked() ? 'Desbloqueada: puedes editar' : 'Solo lectura: toca para desbloquear';
+  }
+}
 
 /** Enlace compartible: la cartera viaja comprimida en el # de la URL, sin servidores. */
 function encodePortfolio(p) {
@@ -1946,6 +2054,7 @@ function adoptPub() {
 /** Las carteras compartidas no se editan: se ofrece copiarlas a una propia.
  *  La publicada sí: se copia sola a este dispositivo y la edición continúa. */
 function roGuard() {
+  if (locked()) { askPin(); return true; }
   if (!isRO()) return false;
   if (PF().pub && adoptPub()) { toast('Cartera copiada a este dispositivo para editarla'); render(); return false; }
   openSheet(`<h2 style="margin-top:4px">Cartera de solo lectura</h2>
@@ -2006,7 +2115,15 @@ document.addEventListener('click', async (e) => {
     S.radar.limit = RADAR_PAGE; render(); return;
   }
   const el = e.target.closest('[data-action]'); if (!el) return;
-  const a = el.dataset.action, sym = el.dataset.sym;
+  const a = el.dataset.action;
+  // Todo lo que escribe datos pasa por el candado. Si está bloqueado, se pide el
+  // PIN y la acción se ejecuta después de acertarlo.
+  if (ACCIONES_PROTEGIDAS.has(a) && locked()) return askPin({ a, el });
+  return runAction(a, el);
+});
+
+async function runAction(a, el) {
+  const sym = el.dataset.sym;
   switch (a) {
     case 'detail': if (sym) openDetail(sym); break;
     case 'book': openBookSheet(); break;
@@ -2070,8 +2187,12 @@ document.addEventListener('click', async (e) => {
       else { const p = PROMPTS.find((x) => x.n === +el.dataset.n); const t = tk(s); copy(p.b(t ? tickerBrief(t) : s, portfolioText())); }
       break;
     }
+    case 'lock': toggleLock(); break;
+    case 'pinSend': await pinSend(); break;
+    case 'pinLock': pinLock(); break;
   }
-});
+}
+
 document.addEventListener('input', (e) => {
   if (e.target.id === 'radarQ') { S.radar.q = e.target.value; S.radar.limit = RADAR_PAGE; const pos = e.target.selectionStart; render(); const q = $('#radarQ'); q.focus(); q.setSelectionRange(pos, pos); }
   if (e.target.dataset.otx && S.ocrTx) {

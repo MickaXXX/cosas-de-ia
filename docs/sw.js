@@ -10,7 +10,7 @@
  * Antes se pedía todo por red primero y con conexión lenta la app se quedaba
  * colgada sin mostrar nada.
  */
-const VERSION = 'mia-v1.6.0';
+const VERSION = 'mia-v1.6.1';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icons/icon.svg', './icons/icon-192.png'];
 
@@ -38,6 +38,13 @@ function distinto(a, b) {
   return et(a) !== et(b) || len(a) !== len(b);
 }
 
+/** fetch con tope de tiempo: si la red no contesta, no se arrastra la petición. */
+async function fetchConTope(req, ms = 12000) {
+  const ctl = new AbortController();
+  const reloj = setTimeout(() => ctl.abort(), ms);
+  try { return await fetch(req, { signal: ctl.signal }); } finally { clearTimeout(reloj); }
+}
+
 async function revalidar(req, cache, esShell) {
   try {
     const res = await fetch(req, { cache: 'no-store' });
@@ -60,7 +67,7 @@ self.addEventListener('fetch', (e) => {
     const cache = await caches.open(VERSION);
     if (exigeRed) {
       try {
-        const res = await fetch(req, { cache: 'no-store' });
+        const res = await fetchConTope(req);
         if (res && res.ok) { cache.put(req, res.clone()); return res; }
       } catch { /* sin red: se responde con la caché */ }
     }
@@ -70,13 +77,16 @@ self.addEventListener('fetch', (e) => {
       return hit;
     }
     try {
-      const res = await fetch(e.request);
+      const res = await fetchConTope(e.request);
       if (res && res.ok) cache.put(req, res.clone());
       return res;
     } catch (err) {
       const alt = await cache.match(req, { ignoreSearch: true });
       if (alt) return alt;
-      throw err;
+      // Nunca se deja la petición sin respuesta: la app necesita un error para
+      // mostrar su pantalla de reintento en vez de quedarse en blanco.
+      return new Response(JSON.stringify({ error: 'sin conexión' }),
+        { status: 503, headers: { 'content-type': 'application/json' } });
     }
   })());
 });
