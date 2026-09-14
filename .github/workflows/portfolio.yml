@@ -46,6 +46,10 @@ jobs:
           NEWS_MODEL: ${{ vars.NEWS_MODEL }}
         run: python scripts/update_data.py --mode full --only "${{ steps.sync.outputs.new_symbols }}"
 
+      - name: Recalcular radar de disrupción
+        continue-on-error: true
+        run: python scripts/disruption.py
+
       - name: Recalcular mesas
         continue-on-error: true
         env:
@@ -58,7 +62,7 @@ jobs:
           git config user.name "market-intelligence-bot"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase --autostash origin ${GITHUB_REF_NAME} || true
-          git add docs/data/portfolios.json docs/data/latest.json docs/data/history.json docs/data/desks.json config/universe.json
+          git add docs/data/portfolios.json docs/data/latest.json docs/data/history.json docs/data/desks.json docs/data/disruption.json config/universe.json
           if git diff --cached --quiet; then
             echo "Sin cambios."
           else

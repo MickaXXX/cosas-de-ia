@@ -4,13 +4,14 @@
  */
 'use strict';
 
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.7.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
 const QUOTES_URL = './data/quotes.json';
 const PUB_URL = './data/portfolios.json';
 const DESKS_URL = './data/desks.json';
+const DISRUP_URL = './data/disruption.json';
 
 const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
@@ -33,7 +34,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, ocr: null, ocrTx: null, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
+  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
   unlocked: (() => { try { return localStorage.getItem('mia.pin.ok.v1') === '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1'; } catch { return false; } })(), refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
@@ -284,13 +285,14 @@ async function loadData(fresh = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
   if (!S.data) render();          // pinta "cargando" antes de esperar la red
   try {
-    const [d, q, pub, desks] = await Promise.all([
+    const [d, q, pub, desks, disrup] = await Promise.all([
       fetchJSON(DATA_URL, fresh),
       fetchJSON(QUOTES_URL, fresh).catch(() => null),
       fetchJSON(PUB_URL, true).catch(() => null),
       fetchJSON(DESKS_URL, fresh).catch(() => null),
+      fetchJSON(DISRUP_URL, fresh).catch(() => null),
     ]);
-    S.data = d; S.quotes = q; S.desks = desks; S.loadError = null;
+    S.data = d; S.quotes = q; S.desks = desks; S.disrup = disrup; S.loadError = null;
     S.pub = (pub?.list || []).map((p) => ({
       ...p, baseId: p.id, id: 'pub:' + p.id, fav: p.fav || [],
       tx: (p.tx || []).map((t, i) => ({ ...t, id: t.id || `${p.id}-${i}`, type: t.type || 'buy', date: t.date || today() })),
@@ -1166,21 +1168,83 @@ function briefCard() {
     ${b.riesgo ? `<p class="small" style="color:var(--s)">⚠️ ${esc(b.riesgo)}</p>` : ''}</div>`;
 }
 
+// ---- RADAR DE DISRUPCIÓN -----------------------------------------------------
+const HZ_LABEL = { corto: 'Corto', mediano: 'Mediano', largo: 'Largo' };
+const RIESGO_CLASE = { Extremo: 'ss', Alto: 's', Medio: 'h', Contenido: 'b' };
+
+const ideaDe = (sym) => (S.disrup?.ideas || []).find((x) => x.sym === sym);
+
+/** Qué ideas se muestran según el filtro de horizonte. */
+function ideasVisibles() {
+  const dk = S.disrup;
+  if (!dk) return [];
+  const syms = S.disrupHz === 'todas' ? dk.top : (dk.horizontes?.[S.disrupHz] || []);
+  return syms.map(ideaDe).filter(Boolean);
+}
+
+function ideaCard(e) {
+  const rc = RIESGO_CLASE[e.riesgo.label] || 'h';
+  return `<button class="idea" data-action="idea" data-sym="${esc(e.sym)}">
+    <span class="pts t-${e.score >= 75 ? 'sb' : e.score >= 60 ? 'b' : 'h'}">${e.score}</span>
+    <span class="grow">
+      <span class="row"><b>${esc(e.sym)}</b>${e.mia ? '<span class="tag">tuya</span>' : ''}
+        <span class="chip sm ${rc}">riesgo ${esc(e.riesgo.label.toLowerCase())}</span></span>
+      <span class="tiny muted ellipsis">${esc(e.name || '')}</span>
+      <span class="tiny" style="color:var(--accent)">${esc(e.tema)} · ${HZ_LABEL[e.horizonte]} plazo${e.asimetria ? ` · ${esc(e.asimetria)}` : ''}</span>
+      ${e.catalizador ? `<span class="tiny muted ellipsis">⚡ ${esc(e.catalizador)}</span>` : ''}
+    </span><span class="caret">›</span></button>`;
+}
+
 function viewIA() {
-  const dk = S.desks;
+  const dk = S.disrup;
   let html = briefCard();
 
-  if (!dk?.desks?.length) {
-    html += `<div class="card"><h2 style="margin-top:0">🏛️ Mesas de análisis</h2>
-      <p class="small muted">Las mesas se generan en el análisis diario. Todavía no hay ninguna publicada; vuelve después del próximo cierre de mercado.</p></div>`;
+  if (!dk?.ideas?.length) {
+    html += `<div class="card"><h2 style="margin-top:0">🚀 Radar de disrupción</h2>
+      <p class="small muted">Se genera en el análisis diario. Todavía no hay ninguno publicado; vuelve después del próximo cierre.</p></div>`;
   } else {
+    const ideas = ideasVisibles();
+    const hz = [['todas', `Top ${dk.top.length}`], ['corto', 'Corto'], ['mediano', 'Mediano'], ['largo', 'Largo']];
+    html += `<div class="card"><div class="between"><h2 style="margin:0">🚀 Radar de disrupción</h2>
+        <span class="tag">${esc(dk.date || '')}</span></div>
+      <p class="small muted">De los ${dk.universo} activos del radar, dónde hay un cambio grande que el mercado todavía no puso en precio. No es lo mismo que el modelo de señales: aquí gana lo que <b>nadie está mirando</b>, no lo que ya va bien.</p>
+      <div class="seg" style="margin:10px 0">${hz.map(([k, l]) => `<button data-action="disrupHz" data-v="${k}" class="${S.disrupHz === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      ${S.disrupHz !== 'todas' ? `<p class="tiny muted">${{
+        corto: 'Semanas: catalizador con fecha —resultados, un cambio de señal, volumen inusual—.',
+        mediano: '6 a 12 meses: una inflexión ya en marcha, revisiones al alza y crecimiento que el precio aún no refleja.',
+        largo: '2 a 5 años: la ola estructural manda y el momento exacto de entrada importa menos.',
+      }[S.disrupHz]}</p>` : ''}
+      <div class="ideas">${ideas.length ? ideas.map(ideaCard).join('')
+        : '<div class="empty small">Ninguna idea cumple el mínimo en este plazo hoy.</div>'}</div>
+      <details style="margin-top:10px"><summary class="small">Cómo se calcula</summary>
+        <ul class="reasons small">${(dk.metodologia?.pilares || []).map((p) => `<li><b>${esc(p.n)} (${p.peso}%)</b>: ${esc(p.d)}</li>`).join('')}</ul>
+        <p class="tiny muted">${esc(dk.metodologia?.nota_riesgo || '')}</p></details></div>`;
+
+    // Las posiciones propias bajo la misma lente: aquí es donde aparecen las
+    // discrepancias entre lo que dicen los números y lo que dice la tesis.
+    const mias = (dk.cartera || []).map(ideaDe).filter(Boolean);
+    if (mias.length) {
+      const choque = mias.filter((e) => e.discrepancia && ['sell', 'strong_sell', 'hold'].includes(e.senal.sig) && e.score >= 55);
+      html += `<div class="card"><h2 style="margin-top:0">🔍 Tu cartera bajo esta lente</h2>
+        ${choque.length ? `<p class="small">En ${choque.length === 1 ? 'una posición' : `${choque.length} posiciones`} el modelo y esta lectura <b>no coinciden</b>: los números de hoy dicen una cosa y el potencial de cambio dice otra. Son las que merecen que decidas tú, no el promedio.</p>` : '<p class="small muted">Hoy el modelo y esta lectura van en la misma dirección en toda tu cartera.</p>'}
+        <div class="ideas">${mias.slice(0, 8).map(ideaCard).join('')}</div></div>`;
+    }
+  }
+
+  // Las mesas institucionales pasan a ser el segundo bloque.
+  if (dk?.ideas?.length && S.desks?.desks?.length) {
     html += `<div class="card"><div class="between"><h2 style="margin:0">🏛️ Mesas de análisis</h2>
-        <span class="tag">${dk.ai ? 'IA · ' : ''}${esc(dk.date || '')}</span></div>
-      <p class="small muted">Diez mesas institucionales revisan tu cartera todos los días. Están listas al abrir: no hay que activar nada.</p>
-      <div class="desks">${dk.desks.map((d) => `<button class="desk" data-action="desk" data-id="${esc(d.id)}">
+        <span class="tag">${S.desks.ai ? 'IA · ' : ''}${esc(S.desks.date || '')}</span></div>
+      <p class="small muted">Diez mesas institucionales revisan tu cartera todos los días.</p>
+      <div class="desks">${S.desks.desks.map((d) => `<button class="desk" data-action="desk" data-id="${esc(d.id)}">
         <span class="ic">${d.icon}</span>
         <span class="grow"><b>${esc(d.firm)}</b><span class="tiny muted">${esc(d.title)}</span>
           <span class="verdict">${esc(d.veredicto || '')}</span></span>
+        <span class="caret">›</span></button>`).join('')}</div></div>`;
+  } else if (S.desks?.desks?.length) {
+    html += `<div class="card"><h2 style="margin-top:0">🏛️ Mesas de análisis</h2>
+      <div class="desks">${S.desks.desks.map((d) => `<button class="desk" data-action="desk" data-id="${esc(d.id)}">
+        <span class="ic">${d.icon}</span><span class="grow"><b>${esc(d.firm)}</b><span class="verdict">${esc(d.veredicto || '')}</span></span>
         <span class="caret">›</span></button>`).join('')}</div></div>`;
   }
 
@@ -1194,6 +1258,66 @@ function viewIA() {
       <button class="btn secondary sm" data-action="copyPrompt" data-kind="portfolio" ${open.length ? '' : 'disabled'}>📋 Prompt de cartera</button></div>
     <p class="tiny muted">Cada mesa también trae su prompt original, dentro de su ficha.</p></div>`;
   return html;
+}
+
+/** Ficha de una idea disruptiva, en página aparte. */
+function openIdea(sym) {
+  const e = ideaDe(sym);
+  if (!e) return;
+  const t = tk(sym);
+  const rc = RIESGO_CLASE[e.riesgo.label] || 'h';
+  const esc2 = (x) => esc(String(x));
+  const p = e.precio, techo = e.escenarios?.techo, piso = e.escenarios?.piso;
+  let barra = '';
+  if (p && techo && piso && techo > piso) {
+    const x = (v) => `${((v - piso) / (techo - piso)) * 100}%`;
+    barra = `<h3>Escenarios de la tesis</h3><div class="range"><div class="track"></div>
+      <div class="seg2" style="left:${x(p)};width:${((techo - p) / (techo - piso)) * 100}%"></div>
+      <div class="dot" style="left:${x(p)};background:var(--text)" title="Hoy"></div></div>
+      <div class="between tiny muted mono"><span>Malo ${fmtUSD(piso)}</span><span>Hoy ${fmtUSD(p)}</span><span>Bueno ${fmtUSD(techo)}</span></div>
+      <p class="tiny muted">El escenario malo sale del mínimo de 52 semanas y de la volatilidad del propio activo; el bueno, del objetivo más alto de los analistas. Entre esos dos puntos se juega la idea.</p>`;
+  }
+
+  $('#pageContent').innerHTML = `<div class="page-head"><button class="icon-btn" data-action="closePage" aria-label="Volver">←</button>
+      <div class="grow"><div class="row"><span class="sym" style="font-size:18px">${esc2(e.sym)}</span>
+        <span class="chip sm ${rc}">riesgo ${esc2(e.riesgo.label.toLowerCase())}</span>${e.mia ? '<span class="tag">en tu cartera</span>' : ''}</div>
+      <div class="name ellipsis">${esc2(e.name || '')}</div></div></div><div class="inner">
+
+    <div class="card"><div class="between">
+        <div><div class="tiny muted">Puntaje de disrupción</div><div class="hero mono t-${e.score >= 75 ? 'sb' : e.score >= 60 ? 'b' : 'h'}">${e.score}<span style="font-size:16px">/100</span></div></div>
+        <div class="center"><div class="tiny muted">Ganancia / riesgo</div><div class="hero mono" style="font-size:28px">${esc2(e.asimetria || '—')}</div>
+          <div class="tiny muted">${HZ_LABEL[e.horizonte]} plazo</div></div></div>
+      <div class="tiny" style="color:var(--accent);margin-top:4px">${esc2(e.tema)}${e.industry ? ` · ${esc2(e.industry)}` : ''}</div>
+      <div class="hbars" style="margin-top:10px">
+        ${scoreBar(e.partes.asimetria, 'Asimetría')}${scoreBar(e.partes.olvido, 'Desapercibida')}
+        ${scoreBar(e.partes.catalizador, 'Catalizador')}${scoreBar(e.partes.tema, 'Tema')}</div></div>
+
+    ${barra ? `<div class="card">${barra}</div>` : ''}
+
+    <div class="card"><h2 style="margin-top:0">💡 Por qué está en la lista</h2>
+      <ul class="reasons">${(e.por_que || []).map((x) => `<li>${esc2(x)}</li>`).join('')}</ul></div>
+
+    ${e.discrepancia ? `<div class="card" style="border-color:var(--accent)"><h2 style="margin-top:0">⚖️ Modelo contra tesis</h2>
+      <p class="small">${mdLite(e.discrepancia)}</p></div>` : ''}
+
+    <div class="card" style="border-color:var(--${rc === 'ss' ? 'ss' : rc === 's' ? 's' : 'border'})">
+      <h2 style="margin-top:0">⚠️ Qué puede salir mal</h2>
+      <div class="between"><span class="small">Riesgo de ruina</span><b class="t-${rc}">${esc2(e.riesgo.label)} · ${e.riesgo.score}/100</b></div>
+      <ul class="reasons">${(e.riesgo.motivos || []).map((x) => `<li>${esc2(x)}</li>`).join('') || '<li>Sin banderas rojas evidentes en los datos.</li>'}</ul>
+      <p class="tiny muted">El riesgo se calcula aparte del puntaje y nunca se promedia con él: una idea puede ser muy asimétrica y muy peligrosa a la vez. Dimensiona la posición pensando en perderla entera.</p></div>
+
+    <div class="card"><h2 style="margin-top:0">📋 Los números</h2>
+      <div class="kv">
+        <div><span>Precio</span><b>${fmtUSD(e.precio)}</b></div>
+        <div><span>Señal del modelo</span><b>${esc2(e.senal.label)} ${e.senal.score ?? ''}</b></div>
+        <div><span>Objetivo medio</span><b>${fmtUSD(e.objetivo?.mean)}${e.upside_medio ? ` (${pct(e.upside_medio, 0)})` : ''}</b></div>
+        <div><span>Objetivo alto</span><b>${fmtUSD(e.objetivo?.high)}${e.upside_alto ? ` (${pct(e.upside_alto, 0)})` : ''}</b></div>
+        <div><span>Analistas</span><b>${e.analistas || 0}</b></div>
+        <div><span>Capitalización</span><b>${big(e.cap)}</b></div></div>
+      ${e.objetivo_viejo ? '<p class="tiny" style="color:var(--s)">El objetivo de los analistas está muy lejos del precio: probablemente quedó sin actualizar tras una caída fuerte. Tómalo como señal de dispersión, no como promesa.</p>' : ''}
+      <div class="btn-row" style="margin-top:10px">${t ? `<button class="btn secondary sm" data-action="detail" data-sym="${esc2(e.sym)}">Ver ficha completa en el radar</button>` : ''}</div></div>
+    </div>`;
+  const page = $('#page'); page.hidden = false; page.scrollTop = 0; document.body.classList.add('locked');
 }
 
 /** Ficha completa de una mesa, en página aparte. */
@@ -2139,6 +2263,8 @@ async function runAction(a, el) {
       closeSheet(); render(); syncHeader(); break; }
     case 'carteraView': S.carteraView = el.dataset.v; render(); break;
     case 'desk': openDesk(el.dataset.id); break;
+    case 'idea': openIdea(el.dataset.sym); break;
+    case 'disrupHz': S.disrupHz = el.dataset.v; render({ keepScroll: true }); break;
     case 'copyDesk': { const d = (S.desks?.desks || []).find((x) => x.id === el.dataset.id); if (d) copy(deskText(d)); break; }
     case 'chatSend': { const el2 = $('#chatText'); const q = el2?.value || ''; if (el2) el2.value = ''; aiSend(q); break; }
     case 'chatAsk': aiSend(el.dataset.q); break;

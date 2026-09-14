@@ -10,7 +10,7 @@
  * Antes se pedía todo por red primero y con conexión lenta la app se quedaba
  * colgada sin mostrar nada.
  */
-const VERSION = 'mia-v1.6.1';
+const VERSION = 'mia-v1.7.0';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icons/icon.svg', './icons/icon-192.png'];
 
