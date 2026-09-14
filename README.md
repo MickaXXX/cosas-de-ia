@@ -53,6 +53,13 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## Novedades v1.6.1 — candado con PIN y arranque a prueba de cuelgues
+
+- **PIN de 4 dígitos para editar.** Cualquiera que abra el enlace ve todo en solo lectura; para editar hay que desbloquear con el PIN, y el dispositivo queda desbloqueado (no lo vuelve a pedir). Candado en la barra superior: 🔒 solo lectura, 🔓 desbloqueada, y se puede volver a bloquear cuando se quiera. Todas las acciones que escriben datos pasan por el candado, así que no hay puertas laterales; navegar, cambiar de cartera o leer las mesas siguen libres.
+  - El PIN no está en el código: se guarda su derivación **PBKDF2-SHA256 con 200.000 iteraciones**. Qué protege y qué no: evita que alguien toque la cartera desde el teléfono de otro o por accidente, pero cuatro dígitos son 10.000 combinaciones y este hash es público, así que no es una barrera criptográfica seria. Lo que de verdad protege la cartera publicada es que solo se cambia desde GitHub con la cuenta del dueño: un intruso, en el peor caso, editaría su propia copia local.
+- **Arranque a prueba de cuelgues.** La pantalla se pinta *antes* de esperar la red, y cada petición tiene tope de 15 segundos. Si algo no responde (un service worker viejo atascado en Safari, la red que se cae a medias) aparece el error concreto con botón de reintentar, en vez de quedarse en negro para siempre: antes `render()` solo corría después de que respondieran los fetch, y una petición colgada dejaba la app muda con la barra de pestañas visible y nada más.
+- El service worker nunca deja una petición sin respuesta: si no hay red ni caché, devuelve un 503 explícito para que la app pueda reaccionar.
+
 ## Novedades v1.6 — la app abre al instante
 
 El service worker de la v1.4.2 pedía **todo por red antes de pintar nada**: cada apertura descargaba los 2,9 MB del snapshot completo, y con señal débil la app se quedaba colgada en blanco. Además guardaba una copia de 2,7 MB en `localStorage`, al filo de la cuota del navegador.
