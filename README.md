@@ -53,6 +53,18 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.7.4 — la copia del teléfono se pone al día sola
+
+El teléfono mostraba **29 posiciones con KTOS abierta y HUB fuera del radar** mientras el enlace ya tenía las 27 correctas. Tres causas distintas, las tres arregladas:
+
+1. **La copia local quedaba aislada.** Cada dispositivo guarda su propia cartera para poder editarla sin credenciales, pero nada comparaba esa copia con la publicada: las correcciones del enlace no llegaban nunca. Ahora la pestaña Cartera avisa cuando las dos difieren —posiciones que sobran, que faltan o **que están en las dos con cantidades distintas**, el caso silencioso que no cambia el número de posiciones pero sí cuánta plata dice que tienes— y ofrece traer la del enlace de un toque. Cada guardado estampa `updated`, así que se sabe cuál es más nueva.
+2. **Una venta con el precio 100 veces más alto.** El OCR leyó `US$47,91` como `US$4.791,00` (perdió la coma) y la venta quedó anotada con −99,0%. El lector ahora compara contra el precio de mercado y corrige el factor 10, 100 o 1000 al momento, dejándolo dicho en el aviso; y los movimientos ya guardados con ese error aparecen en una tarjeta con el botón **Corregir**. En la misma tarjeta se resuelven los tickers abreviados (**HUB → HUBS**) y **el mismo comprobante cargado dos veces** (misma acción, mismo día, misma cantidad y mismo precio), que hacía ver la posición del doble.
+3. **Una compra y una venta del mismo día se procesaban al revés.** El orden desempataba por `id`, que es aleatorio, así que la venta podía llegar antes que la compra, no encontraba acciones que restar y la posición quedaba abierta para siempre — exactamente lo que pasaba con KTOS. Dentro de un mismo día las compras van primero, en la app y en `scripts/desks.py`.
+
+`latest.json` ahora publica el mapa de alias, así la app reconoce un ticker abreviado sin esperar a que el motor lo traduzca.
+
+Verificado en el navegador con su caso real: el comprobante de KTOS a `US$4.791,00` entra como `US$47,91`, el HUB duplicado se detecta como duplicado y el suelto se renombra, y al traer la del enlace quedan **27 posiciones, KTOS y HL cerradas, ninguna sin valor**.
+
 ## v1.7.2 — publicación a prueba de choques
 
 Dos workflows coincidieron (el análisis diario de 16:55 y el intradía de 16:58) y **la app se quedó sin poder leer sus datos**: el paso de publicar hacía `git pull --rebase --autostash || true` y luego commiteaba a ciegas, así que cuando el rebase falló, el `|| true` se lo tragó y subió `latest.json`, `history.json`, `desks.json` y `disruption.json` con los marcadores `<<<<<<<` dentro.

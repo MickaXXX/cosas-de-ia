@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.7.3';
+const APP_VERSION = '1.7.4';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -34,7 +34,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
+  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
   unlocked: (() => { try { return localStorage.getItem('mia.pin.ok.v1') === '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1'; } catch { return false; } })(), refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
@@ -60,7 +60,12 @@ const isPub = (id) => !!pubOf(id ?? S.book.active);
 
 function loadJSON(k, d) { try { const v = localStorage.getItem(k); return v ? { ...d, ...JSON.parse(v) } : d; } catch { return d; } }
 function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { toast('No se pudo guardar (almacenamiento lleno)'); } }
-function savePf() { pruneLocal(); saveJSON(LS.book, S.book); }
+function savePf(marcarEdicion = true) {
+  // La marca de tiempo permite comparar la copia de este dispositivo con la del
+  // enlace: sin ella no había forma de saber cuál de las dos es más nueva.
+  if (marcarEdicion) { const p = S.book.list.find((x) => x.id === S.book.active); if (p) p.updated = new Date().toISOString(); }
+  pruneLocal(); saveJSON(LS.book, S.book);
+}
 function saveSettings() { saveJSON(LS.settings, S.settings); }
 /** v1.6: el snapshot completo (2,7 MB) se guardaba en localStorage en cada carga.
  *  Eso llenaba la cuota del navegador y congelaba el hilo principal al serializar;
@@ -205,7 +210,7 @@ const locked = () => !S.unlocked;
 const ACCIONES_PROTEGIDAS = new Set([
   'addTx', 'saveTx', 'deleteTx', 'editTx', 'ocr', 'ocrImport', 'ocrTxImport', 'syncRadar',
   'pfNew', 'pfRename', 'pfDelete', 'pfDuplicate', 'pfAcceptShare',
-  'import', 'doImport', 'reset', 'addLog', 'saveKeys', 'clearAiKey', 'fav',
+  'import', 'doImport', 'reset', 'addLog', 'saveKeys', 'clearAiKey', 'fav', 'pubPull', 'txFix', 'txAlias', 'txDrop',
   'clearPending',
 ]);
 // Quedan libres a propósito: cambiar de cartera, marcar como leído el resumen y
@@ -453,7 +458,12 @@ const positions = () => positionsOf(PF());
 
 function positionsOf(pf) {
   const pos = {};
-  const txs = [...(pf.tx || [])].sort((a, b) => (a.date + a.id).localeCompare(b.date + b.id));
+  // Dentro de un mismo día las compras van antes que las ventas: no se puede
+  // vender lo que aún no se compró. Antes desempataba el id, que es aleatorio, y
+  // una compra y una venta del mismo día podían procesarse al revés: la venta no
+  // encontraba acciones que restar y la posición quedaba abierta para siempre.
+  const orden = (t) => `${t.date || ''}|${t.type === 'sell' ? '1' : '0'}|${t.id || ''}`;
+  const txs = [...(pf.tx || [])].sort((a, b) => orden(a).localeCompare(orden(b)));
   for (const t of txs) {
     const p = pos[t.sym] || (pos[t.sym] = { sym: t.sym, qty: 0, cost: 0, realized: 0, txs: [], fixedValue: null });
     p.txs.push(t);
@@ -522,6 +532,8 @@ function viewCartera() {
     ${PF().pub ? 'Se actualiza sola desde el enlace. Si editas algo, se copia a este dispositivo automáticamente.' : ''}
     <button class="btn secondary sm" style="margin-top:6px" data-action="pfDuplicate">Duplicar como mía</button></div>`;
 
+  html += txSospechosasCard();
+  html += pubDiffCard();
   html += sinceCard();
 
   // Compras que el radar todavía no analiza: se agregan al radar con un toque.
@@ -1917,7 +1929,7 @@ function parseRacionalReceipt(lines) {
   // no puede hacerse pasar por la cantidad de acciones.
   const qCands = nums(/acc?[il1]ones?\s+(?:compradas|vendidas)\D{0,12}(\d[\d.,]{2,})/gi)
     .sort((a, b) => (dec(b) > 0) - (dec(a) > 0) || dec(b) - dec(a));
-  const price = parseAmount((nums(/prec[il1]o\s+de\s+(?:compra|venta)\D{0,12}(\d[\d.,]*)/gi)[0]) || '');
+  let price = parseAmount((nums(/prec[il1]o\s+de\s+(?:compra|venta)\D{0,12}(\d[\d.,]*)/gi)[0]) || '');
   const monto = parseAmount((nums(/\bmonto\D{0,12}(\d[\d.,]*)/gi)[0]) || nums(/\btotal\D{0,12}(\d[\d.,]*)/gi)[0] || '');
 
   let qty = qCands.length ? parseAmount(qCands[0]) : null;
@@ -1930,6 +1942,27 @@ function parseRacionalReceipt(lines) {
     }
   }
   if (!qty || !price) return null;
+
+  // El OCR pierde el separador decimal y deja precios 10 o 100 veces mayores:
+  // una venta de Kratos a US$47,91 se leyó "4791,00" y quedó registrada así.
+  // El precio de mercado del propio activo sirve de referencia.
+  let aviso = null;
+  const mercado = tk(sym)?.price;
+  if (mercado > 0) {
+    const razon = price / mercado;
+    for (const f of [1000, 100, 10, 0.1, 0.01]) {
+      if (Math.abs(razon / f - 1) < 0.25) {          // es una potencia de diez exacta
+        aviso = `precio corregido de ${fmtUSD(price)} a ${fmtUSD(price / f)} (el OCR perdió la coma)`;
+        price = price / f;
+        qty = (monto && price) ? monto / price : qty * f;
+        break;
+      }
+    }
+    if (!aviso && (price / mercado > 5 || mercado / price > 5)) {
+      aviso = `¡revisa el precio! Leí ${fmtUSD(price)} y ${sym} vale ${fmtUSD(mercado)} hoy`;
+    }
+  }
+  if (aviso) fix = fix ? `${fix} · ${aviso}` : aviso;
 
   // Fecha de la línea de ejecución. El OCR suele leer las barras de "09/09/2026"
   // como 7 o 1, así que se aceptan separadores basura y se valida el resultado.
@@ -2175,6 +2208,124 @@ function adoptPub() {
   return true;
 }
 
+/** Movimientos guardados que necesitan una mano: un precio que el OCR dejó 10 o
+ *  100 veces más alto, un ticker que Yahoo no conoce y del que sí sabemos el
+ *  equivalente (HUB por HUBS), o el mismo comprobante cargado dos veces.
+ *  Los tres arruinan el valor de la cartera sin avisar. */
+function txSospechosas() {
+  const out = [];
+  const alias = S.data?.renames || {};
+  const vistos = new Map();
+  for (const t of PF().tx || []) {
+    // Duplicado: mismo símbolo, mismo tipo, mismo día y cantidad casi igual.
+    // Pasa al leer dos veces el mismo pantallazo, o al renombrar un ticker que
+    // ya estaba anotado con su nombre bueno.
+    const destino = alias[t.sym] || t.sym;
+    const clave = `${destino}|${t.type}|${t.date || ''}`;
+    const parecido = (a, b) => a > 0 && b > 0 && Math.abs(b / a - 1) < 0.02;
+    // Cantidad Y precio casi iguales el mismo día: comprar dos veces lo mismo al
+    // mismo precio el mismo día es raro; cargar dos veces el mismo comprobante no.
+    const gemelo = (vistos.get(clave) || []).find((x) => parecido(+x.qty, +t.qty) && parecido(+x.price, +t.price));
+    if (gemelo) { out.push({ t, tipo: 'dup', gemelo }); continue; }
+    vistos.set(clave, [...(vistos.get(clave) || []), t]);
+
+    if (alias[t.sym]) { out.push({ t, tipo: 'alias', destino: alias[t.sym] }); continue; }
+    const m = tk(t.sym)?.price;
+    if (!(m > 0) || !(t.price > 0)) continue;
+    const razon = t.price / m;
+    if (razon < 5) continue;                       // dentro de lo posible
+    const f = [1000, 100, 10].find((x) => Math.abs(razon / x - 1) < 0.25);
+    out.push({ t, tipo: 'precio', mercado: m, sugerido: f ? t.price / f : null });
+  }
+  return out;
+}
+
+function txSospechosasCard() {
+  const malas = txSospechosas();
+  if (!malas.length) return '';
+  const fila = (m) => {
+    const cab = `<b>${m.t.type === 'sell' ? 'Venta' : 'Compra'} ${esc(m.t.sym)}</b> · ${esc(m.t.date || '')}`;
+    if (m.tipo === 'dup') {
+      const otro = m.gemelo.sym !== m.t.sym
+        ? `ya lo tienes anotado como <b>${esc(m.gemelo.sym)}</b> ese mismo día (Racional abrevia ${esc(m.gemelo.sym)} como ${esc(m.t.sym)})`
+        : 'está anotado dos veces';
+      return `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
+        <div class="grow">${cab}
+          <div class="tiny muted">${fmtQ(m.t.qty)} acciones a ${fmtUSD(m.t.price)}: ${otro}. Así, tu posición se ve del doble. Si de verdad compraste dos veces lo mismo, déjalo y listo.</div></div>
+        <button class="btn sm" data-action="txDrop" data-id="${esc(m.t.id)}">Borrar la copia</button></div>`;
+    }
+    if (m.tipo === 'alias') {
+      return `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
+        <div class="grow">${cab}
+          <div class="tiny muted"><b>${esc(m.t.sym)}</b> no existe en el mercado: Racional lo muestra abreviado y en realidad es <b>${esc(m.destino)}</b>. Sin corregirlo esta posición nunca va a tener precio ni señal.</div></div>
+        <button class="btn sm" data-action="txAlias" data-id="${esc(m.t.id)}" data-s="${esc(m.destino)}">→ ${esc(m.destino)}</button></div>`;
+    }
+    return `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
+      <div class="grow">${cab}
+        <div class="tiny muted">Registrado a <b>${fmtUSD(m.t.price)}</b> y ${esc(m.t.sym)} vale ${fmtUSD(m.mercado)} hoy.
+          ${m.sugerido ? `Lo más probable: <b>${fmtUSD(m.sugerido)}</b>, el lector perdió la coma.` : 'Revísalo a mano.'}</div></div>
+      ${m.sugerido ? `<button class="btn sm" data-action="txFix" data-id="${esc(m.t.id)}" data-p="${m.sugerido}">Corregir</button>`
+        : `<button class="btn secondary sm" data-action="editTx" data-id="${esc(m.t.id)}">Editar</button>`}</div>`;
+  };
+  return `<div class="card" style="border-color:var(--ss)"><b>⚠️ ${malas.length === 1 ? 'Un movimiento necesita tu atención' : `${malas.length} movimientos necesitan tu atención`}</b>
+    <p class="small muted">Mientras estén así, el valor y el resultado que muestra la app no son reales.</p>
+    ${malas.map(fila).join('')}</div>`;
+}
+
+/** ¿La versión del enlace difiere de la copia de este dispositivo?
+ *  Sin esto, una vez que el dispositivo se quedaba con su copia local quedaba
+ *  aislado para siempre: las correcciones publicadas no llegaban nunca. */
+function pubDiff() {
+  const local = PF();
+  if (!local || local.pub || local.ro) return null;            // ya estás viendo la del enlace
+  const pub = pubOf(local.id);
+  if (!pub?.tx?.length) return null;
+  const abiertas = (p) => {
+    const saldo = {};
+    for (const t of p.tx || []) saldo[t.sym] = (saldo[t.sym] || 0) + (t.type === 'sell' ? -(+t.qty || 0) : (+t.qty || 0));
+    return new Map(Object.entries(saldo).filter(([, v]) => v > 1e-9));
+  };
+  const mias = abiertas(local), suyas = abiertas(pub);
+  const sobran = [...mias.keys()].filter((x) => !suyas.has(x));   // tengo y el enlace no
+  const faltan = [...suyas.keys()].filter((x) => !mias.has(x));   // el enlace tiene y yo no
+  // Y las que están en las dos con cantidades distintas: es el caso silencioso,
+  // el que no cambia el número de posiciones pero sí cuánta plata dice que tienes.
+  const distintas = [...mias.keys()].filter((x) => suyas.has(x) && Math.abs(mias.get(x) / suyas.get(x) - 1) > 0.02)
+    .map((x) => ({ sym: x, mia: mias.get(x), suya: suyas.get(x) }));
+  const masNueva = pub.updated && (!local.updated || pub.updated > local.updated);
+  if (!sobran.length && !faltan.length && !distintas.length && !masNueva) return null;
+  return { sobran, faltan, distintas, masNueva, nPub: suyas.size, nLocal: mias.size, cuando: pub.updated };
+}
+
+function pubDiffCard() {
+  const d = pubDiff();
+  if (!d || S.pubDiffOculto) return '';
+  const partes = [];
+  if (d.sobran.length) partes.push(`<li>Tienes <b>${esc(d.sobran.join(', '))}</b> que en el enlace ya no está${d.sobran.length > 1 ? 'n' : ''} (¿ya vendiste?).</li>`);
+  if (d.faltan.length) partes.push(`<li>El enlace tiene <b>${esc(d.faltan.join(', '))}</b> y este dispositivo no.</li>`);
+  for (const x of d.distintas || []) {
+    partes.push(`<li>En <b>${esc(x.sym)}</b> este dispositivo dice ${fmtQ(x.mia)} acciones y el enlace ${fmtQ(x.suya)}.</li>`);
+  }
+  return `<div class="card" style="border-color:var(--accent)"><div class="between"><b>🔄 La cartera del enlace es distinta</b>
+      <button class="btn secondary sm" data-action="pubDiffHide">Después</button></div>
+    <p class="small muted">Este dispositivo guarda su propia copia (${d.nLocal} posiciones) y en el enlace hay otra (${d.nPub})${d.cuando ? `, actualizada ${relTime(d.cuando)}` : ''}.</p>
+    ${partes.length ? `<ul class="reasons">${partes.join('')}</ul>` : ''}
+    <div class="btn-row"><button class="btn" data-action="pubPull">⬇️ Traer la del enlace</button></div>
+    <p class="tiny muted">Reemplaza la copia de este dispositivo por la del enlace. Lo que tengas anotado solo aquí se pierde, así que si tus registros locales son los buenos, quédate con ellos y avísame para publicarlos.</p></div>`;
+}
+
+/** Reemplaza la copia local por la publicada. */
+function pubPull() {
+  const local = PF(), pub = pubOf(local.id);
+  if (!pub?.tx?.length) return toast('No hay una cartera publicada que traer');
+  local.tx = pub.tx.map((t) => ({ ...t }));
+  local.fav = [...(pub.fav || [])];
+  local.updated = pub.updated || new Date().toISOString();
+  savePf(false);                       // no cuenta como edición propia
+  S.pubDiffOculto = false; render(); syncHeader();
+  toast(`Traída la del enlace: ${positions().open.length} posiciones`);
+}
+
 /** Las carteras compartidas no se editan: se ofrece copiarlas a una propia.
  *  La publicada sí: se copia sola a este dispositivo y la edición continúa. */
 function roGuard() {
@@ -2283,6 +2434,24 @@ async function runAction(a, el) {
     case 'updateMarket': updateMarket(); break;
     case 'retryLoad': loadData(true); break;
     case 'seenOk': saveSeen(); render({ keepScroll: true }); break;
+    case 'pubPull': pubPull(); break;
+    case 'txDrop': {
+      const t = PF().tx.find((x) => x.id === el.dataset.id);
+      if (t) { PF().tx = PF().tx.filter((x) => x.id !== t.id); savePf(); render({ keepScroll: true }); toast(`Borrada la copia de ${t.sym}`); }
+      break;
+    }
+    case 'txAlias': { const t = PF().tx.find((x) => x.id === el.dataset.id); if (t) {
+        const antes = t.sym; t.sym = el.dataset.s;
+        t.note = `${t.note || ''} · ${antes} → ${t.sym} (Racional lo muestra abreviado)`.trim();
+        savePf(); render({ keepScroll: true }); toast(`${antes} pasó a ${t.sym}`);
+      } break; }
+    case 'txFix': { const t = PF().tx.find((x) => x.id === el.dataset.id); if (t) {
+        const antes = t.price; t.price = +(+el.dataset.p).toFixed(4);
+        if (t.amount) t.qty = +(t.amount / t.price).toFixed(8);
+        t.note = `${t.note || ''} · precio corregido de ${antes} a ${t.price}`.trim();
+        savePf(); render({ keepScroll: true }); toast(`${t.sym}: precio corregido a ${fmtUSD(t.price)}`);
+      } break; }
+    case 'pubDiffHide': S.pubDiffOculto = true; render({ keepScroll: true }); break;
     case 'reloadApp': location.reload(); break;
 
     case 'ocr': if (roGuard()) break; openOcrSheet(); break;
