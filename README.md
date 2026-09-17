@@ -53,6 +53,18 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.7.2 — publicación a prueba de choques
+
+Dos workflows coincidieron (el análisis diario de 16:55 y el intradía de 16:58) y **la app se quedó sin poder leer sus datos**: el paso de publicar hacía `git pull --rebase --autostash || true` y luego commiteaba a ciegas, así que cuando el rebase falló, el `|| true` se lo tragó y subió `latest.json`, `history.json`, `desks.json` y `disruption.json` con los marcadores `<<<<<<<` dentro.
+
+`scripts/publish.sh` reemplaza ese bloque en los cuatro workflows:
+
+1. **Valida cada JSON antes de commitear** — parseo completo y búsqueda de marcadores de conflicto. Si algo está roto, el run falla y no se publica nada: mejor datos de hace una hora que datos ilegibles.
+2. **Commit primero, sincronización después**, con `merge -X ours`: estos archivos son fotos completas del estado, no ediciones colaborativas, así que ante un choque manda la que se acaba de generar.
+3. **Revalida después del merge** y reintenta el push hasta tres veces.
+
+Verificado en un repositorio de prueba con tres escenarios: dos runs publicando a la vez (el remoto queda con JSON válido y cero marcadores), un archivo con marcadores de conflicto (rechazado, remoto intacto) y un JSON truncado a medias (rechazado, remoto intacto).
+
 ## v1.7.1 — alias de tickers de Racional
 
 Racional muestra algunos tickers abreviados que no existen en Yahoo Finance: compró **HUB** (HubSpot) y el radar la reportó como fallida (`sin historial de precios`) run tras run, dejando la posición sin precio, sin señal y fuera de las mesas.
