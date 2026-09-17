@@ -4,12 +4,12 @@
  "_watch": "Tickers en observación (agregados a mano o por el descubridor de noticias).",
  "core": [
   "ACRV",
-  "CCU",
   "CORZ",
   "DY",
   "FRVO",
-  "GWW",
   "HL",
+  "HUB",
+  "HUBS",
   "KTOS",
   "LITE",
   "MDCX",
@@ -808,7 +808,8 @@
   "VAL",
   "BRKR",
   "IOVA",
-  "AGI"
+  "AGI",
+  "HUB"
  ],
  "etfs": [
   "SPY",
