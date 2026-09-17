@@ -919,7 +919,24 @@ def main():
     print(f"== Market Intelligence AI :: {today} :: modo {args.mode.upper()}"
           f"{' DEMO' if args.demo else ''} :: {len(stocks)} acciones + {len(etfs)} ETFs", flush=True)
 
-    prev = load_json(DATA_DIR / "latest.json", {})
+    # El snapshot anterior es la base de los modos que no bajan todo: de ahí salen
+    # sector, fundamentales, analistas y noticias de lo que no toca refrescar. Si
+    # el archivo existe pero no se puede leer, seguir adelante produce un snapshot
+    # degradado (precios sin nada más) y encima lo publica. Ya pasó: un latest.json
+    # con marcadores de conflicto dejó 839 de 899 activos sin metadatos.
+    prev_path = DATA_DIR / "latest.json"
+    prev = load_json(prev_path, None)
+    if prev is None:
+        if prev_path.exists() and args.mode in ("fast", "news"):
+            print(f"ERROR: {prev_path} existe pero no se puede leer, y el modo "
+                  f"{args.mode.upper()} depende de él. Se aborta para no publicar un "
+                  f"snapshot sin metadatos. Corre el modo FULL para reconstruirlo.",
+                  file=sys.stderr)
+            sys.exit(1)
+        if prev_path.exists():
+            print(f"-- aviso: {prev_path} ilegible; el modo {args.mode.upper()} "
+                  f"reconstruye todo desde cero", flush=True)
+        prev = {}
     prev_by_sym = {t["sym"]: t for t in prev.get("tickers", [])}
 
     # ---------------- precios ----------------
