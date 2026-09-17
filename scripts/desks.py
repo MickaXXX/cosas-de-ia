@@ -96,6 +96,10 @@ def load_all():
 def positions_of(tx, tickers):
     """Reconstruye posiciones abiertas: cantidad, costo y valor a precio de hoy."""
     acc = {}
+    # Las compras van antes que las ventas del mismo día: no se puede vender lo
+    # que aún no se compró, y sin este orden una venta intradía no encontraba
+    # acciones que restar.
+    tx = sorted(tx, key=lambda t: (t.get("date") or "", 1 if t.get("type") == "sell" else 0, t.get("id") or ""))
     for t in tx:
         sym = (t.get("sym") or "").upper()
         if not sym:

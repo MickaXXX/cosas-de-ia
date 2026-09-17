@@ -1119,6 +1119,9 @@ def main():
         "version": 3, "mode": args.mode, "elapsed_s": round(time.time() - t0),
         "weights": {k: v for k, v in W.items() if not k.startswith("_")},
         "labels": SIGNAL_LABELS, "regime": regime, "market": market, "market_news": market_news,
+        # Los alias viajan al cliente: así la app puede ofrecer arreglar una
+        # posición guardada con un ticker que Yahoo no conoce (HUB por HUBS).
+        "renames": universe.get("renames") or {},
         "changes": changes[:40], "tickers": tickers, "failed": failed,
         "investors": {i["short"]: i.get("name", i["short"]) for i in investors.get("investors", [])},
         "investors_note": investors.get("_note", ""),
