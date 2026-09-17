@@ -48,13 +48,21 @@ def extract_json(body: str) -> dict:
         fail(f"El cuerpo del issue no trae un JSON válido: {e}")
 
 
-def clean_tx(tx: list) -> list:
-    """Solo se acepta lo que el motor sabe usar; el resto se descarta en silencio."""
+def clean_tx(tx: list, renames: dict | None = None) -> list:
+    """Solo se acepta lo que el motor sabe usar; el resto se descarta en silencio.
+
+    Racional muestra algunos tickers abreviados o con el nombre corto y no siempre
+    coinciden con Yahoo Finance (HUB por HUBS de HubSpot). El mapa de renames del
+    universo los traduce al entrar: si no, la posición queda sin precio ni señal
+    y el radar la reporta como fallida un día tras otro.
+    """
+    renames = renames or {}
     out = []
     for t in tx[:MAX_TX]:
         if not isinstance(t, dict):
             continue
         sym = str(t.get("s") or t.get("sym") or "").strip().upper()
+        sym = renames.get(sym, sym)
         if not SYM_RE.match(sym):
             continue
         try:
@@ -87,8 +95,9 @@ def main():
         fail("Falta ISSUE_BODY.")
     payload = extract_json(body)
 
+    uni = json.load(open(CONFIG / "universe.json", encoding="utf-8"))
     pf_in = payload.get("pf") or payload
-    tx = clean_tx(pf_in.get("tx") or [])
+    tx = clean_tx(pf_in.get("tx") or [], uni.get("renames") or {})
     if not tx:
         fail("La cartera no trae movimientos utilizables.")
     name = str(pf_in.get("name") or "Mi cartera")[:40]
@@ -111,7 +120,6 @@ def main():
               ensure_ascii=False, separators=(",", ":"))
 
     # Todo lo que alguien tenga en una cartera publicada entra al radar como core.
-    uni = json.load(open(CONFIG / "universe.json", encoding="utf-8"))
     tenidos = sorted({s for p in lista for s in held(p.get("tx", []))})
     antes = set(uni.get("core", []))
 

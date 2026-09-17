@@ -53,6 +53,13 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.7.1 — alias de tickers de Racional
+
+Racional muestra algunos tickers abreviados que no existen en Yahoo Finance: compró **HUB** (HubSpot) y el radar la reportó como fallida (`sin historial de precios`) run tras run, dejando la posición sin precio, sin señal y fuera de las mesas.
+
+- `sync_portfolio.py` ahora **traduce los símbolos al entrar** usando el mapa `renames` del universo, así la posición nace con el ticker que el motor sabe descargar. Verificado: `HUB → HUBS` y `SQ → XYZ`.
+- `HUB: HUBS` agregado al mapa; HUB sale del universo (era un símbolo inválido que iba a seguir fallando) y HUBS entra en `core`.
+
 ## Novedades v1.7 — Radar de disrupción
 
 La pestaña IA cambia de pregunta. El modelo de señales responde *"¿qué está bien hoy?"*; el radar de disrupción responde *"¿dónde hay un cambio grande que el mercado todavía no puso en precio?"*. Son cosas distintas y a menudo opuestas: una acción que ya subió y gusta a todos los analistas puntúa alto en el modelo y bajo aquí, porque ya no queda sorpresa.

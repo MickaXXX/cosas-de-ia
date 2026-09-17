@@ -8,7 +8,6 @@
   "DY",
   "FRVO",
   "HL",
-  "HUB",
   "HUBS",
   "KTOS",
   "LITE",
@@ -808,8 +807,7 @@
   "VAL",
   "BRKR",
   "IOVA",
-  "AGI",
-  "HUB"
+  "AGI"
  ],
  "etfs": [
   "SPY",
@@ -960,6 +958,7 @@
   "FB": "META",
   "RE": "EG",
   "FISV": "FI",
-  "ANTM": "ELV"
+  "ANTM": "ELV",
+  "HUB": "HUBS"
  }
 }

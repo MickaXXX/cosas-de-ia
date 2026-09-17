@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
