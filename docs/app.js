@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.7.4';
+const APP_VERSION = '1.7.5';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -1667,8 +1667,11 @@ function openDetail(sym, silent = false) {
     <div><span>FCF yield</span><b>${pct(f.fcf_yield, 1, false)}</b></div><div><span>Dividendo</span><b>${pct(f.dividend_yield, 2, false)}</b></div></div>
     ${t.earnings_date ? `<p class="small">📅 Próximos resultados: <b>${t.earnings_date}</b></p>` : ''}</div>`;
 
-  if (hist.length >= 2) html += `<div class="card"><h2 style="margin-top:0">Evolución del score <small>${hist.length} días</small></h2>${spark(hist.map((h) => h.s ?? 50), { big: true, color: 'var(--accent)' })}
-    <div class="between tiny muted mono"><span>${hist[0].d}: ${hist[0].s} (${SIG_LABEL[hist[0].sig]})</span><span>${hist[hist.length - 1].d}: ${hist[hist.length - 1].s}</span></div></div>`;
+  // Las filas rellenadas con precios de antes traen precio y nada más: sirven para
+  // la curva de la cartera, no para la del score.
+  const conScore = hist.filter((h) => h.s != null);
+  if (conScore.length >= 2) html += `<div class="card"><h2 style="margin-top:0">Evolución del score <small>${conScore.length} días</small></h2>${spark(conScore.map((h) => h.s), { big: true, color: 'var(--accent)' })}
+    <div class="between tiny muted mono"><span>${conScore[0].d}: ${conScore[0].s} (${SIG_LABEL[conScore[0].sig]})</span><span>${conScore[conScore.length - 1].d}: ${conScore[conScore.length - 1].s}</span></div></div>`;
 
   if (t.news?.length) {
     const mine = held(), favs = new Set(PF().fav);
