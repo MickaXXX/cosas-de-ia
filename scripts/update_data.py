@@ -840,25 +840,79 @@ def build_market(symbols: dict, hists: dict) -> dict:
     return out
 
 
-def update_history(history: dict, tickers: list, today: str, keep_days: int, universe: set) -> dict:
+def backfill_prices(rows: list, frame, keep_days: int, today: str) -> list:
+    """Rellena los días que faltan con los precios que ya se bajaron.
+
+    El historial diario empezaba el día que se agregaba el activo y crecía de a
+    una fila por run, así que un activo nuevo tardaba meses en tener curva y un
+    archivo dañado borraba lo poco que había. Los precios de un año ya vienen
+    descargados para calcular los indicadores: aprovecharlos cuesta cero
+    peticiones. Las filas rellenadas llevan solo el precio y la marca "bf": el
+    score y la señal de un día pasado no se pueden reconstruir de forma honesta,
+    así que no se inventan.
+    """
+    if frame is None or len(frame) < 2:
+        return rows
+    tengo = {r.get("d") for r in rows}
+    try:
+        cierres = frame["Close"].dropna()
+    except Exception:
+        return rows
+    for fecha, precio in list(cierres.items())[-keep_days:]:
+        d = fecha.strftime("%Y-%m-%d")
+        if d in tengo or d >= today:
+            continue
+        try:
+            p = round(float(precio), 4)
+        except (TypeError, ValueError):
+            continue
+        if p > 0:
+            rows.append({"d": d, "p": p, "bf": 1})
+    return rows
+
+
+# Días que se guardan de los activos que no están en ninguna cartera. El radar
+# completo a 120 días pesaría 6,4 MB y la app lo baja cada vez que abre; con 40
+# días alcanza de sobra para la curva del score y el archivo queda en cientos de
+# KB. Las posiciones sí guardan el máximo: de ahí sale el rendimiento diario.
+DIAS_RADAR = 40
+
+
+def update_history(history: dict, tickers: list, today: str, keep_days: int, universe: set,
+                   frames: dict | None = None, hondos: set | None = None) -> dict:
+    hondos = hondos or set()
+    corto = min(DIAS_RADAR, keep_days)
+    tope = lambda sym: keep_days if sym in hondos else corto
     new_hist = {}
     for tk in tickers:
-        rows = [row for row in history.get(tk["sym"], []) if row.get("d") != today]
+        sym = tk["sym"]
+        rows = [row for row in history.get(sym, []) if row.get("d") != today]
         rows.append({"d": today, "p": tk["price"], "s": tk["score"], "sig": tk["signal"],
                      "sh": tk["h"]["short"]["s"], "md": tk["h"]["medium"]["s"], "lg": tk["h"]["long"]["s"]})
+        if frames and sym in hondos:
+            rows = backfill_prices(rows, frames.get(sym), keep_days, today)
         rows.sort(key=lambda x: x["d"])
-        new_hist[tk["sym"]] = rows[-keep_days:]
+        new_hist[sym] = rows[-tope(sym):]
     for sym in list(history.keys()):
         if sym in universe and sym not in new_hist:
-            new_hist[sym] = history[sym][-keep_days:]
+            new_hist[sym] = history[sym][-tope(sym):]
     return new_hist
+
+
+def simbolos_en_cartera() -> set:
+    """Todo lo que aparece en la cartera publicada, vendido incluido: son los que
+    necesitan historial hondo para reconstruir el rendimiento diario."""
+    book = load_json(DATA_DIR / "portfolios.json", {}) or {}
+    return {t.get("sym") for p in book.get("list", []) for t in (p.get("tx") or []) if t.get("sym")} | \
+           {s for p in book.get("list", []) for s in (p.get("fav") or [])}
 
 
 def signal_changes(tickers: list, history: dict) -> list:
     changes = []
     order = ["strong_sell", "sell", "hold", "buy", "strong_buy"]
     for tk in tickers:
-        rows = history.get(tk["sym"], [])
+        # Solo las filas con señal propia: las rellenadas traen precio y nada más.
+        rows = [r for r in history.get(tk["sym"], []) if r.get("sig")]
         if len(rows) < 2:
             continue
         prev = rows[-2]
@@ -1063,9 +1117,31 @@ def main():
     market = build_market(market_syms, hists)
     regime = market_regime(market)
 
-    history = load_json(DATA_DIR / "history.json", {})
+    # Un history.json ilegible se leía como {} y el run lo reescribía con un solo
+    # día: así se perdieron once días de curva sin que nadie se enterara. Ahora se
+    # aborta y se publica nada, que es recuperable; un historial truncado no lo es.
+    hist_path = DATA_DIR / "history.json"
+    history = load_json(hist_path, None)
+    if history is None:
+        if hist_path.exists():
+            print(f"ERROR: {hist_path} existe pero no se puede leer. Se aborta para no "
+                  f"reemplazar el historial diario por un solo día. Restaura el archivo "
+                  f"desde el último commit bueno y vuelve a correr.", file=sys.stderr)
+            sys.exit(1)
+        history = {}
     keep_hist = set(all_syms) if not args.only else set(all_syms) | {t["sym"] for t in prev.get("tickers", [])}
-    history = update_history(history, tickers, today, W["retention"]["history_days"], keep_hist)
+    hondos = simbolos_en_cartera()
+    antes = {k: len(v) for k, v in history.items()}
+    history = update_history(history, tickers, today, W["retention"]["history_days"], keep_hist,
+                             frames=None if args.demo else hists, hondos=hondos)
+    # Segundo freno, por si el historial se acorta por una razón que no vimos venir:
+    # que un símbolo pierda días solo puede pasar por retención (120 días).
+    tope = lambda k: W["retention"]["history_days"] if k in hondos else min(DIAS_RADAR, W["retention"]["history_days"])
+    perdieron = [k for k, n in antes.items() if k in history and len(history[k]) < min(n, tope(k))]
+    if len(perdieron) > max(5, 0.2 * len(antes)):
+        print(f"ERROR: {len(perdieron)} símbolos perderían días de historial "
+              f"(p. ej. {', '.join(perdieron[:5])}). Se aborta sin publicar.", file=sys.stderr)
+        sys.exit(1)
     changes = signal_changes(tickers, history)
 
     # ---------------- noticias ----------------

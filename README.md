@@ -53,6 +53,15 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.7.5 — el historial diario, restaurado y a prueba del mismo golpe
+
+La pestaña Rendimiento decía *"Aún no hay historial suficiente"*. No era falta de días: el run de las 17:00 del 17-sep leyó un `history.json` con marcadores de conflicto, `load_json` devolvió `{}` en silencio y el run lo reescribió **con un solo día**. Once días de curva se borraron sin que nada fallara.
+
+- **Restaurado** desde el último commit bueno (`bf0728f`) y fusionado con el cierre del 17: 12 días, del 06-sep al 17-sep, 899 símbolos. La curva de la cartera vuelve a dibujarse (US$4.061,72 → US$4.133,64).
+- **El mismo golpe ya no pasa dos veces**: si `history.json` existe pero no se puede leer, el run aborta en vez de publicar un historial de un día. Y un segundo freno rechaza cualquier run donde más del 20% de los símbolos perdería días.
+- **Relleno hacia atrás**: los precios de un año ya se descargan para calcular los indicadores, así que ahora se usan para completar los días que faltan en las posiciones de la cartera. Una acción recién comprada deja de tardar meses en tener curva. Las filas rellenadas llevan solo precio y la marca `bf`: el score y la señal de un día pasado no se pueden reconstruir de forma honesta, así que no se inventan (la tarjeta "Evolución del score" solo cuenta los días con score real).
+- **Retención por uso**: el radar completo a 120 días pesaría 6,4 MB y la app baja ese archivo cada vez que abre. Los símbolos de la cartera guardan los 120 días; el resto, 40. De ahí sale la curva de rendimiento sin que el archivo se dispare.
+
 ## v1.7.4 — la copia del teléfono se pone al día sola
 
 El teléfono mostraba **29 posiciones con KTOS abierta y HUB fuera del radar** mientras el enlace ya tenía las 27 correctas. Tres causas distintas, las tres arregladas:
