@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.7.5';
+const APP_VERSION = '1.7.6';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -866,7 +866,8 @@ function viewRendimiento() {
     <div class="grid3" style="margin-top:10px">
       ${[['1 semana', retOver(series, 5)], ['2 semanas', retOver(series, 10)], ['30 días', retOver(series, 21)]].map(([k, v]) =>
         `<div class="stat"><div class="k">${k}</div><div class="v mono ${cls(v)}">${pct(v)}</div></div>`).join('')}
-    </div></div>
+    </div>
+    <p class="tiny muted" style="margin-bottom:0">Simulación: son <b>tus posiciones de hoy</b> valoradas a los precios de cada día, no el saldo que tenía tu cuenta entonces (en abril no tenías estas acciones). Sirve para ver cómo se comporta la mezcla que tienes ahora.</p></div>
 
     <div class="card"><h2 style="margin-top:0">Mejores y peores días</h2>
     <div class="grid2">
@@ -886,8 +887,7 @@ function viewRendimiento() {
 
     <div class="card"><h2 style="margin-top:0">Por mes</h2><div class="kv">
     ${Object.entries(porMes).sort().reverse().map(([m, v]) => `<div><span>${m}</span><b class="mono ${cls(v)}">${fmtUSD(v)}</b></div>`).join('')}</div></div>
-
-    <p class="tiny muted center">El histórico se reconstruye aplicando tus posiciones actuales a los precios pasados. Sirve para ver comportamiento y tendencia, no como estado de cuenta.</p>`;
+`;
   return html;
 }
 
