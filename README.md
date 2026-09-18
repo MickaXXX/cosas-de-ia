@@ -53,6 +53,10 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.7.6 — el historial, completo y dicho como es
+
+El relleno hacia atrás dejó la curva en **120 días** (abril → septiembre) en vez de 12. Con doce días la simulación se leía sola; con ciento veinte se presta a confusión, así que el aviso ahora va **bajo el gráfico**, donde se leen los números, y no al pie: son las posiciones de hoy valoradas a los precios de cada día, no el saldo que tenía la cuenta en abril. La nota que estaba al final decía lo mismo y se quitó.
+
 ## v1.7.5 — el historial diario, restaurado y a prueba del mismo golpe
 
 La pestaña Rendimiento decía *"Aún no hay historial suficiente"*. No era falta de días: el run de las 17:00 del 17-sep leyó un `history.json` con marcadores de conflicto, `load_json` devolvió `{}` en silencio y el run lo reescribió **con un solo día**. Once días de curva se borraron sin que nada fallara.
