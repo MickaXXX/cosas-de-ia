@@ -7,9 +7,11 @@
   "AMD",
   "APLD",
   "CORZ",
+  "DFTX",
   "DY",
   "FRVO",
   "HUBS",
+  "IONQ",
   "LITE",
   "MDCX",
   "META",
@@ -807,7 +809,8 @@
   "RSI",
   "MIRM",
   "GPK",
-  "FIVN"
+  "FIVN",
+  "DFTX"
  ],
  "etfs": [
   "SPY",
