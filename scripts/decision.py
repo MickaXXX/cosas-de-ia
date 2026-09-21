@@ -250,6 +250,17 @@ def c_tecnico(t):
     return promedio(partes)
 
 
+def rev_sana(v):
+    """Una revisión de utilidades utilizable.
+
+    Los datos publicados antes de la corrección traen porcentajes calculados
+    sobre estimaciones que cruzaban el cero (-580% en un caso). Se acotan aquí
+    también, para que un archivo viejo no desequilibre la componente.
+    """
+    x = num(v)
+    return None if x is None else max(-100.0, min(100.0, x))
+
+
 def c_earnings(t):
     a = t.get("analysts") or {}
     rev = a.get("revisions") or {}
@@ -257,8 +268,8 @@ def c_earnings(t):
     balance = escala((up - down) / (up + down) * 100, -100, 100) if (up + down) else None
     sor = a.get("surprises") or []
     partes = [
-        (escala(num(a.get("eps_rev90")), -8, 8), 5),
-        (escala(num(a.get("eps_rev30")), -4, 4), 4),
+        (escala(rev_sana(a.get("eps_rev90")), -8, 8), 5),
+        (escala(rev_sana(a.get("eps_rev30")), -4, 4), 4),
         (balance, 4),
         (escala(num(a.get("eps_growth_next")), -15, 35), 3),
         (escala(num(a.get("rev_growth_next")), -5, 25), 2),
@@ -312,8 +323,12 @@ def vetos(t, peso, grupo, peso_grupo, prev_t):
     if prev_shares and shares and shares / prev_shares - 1 > 0.05:
         out.append(("dilucion", f"Emitió {coma((shares / prev_shares - 1) * 100)}% más acciones desde el análisis anterior: "
                                 f"tu parte de la empresa se achicó."))
-    if num(a.get("eps_rev90")) is not None and num(a.get("eps_rev90")) < -10:
-        out.append(("guidance", f"Las estimaciones de utilidades del próximo año bajaron {coma(abs(num(a.get('eps_rev90'))))}% "
+    rev90 = rev_sana(a.get("eps_rev90"))
+    if a.get("eps_cruce90") == "a pérdidas":
+        out.append(("guidance", "La estimación de utilidades del próximo año cruzó a pérdidas en 90 días: "
+                                "Wall Street ya no espera que gane plata."))
+    elif rev90 is not None and rev90 < -10:
+        out.append(("guidance", f"Las estimaciones de utilidades del próximo año bajaron {coma(abs(rev90))}% "
                                 f"en 90 días. Eso es un recorte, no ruido."))
     if peso > MAX_POS + 4:
         out.append(("concentracion", f"Pesa {coma(peso)}% de la cartera: pase lo que pase con la empresa, "
