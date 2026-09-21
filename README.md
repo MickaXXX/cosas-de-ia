@@ -87,6 +87,10 @@ Un porcentaje sobre una estimación que pasa de casi cero a negativa no signific
 
 Cada corrida compara contra la anterior y solo reporta lo que cambió: puntaje, componentes, peso, señal. Los movimientos prioritarios se ordenan por **capital que mueven**, no por lo grave que suene el motivo —salir de una posición de US$64 importa menos que recortar una de US$930—, nunca se repite el mismo motivo tres veces, y lo que ya se dijo ayer sin novedades baja en la lista.
 
+### Cuando no hay nada que reorganizar
+
+Si mover los pesos no bajaría el riesgo, no se propone reorganización: se dice. Después de que la cartera pasara de 3,43% a 2,67% de volatilidad diaria, el plan completo la habría dejado en 2,76% —peor—, así que el motor lo retira y deja solo las decisiones sobre posiciones concretas (un veto, una tesis rota). Listar veinte movimientos igual sería fabricar operaciones por ruido, que es justo lo que este motor tiene que evitar.
+
 ### Formato
 
 Diagnóstico (4-6 líneas) → movimientos prioritarios (máximo 3, cada uno con por qué ahora, qué cambió, principal riesgo y qué lo invalidaría) → tabla de reorganización propuesta → alertas de cartera (máximo 3) → qué vigilar (máximo 5) → cómo ejecutarlo, con las ventas financiando exactamente las compras. Tocar cualquier fila de la tabla abre las siete componentes de esa posición y su confianza de dato.
