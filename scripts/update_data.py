@@ -694,8 +694,20 @@ def parse_modules(mods: dict, price_hint=None) -> dict:
                 # pasó la primera vez.
                 clave = next((k for k in et if str(dias) in k and "day" in k.lower()), None)
                 antes = num(et.get(clave)) if clave else None
-                if antes and antes > 0:
-                    a[f"eps_rev{dias}"] = round((hoy / antes - 1) * 100, 2)
+                if antes is None:
+                    continue
+                # Un porcentaje sobre una base que cruza el cero no significa nada:
+                # WULF daba -580% porque su estimación pasó de casi cero a negativa.
+                # Cuando eso pasa se guarda el cruce, que sí es información, y no un
+                # número explosivo que ensucia la componente de earnings.
+                if antes > 0 and hoy > 0:
+                    a[f"eps_rev{dias}"] = round(max(-100.0, min(100.0, (hoy / antes - 1) * 100)), 2)
+                elif antes > 0 >= hoy:
+                    a[f"eps_rev{dias}"] = -100.0
+                    a[f"eps_cruce{dias}"] = "a pérdidas"
+                elif hoy > 0 >= antes:
+                    a[f"eps_rev{dias}"] = 100.0
+                    a[f"eps_cruce{dias}"] = "a ganancias"
         re_ = tr.get("revenueEstimate") or {}
         cre = num(re_.get("growth"))
         if cre is not None:
@@ -838,6 +850,7 @@ def analyze(sym, hist, meta, is_etf, W, gurus) -> dict:
                       "upside": r(a.get("upside"), 1), "dist": a.get("dist"), "revisions": a.get("revisions"),
                       # Hacia dónde se mueven las expectativas, no solo cuántos opinan.
                       "eps_rev30": a.get("eps_rev30"), "eps_rev90": a.get("eps_rev90"),
+                      "eps_cruce90": a.get("eps_cruce90"),
                       "eps_growth_next": a.get("eps_growth_next"), "rev_growth_next": a.get("rev_growth_next"),
                       "surprises": a.get("surprises")}
                      if a else None),

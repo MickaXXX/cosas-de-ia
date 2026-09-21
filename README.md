@@ -79,6 +79,10 @@ Cada posición cae en uno de cinco estados —🟢 aumentar, 🟢 mantener, 🟡
 
 No hay CPI, PCE ni actas de la Fed en esta fuente y no se fabrican. El régimen se deduce de los precios que reaccionan a esos datos antes que nadie —cobre contra oro y small caps contra el índice para crecimiento; petróleo y la tasa a diez años para precios— y se clasifica en Goldilocks, reflación, desaceleración/desinflación o estanflación, **etiquetado como lo que es**: lectura de mercado, no dato oficial.
 
+### Revisiones que cruzan el cero
+
+Un porcentaje sobre una estimación que pasa de casi cero a negativa no significa nada: WULF daba −580% en 30 días. Cuando la estimación cruza el cero se guarda el **cruce** —"a pérdidas" o "a ganancias"—, que sí es información y vale como veto, en vez de un número explosivo. El resto se acota a ±100%, en el motor y también al leer archivos publicados antes de la corrección.
+
 ### Continuidad
 
 Cada corrida compara contra la anterior y solo reporta lo que cambió: puntaje, componentes, peso, señal. Los movimientos prioritarios se ordenan por **capital que mueven**, no por lo grave que suene el motivo —salir de una posición de US$64 importa menos que recortar una de US$930—, nunca se repite el mismo motivo tres veces, y lo que ya se dijo ayer sin novedades baja en la lista.
