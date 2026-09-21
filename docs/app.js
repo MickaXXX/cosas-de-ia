@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -12,7 +12,7 @@ const QUOTES_URL = './data/quotes.json';
 const PUB_URL = './data/portfolios.json';
 const DESKS_URL = './data/desks.json';
 const DISRUP_URL = './data/disruption.json';
-const REB_URL = './data/rebalance.json';
+const DEC_URL = './data/decision.json';
 
 const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
@@ -291,15 +291,15 @@ async function loadData(fresh = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
   if (!S.data) render();          // pinta "cargando" antes de esperar la red
   try {
-    const [d, q, pub, desks, disrup, reb] = await Promise.all([
+    const [d, q, pub, desks, disrup, dec] = await Promise.all([
       fetchJSON(DATA_URL, fresh),
       fetchJSON(QUOTES_URL, fresh).catch(() => null),
       fetchJSON(PUB_URL, true).catch(() => null),
       fetchJSON(DESKS_URL, fresh).catch(() => null),
       fetchJSON(DISRUP_URL, fresh).catch(() => null),
-      fetchJSON(REB_URL, fresh).catch(() => null),
+      fetchJSON(DEC_URL, fresh).catch(() => null),
     ]);
-    S.data = d; S.quotes = q; S.desks = desks; S.disrup = disrup; S.reb = reb; S.loadError = null;
+    S.data = d; S.quotes = q; S.desks = desks; S.disrup = disrup; S.dec = dec; S.loadError = null;
     S.pub = (pub?.list || []).map((p) => ({
       ...p, baseId: p.id, id: 'pub:' + p.id, fav: p.fav || [],
       tx: (p.tx || []).map((t, i) => ({ ...t, id: t.id || `${p.id}-${i}`, type: t.type || 'buy', date: t.date || today() })),
@@ -1197,47 +1197,127 @@ function movFila(f) {
 
 /** ¿Hay una forma mejor de repartir lo que ya tienes? Es lo primero que se ve en
  *  la hoja de IA, antes del radar: son decisiones sobre la cartera propia. */
-function rebalanceCard() {
-  const r = S.reb;
-  if (!r?.antes) return '';
-  const a = r.antes, d = r.despues, es = r.esencial || {};
-  const baja = (a.vol && es.vol) ? (1 - es.vol / a.vol) * 100 : null;
-  const met = (k, antes, luego, suf = '') => `<div class="stat"><div class="k">${k}</div>
-    <div class="v mono" style="font-size:15px">${antes}${suf} <span class="muted">→</span> <b>${luego}${suf}</b></div></div>`;
+const EST_CLASE = { AUMENTAR: 'sb', MANTENER: 'b', OBSERVAR: 'h', REDUCIR: 's', SALIR: 'ss' };
+const EST_FLECHA = { AUMENTAR: '↑', MANTENER: '=', OBSERVAR: '=', REDUCIR: '↓', SALIR: '↓' };
+const COMP_NOMBRE = {
+  valoracion: 'Fundamentales y valoración', calidad: 'Calidad y factores', tecnico: 'Técnico y momentum',
+  earnings: 'Earnings y revisiones', macro: 'Macro y régimen', flujos: 'Institucionales y sentimiento',
+  riesgo: 'Riesgo de cartera',
+};
+
+/** Fila de un movimiento concreto del plan. */
+function movFila(f) {
+  const venta = f.accion === 'vender';
+  return `<div class="between" style="padding:8px 0;border-top:1px solid var(--border)">
+    <div class="grow"><div class="row"><span class="chip sm ${venta ? 'ss' : 'sb'}">${venta ? 'Vender' : 'Comprar'}</span>
+        <b>${esc(f.sym)}</b><span class="tiny muted mono">${fmtN(f.peso, 1)}% → ${fmtN(f.meta, 1)}%</span></div>
+      <div class="tiny muted">${esc(f.por_que || '')}</div></div>
+    <b class="mono ${venta ? 'down' : 'up'}">${fmtUSD(f.usd)}</b></div>`;
+}
+
+/** Ficha de una posición dentro del motor de decisión, en página aparte. */
+function openDecision(sym) {
+  const f = (S.dec?.posiciones || []).find((x) => x.sym === sym);
+  if (!f) return;
+  const t = tk(sym);
+  const barra = (k) => scoreBar(f.comp[k], `${COMP_NOMBRE[k]} (${S.dec.pesos_modelo[k]}%)`);
+  $('#pageContent').innerHTML = `<div class="page-head"><button class="icon-btn" data-action="closePage" aria-label="Volver">←</button>
+      <div class="grow"><div class="row"><span class="sym" style="font-size:18px">${esc(sym)}</span>
+        <span class="chip sm ${EST_CLASE[f.estado]}">${esc(f.estado)}</span></div>
+      <div class="name ellipsis">${esc(f.nombre || '')}</div></div></div><div class="inner">
+
+    ${f.vetos?.length ? `<div class="card" style="border-color:var(--ss)"><b>⛔ Antes que el puntaje</b>
+      <ul class="reasons">${f.vetos.map((v) => `<li>${esc(v.texto)}</li>`).join('')}</ul>
+      <p class="tiny muted" style="margin-bottom:0">Un veto manda sobre el puntaje: por bueno que sea, no se aumenta una posición con esto encima.</p></div>` : ''}
+
+    <div class="card"><div class="between">
+        <div><div class="tiny muted">Puntaje de cartera</div>
+          <div class="hero mono t-${f.score >= 65 ? 'sb' : f.score >= 45 ? 'h' : 'ss'}">${f.score}<span style="font-size:16px">/100</span></div>
+          ${f.score_prev != null && f.score !== f.score_prev ? `<div class="tiny ${cls(f.score - f.score_prev)}">${f.score > f.score_prev ? '+' : ''}${f.score - f.score_prev} desde el análisis anterior</div>` : ''}</div>
+        <div class="center"><div class="tiny muted">Peso</div><div class="hero mono" style="font-size:26px">${fmtN(f.peso, 1)}%</div>
+          <div class="tiny muted">le corresponde ${f.meta != null ? `${fmtN(f.meta, 1)}%` : '—'}</div></div></div>
+      <p class="small" style="margin-bottom:0">${esc(f.motivo || '')}</p></div>
+
+    <div class="card"><h2 style="margin-top:0">Las siete componentes</h2>
+      <div class="hbars">${Object.keys(S.dec.pesos_modelo).map(barra).join('')}</div>
+      <p class="tiny muted">Confianza del dato: ${f.confianza}%. Lo que la fuente no trae no se inventa: baja la confianza y se dice.</p></div>
+
+    ${f.cambios?.length ? `<div class="card"><h2 style="margin-top:0">Qué cambió</h2>
+      <ul class="reasons">${f.cambios.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></div>` : ''}
+
+    ${f.grupo ? `<div class="card"><h2 style="margin-top:0">No está sola</h2>
+      <p class="small">Se mueve junto a <b>${esc(f.grupo.filter((x) => x !== sym).join(', '))}</b>. Sumar aquí es sumar a todas.</p></div>` : ''}
+
+    ${t ? `<div class="btn-row"><button class="btn secondary" data-action="open" data-s="${esc(sym)}">Ver la ficha completa de ${esc(sym)}</button></div>` : ''}
+  </div>`;
+  $('#page').hidden = false; document.body.classList.add('locked');
+}
+
+/** El motor de decisión: qué mantener, qué aumentar, qué reducir, qué sacar.
+ *  Es lo primero de la hoja de IA porque son decisiones sobre la plata propia. */
+function decisionCard() {
+  const d = S.dec;
+  if (!d?.posiciones?.length) return '';
+  const est = (f) => `<span class="chip sm ${EST_CLASE[f.estado]}">${f.estado}</span>`;
+  const conteo = d.conteo || {};
+
+  const tabla = `<table class="tbl"><thead><tr><th>Acción</th><th>Estado</th><th class="r">Cambio</th><th>Motivo</th></tr></thead>
+    <tbody>${d.posiciones.map((f) => `<tr data-action="decision" data-s="${esc(f.sym)}">
+      <td><b>${esc(f.sym)}</b><div class="tiny muted mono">${fmtN(f.peso, 1)}%</div></td>
+      <td>${est(f)}${f.vetos?.length ? ' <span class="tiny" style="color:var(--ss)">⛔</span>' : ''}</td>
+      <td class="r mono">${EST_FLECHA[f.estado]}${f.meta != null && Math.abs(f.meta - f.peso) >= 1 ? `<div class="tiny muted">${fmtN(f.meta, 1)}%</div>` : ''}</td>
+      <td class="tiny">${esc((f.vetos?.[0]?.texto || f.motivo || '').slice(0, 95))}</td></tr>`).join('')}</tbody></table>`;
 
   return `<div class="card" style="border-color:var(--accent)">
-    <div class="between"><h2 style="margin:0">🧭 Cómo reorganizar tu cartera</h2>
-      <span class="tag">${esc(r.date || '')}</span></div>
-    <p class="small">${negritas(r.titular || '')}</p>
-    ${(r.grupos || []).filter((g) => g.peso >= 15).map((g) => `<p class="tiny muted">Se mueven juntos (correlación ${fmtN(g.corr, 2)}): <b>${esc(g.syms.join(', '))}</b> — ${fmtN(g.peso, 0)}% de la cartera.</p>`).join('')}
+      <div class="between"><h2 style="margin:0">🧭 Diagnóstico de cartera</h2>
+        <span class="tag">${esc(d.date || '')}</span></div>
+      <ul class="reasons">${(d.diagnostico || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <details><summary class="small">Régimen: ${esc(d.macro?.label || '—')}</summary>
+        <p class="small">${esc(d.macro?.detalle || '')}</p>
+        <ul class="reasons small">${(d.macro?.senales || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+        <p class="tiny muted">${esc(d.macro?.fuente || '')}</p></details></div>
 
-    ${es.filas?.length ? `<h3>Si solo haces ${es.filas.length === 1 ? 'un movimiento' : `${es.filas.length} movimientos`}</h3>
-      <p class="small muted">Es casi todo el beneficio con la menor cantidad de operaciones: el riesgo diario baja de
-        ${fmtN(a.vol, 2)}% a <b>${fmtN(es.vol, 2)}%</b>${baja ? ` (${fmtN(baja, 0)}% menos)` : ''}.</p>
-      ${es.filas.map(movFila).join('')}` : ''}
+    ${(d.prioritarios || []).length ? `<div class="card"><h2 style="margin-top:0">🎯 Movimientos prioritarios</h2>
+      <p class="small muted">Como máximo tres. El resto puede esperar.</p>
+      ${d.prioritarios.map((p) => `<div class="mov">
+        <div class="between"><div class="row"><b>${esc(p.sym)}</b><span class="chip sm ${EST_CLASE[p.estado]}">${esc(p.accion)}</span></div>
+          ${p.usd ? `<b class="mono">${fmtUSD(p.usd)}</b>` : ''}</div>
+        <div class="kvl"><span>Por qué ahora</span><p>${esc(p.por_que)}</p></div>
+        <div class="kvl"><span>Qué cambió</span><p>${esc(p.que_cambio)}</p></div>
+        <div class="kvl"><span>Principal riesgo</span><p>${esc(p.riesgo)}</p></div>
+        <div class="kvl"><span>Qué lo invalidaría</span><p>${esc(p.invalida)}</p></div></div>`).join('')}</div>` : ''}
 
-    <h3 style="margin-top:14px">La cartera completa, antes y después</h3>
-    <div class="grid2">
-      ${met('Posiciones', a.posiciones, d.posiciones)}
-      ${met('Apuestas de verdad', fmtN(a.efectivas, 1), fmtN(d.efectivas, 1))}
-      ${met('La mayor', `${esc(a.mayor?.sym || '')} ${fmtN(a.mayor?.peso, 0)}`, `${esc(d.mayor?.sym || '')} ${fmtN(d.mayor?.peso, 0)}`, '%')}
-      ${met('Grupo más grande', fmtN(a.grupo_top, 0), fmtN(d.grupo_top, 0), '%')}
-      ${a.vol != null ? met('Riesgo diario', fmtN(a.vol, 2), fmtN(d.vol, 2), '%') : ''}
-      ${a.score != null ? met('Puntaje medio', a.score, d.score) : ''}
-    </div>
-    <p class="tiny muted">"Apuestas de verdad" son las posiciones efectivas: ${a.posiciones} nombres que se mueven juntos pesan como ${fmtN(a.efectivas, 1)}.</p>
+    <div class="card"><h2 style="margin-top:0">🔄 Reorganización propuesta</h2>
+      <p class="small muted">${Object.entries(conteo).filter(([, v]) => v).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(' · ')}. Toca cualquiera para ver sus siete componentes.</p>
+      ${tabla}</div>
 
-    ${(r.plan || []).length ? `<details style="margin-top:10px"><summary class="small">Ver el plan completo (${r.plan.length} movimientos, se paga solo)</summary>
-      ${r.plan.map(movFila).join('')}
-      <p class="tiny muted" style="margin-top:8px">Las ventas financian exactamente las compras: no hace falta poner plata nueva.</p></details>` : ''}
+    ${(d.alertas || []).length ? `<div class="card" style="border-color:var(--s)"><h2 style="margin-top:0">⚠️ Alertas de cartera</h2>
+      <ul class="reasons">${d.alertas.map((a) => `<li><b>${esc(a.tipo)}:</b> ${esc(a.texto)}</li>`).join('')}</ul></div>` : ''}
 
-    ${r.aporte?.filas?.length ? `<h3 style="margin-top:14px">Sin vender nada</h3>
-      <p class="small muted">Si prefieres no mover lo que ya tienes, los próximos ${fmtUSD(r.aporte.monto)} que aportes van aquí:</p>
-      <ul class="reasons">${r.aporte.filas.map((f) => `<li><b>${esc(f.sym)}</b> ${fmtUSD(f.usd)} — hoy pesa ${fmtN(f.peso, 1)}% y debería pesar ${fmtN(f.meta, 1)}%.</li>`).join('')}</ul>` : ''}
+    ${(d.vigilar || []).length ? `<div class="card"><h2 style="margin-top:0">👀 Qué vigilar</h2>
+      <ul class="reasons">${d.vigilar.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
 
-    <details style="margin-top:10px"><summary class="small">Las reglas que usé</summary>
-      <ul class="reasons small">${(r.reglas || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></details>
-    <p class="tiny muted" style="margin-bottom:0">${esc(r.limites || '')}</p></div>`;
+    ${d.esencial?.filas?.length ? `<div class="card"><h2 style="margin-top:0">🛠️ Cómo ejecutarlo</h2>
+      <p class="small muted">Si solo haces ${d.esencial.filas.length === 1 ? 'un movimiento' : `${d.esencial.filas.length} movimientos`}: el riesgo diario baja de
+        ${fmtN(d.antes?.vol, 2)}% a <b>${fmtN(d.esencial.vol, 2)}%</b>. Las ventas financian las compras, no hace falta plata nueva.</p>
+      ${d.esencial.filas.map(movFila).join('')}
+      ${(d.plan || []).length ? `<details style="margin-top:10px"><summary class="small">El plan completo (${d.plan.length} movimientos)</summary>
+        ${d.plan.map(movFila).join('')}
+        <div class="grid2" style="margin-top:10px">
+          <div class="stat"><div class="k">Posiciones</div><div class="v mono" style="font-size:15px">${d.antes?.posiciones} <span class="muted">→</span> <b>${d.despues?.posiciones}</b></div></div>
+          <div class="stat"><div class="k">Riesgo diario</div><div class="v mono" style="font-size:15px">${fmtN(d.antes?.vol, 2)}% <span class="muted">→</span> <b>${fmtN(d.despues?.vol, 2)}%</b></div></div>
+          <div class="stat"><div class="k">La mayor</div><div class="v mono" style="font-size:15px">${fmtN(d.antes?.mayor?.peso, 0)}% <span class="muted">→</span> <b>${fmtN(d.despues?.mayor?.peso, 0)}%</b></div></div>
+          <div class="stat"><div class="k">Grupo más grande</div><div class="v mono" style="font-size:15px">${fmtN(d.antes?.grupo_top, 0)}% <span class="muted">→</span> <b>${fmtN(d.despues?.grupo_top, 0)}%</b></div></div>
+        </div></details>` : ''}
+      ${d.aporte?.filas?.length ? `<h3>Sin vender nada</h3>
+        <p class="small muted">Los próximos ${fmtUSD(d.aporte.monto)} que aportes:</p>
+        <ul class="reasons">${d.aporte.filas.map((f) => `<li><b>${esc(f.sym)}</b> ${fmtUSD(f.usd)} — pesa ${fmtN(f.peso, 1)}% y le corresponde ${fmtN(f.meta, 1)}%.</li>`).join('')}</ul>` : ''}
+      <p class="tiny muted" style="margin-bottom:0">Cada movimiento paga comisión y puede gatillar impuestos: conviene hacerlos de a poco, empezando por arriba.</p></div>` : ''}
+
+    <div class="card"><details><summary class="small">Cómo se decide</summary>
+      <p class="small">Cada posición se puntúa en siete componentes y se lee contra la cartera completa y contra el análisis anterior.</p>
+      <ul class="reasons small">${Object.entries(d.pesos_modelo || {}).map(([k, v]) => `<li><b>${COMP_NOMBRE[k]}</b>: ${v}%</li>`).join('')}</ul>
+      <p class="tiny muted">${esc(d.nota || '')}</p></details></div>`;
 }
 
 // ---- RADAR DE DISRUPCIÓN -----------------------------------------------------
@@ -1269,7 +1349,7 @@ function ideaCard(e) {
 
 function viewIA() {
   const dk = S.disrup;
-  let html = briefCard() + rebalanceCard();
+  let html = briefCard() + decisionCard();
 
   if (!dk?.ideas?.length) {
     html += `<div class="card"><h2 style="margin-top:0">🚀 Radar de disrupción</h2>
@@ -2478,6 +2558,7 @@ async function runAction(a, el) {
     case 'carteraView': S.carteraView = el.dataset.v; render(); break;
     case 'desk': openDesk(el.dataset.id); break;
     case 'idea': openIdea(el.dataset.sym); break;
+    case 'decision': openDecision(el.dataset.s); break;
     case 'disrupHz': S.disrupHz = el.dataset.v; render({ keepScroll: true }); break;
     case 'copyDesk': { const d = (S.desks?.desks || []).find((x) => x.id === el.dataset.id); if (d) copy(deskText(d)); break; }
     case 'chatSend': { const el2 = $('#chatText'); const q = el2?.value || ''; if (el2) el2.value = ''; aiSend(q); break; }

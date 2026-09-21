@@ -55,6 +55,8 @@ SIGNAL_LABELS = {
 QS_MODULES = [
     "price", "summaryDetail", "summaryProfile", "defaultKeyStatistics",
     "financialData", "recommendationTrend", "earningsTrend", "calendarEvents",
+    # Historial de sorpresas: va en la misma petición, no cuesta un request más.
+    "earningsHistory",
 ]
 
 
@@ -625,6 +627,23 @@ def parse_modules(mods: dict, price_hint=None) -> dict:
         "fcf_yield": (fcf / mc * 100) if fcf and mc else None,
         "dividend_yield": dy,
         "beta": num(sd.get("beta")) or num(ks.get("beta")) or num(ks.get("beta3Year")),
+        # Lo que pide un análisis quantamental y ya venía en la misma respuesta:
+        # calidad del negocio, solidez financiera y quién está del otro lado.
+        "gross_margin": pct_(fd, "grossMargins"),
+        "ev_ebitda": num(ks.get("enterpriseToEbitda")),
+        "ps": num(sd.get("priceToSalesTrailing12Months")),
+        "p_fcf": (mc / fcf) if (fcf and mc and fcf > 0) else None,
+        "fcf": fcf,
+        "current_ratio": num(fd.get("currentRatio")),
+        "total_debt": num(fd.get("totalDebt")),
+        "total_cash": num(fd.get("totalCash")),
+        "shares": num(ks.get("sharesOutstanding")),
+        "held_inst": pct_(ks, "heldPercentInstitutions"),
+        "held_insiders": pct_(ks, "heldPercentInsiders"),
+        "short_pct": pct_(ks, "shortPercentOfFloat"),
+        "short_ratio": num(ks.get("shortRatio")),
+        "short_chg": ((num(ks.get("sharesShort")) / num(ks.get("sharesShortPriorMonth")) - 1) * 100
+                      if num(ks.get("sharesShort")) and num(ks.get("sharesShortPriorMonth")) else None),
         "currency": price_m.get("currency") or "USD",
         "quote_type": price_m.get("quoteType"),
         "price": num(fd.get("currentPrice")) or num(price_m.get("regularMarketPrice")),
@@ -658,6 +677,35 @@ def parse_modules(mods: dict, price_hint=None) -> dict:
         up += int(num(er.get("upLast30days")) or 0)
         down += int(num(er.get("downLast30days")) or 0)
     a["revisions"] = {"up": up, "down": down} if (up or down) else None
+
+    # Cuánto se movió la estimación de utilidades del próximo año en 30 y 90 días.
+    # Es más informativo que contar analistas: dice en qué dirección y cuánto se
+    # está moviendo Wall Street, que es lo que termina arrastrando al precio.
+    for tr in (mods.get("earningsTrend") or {}).get("trend") or []:
+        if tr.get("period") != "+1y":
+            continue
+        et = tr.get("epsTrend") or {}
+        hoy = num(et.get("current"))
+        if hoy:
+            for dias, clave in ((30, "days30Ago"), (90, "days90Ago")):
+                antes = num(et.get(clave))
+                if antes and antes > 0:
+                    a[f"eps_rev{dias}"] = round((hoy / antes - 1) * 100, 2)
+        re_ = tr.get("revenueEstimate") or {}
+        cre = num(re_.get("growth"))
+        if cre is not None:
+            a["rev_growth_next"] = round(cre * 100, 1)
+        a["eps_growth_next"] = round(num(tr.get("growth")) * 100, 1) if num(tr.get("growth")) is not None else None
+        break
+
+    # Sorpresas de los últimos trimestres: cuántos superaron y por cuánto.
+    sorpresas = []
+    for q in (mods.get("earningsHistory") or {}).get("history") or []:
+        pct_sorp = num(q.get("surprisePercent"))
+        if pct_sorp is not None:
+            sorpresas.append(round(pct_sorp * 100 if abs(pct_sorp) < 5 else pct_sorp, 1))
+    if sorpresas:
+        a["surprises"] = sorpresas[-4:]
 
     earn = None
     try:
@@ -782,7 +830,11 @@ def analyze(sym, hist, meta, is_etf, W, gurus) -> dict:
                  if k not in ("name", "sector", "industry", "currency", "quote_type", "price")},
         "analysts": ({"key": a.get("key"), "mean": r(a.get("mean_rating")), "count": a.get("count"),
                       "target": {"mean": r(a.get("target_mean")), "high": r(a.get("target_high")), "low": r(a.get("target_low"))},
-                      "upside": r(a.get("upside"), 1), "dist": a.get("dist"), "revisions": a.get("revisions")}
+                      "upside": r(a.get("upside"), 1), "dist": a.get("dist"), "revisions": a.get("revisions"),
+                      # Hacia dónde se mueven las expectativas, no solo cuántos opinan.
+                      "eps_rev30": a.get("eps_rev30"), "eps_rev90": a.get("eps_rev90"),
+                      "eps_growth_next": a.get("eps_growth_next"), "rev_growth_next": a.get("rev_growth_next"),
+                      "surprises": a.get("surprises")}
                      if a else None),
         "earnings_date": meta.get("earnings_date"),
         "meta_at": meta.get("meta_at"),
