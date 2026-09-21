@@ -57,6 +57,10 @@ jobs:
           DESKS_MODEL: ${{ vars.DESKS_MODEL }}
         run: python scripts/desks.py
 
+      - name: Reorganización de cartera
+        continue-on-error: true
+        run: python scripts/rebalance.py
+
       - name: Publicar
         run: |
           scripts/publish.sh "cartera: sincronizada desde la app [skip ci]" \
@@ -64,6 +68,7 @@ jobs:
             docs/data/latest.json \
             docs/data/history.json \
             docs/data/desks.json \
+            docs/data/rebalance.json \
             docs/data/disruption.json \
             config/universe.json
 

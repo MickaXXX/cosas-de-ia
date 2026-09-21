@@ -43,11 +43,16 @@ jobs:
         continue-on-error: true
         run: python scripts/desks.py
 
+      - name: Reorganización de cartera
+        continue-on-error: true
+        run: python scripts/rebalance.py
+
       - name: Publicar
         run: |
           scripts/publish.sh "data: precios a pedido $(date -u +%Y-%m-%dT%H:%M) [skip ci]" \
             docs/data/quotes.json \
             docs/data/desks.json \
+            docs/data/rebalance.json \
             docs/data/disruption.json
 
       - name: Cerrar el issue
