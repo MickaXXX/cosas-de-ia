@@ -33,7 +33,9 @@
   "TSM",
   "WULF"
  ],
- "watch": [],
+ "watch": [
+  "HUB"
+ ],
  "stocks": [
   "NVDA",
   "AAPL",
@@ -810,7 +812,8 @@
   "MIRM",
   "GPK",
   "FIVN",
-  "DFTX"
+  "DFTX",
+  "HUB"
  ],
  "etfs": [
   "SPY",
