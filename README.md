@@ -53,6 +53,29 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.8.0 — cómo reorganizar la cartera
+
+En la hoja de IA, debajo del resumen del día: **🧭 Cómo reorganizar tu cartera**. No adivina qué va a subir —eso no se puede, y el propio historial de esta app lo confirma— sino que responde lo que sí es calculable: cuánto del resultado depende de una sola posición, cuántas apuestas distintas hay de verdad detrás de 27 nombres, y qué posiciones son tan chicas que no cambian nada aunque acierten.
+
+`scripts/rebalance.py` → `docs/data/rebalance.json`. Cuatro reglas explícitas, ninguna caja negra:
+
+1. Ninguna posición sobre el 12%.
+2. Ninguna bajo el 5%: más chica que eso no mueve la aguja y sí cuesta comisiones.
+3. Ningún grupo correlacionado sobre el 30%. Los grupos salen de la **correlación real** de los últimos meses, no del sector declarado: ocho nombres que se mueven juntos son una apuesta con ocho nombres.
+4. Dentro de esos límites, más peso a lo que el modelo puntúa más alto; señal de venta o puntaje bajo 50 sale.
+
+Se publican tres planes, porque cuestan cosas distintas:
+
+- **El esencial**: los dos o tres movimientos que capturan el 60% de la baja de riesgo. Veintitrés operaciones no las hace nadie.
+- **El completo**: la reorganización entera. Las ventas financian exactamente las compras, sin plata nueva.
+- **Sin vender nada**: dónde poner el próximo aporte.
+
+El riesgo se estima con la matriz de correlaciones de los últimos 120 días. Verificado contra los retornos realizados de la propia cartera: el motor estima 3,43% → 2,69% de volatilidad diaria y el cálculo directo sobre la serie da 3,59% → 2,62%.
+
+### Un día falso que llevaba semanas en el historial
+
+Calculando esas correlaciones aparecieron pares imposibles (MU/TSM en 0,99). La causa: la primera fila que se guardó de historial, el 2026-09-06 —un domingo—, salió de un run en modo demo y traía precios inventados para 74 activos. Nadie lo notó hasta que el relleno hacia atrás puso precios reales al lado. Ahora el motor descarta cualquier fila cuyo precio contradiga a sus dos vecinos cuando esos dos concuerdan entre sí: un salto de 25% que vuelve al día siguiente es un dato malo, no un movimiento. Un salto real que no vuelve (SNDK +26%) no se toca.
+
 ## v1.7.6 — el historial, completo y dicho como es
 
 El relleno hacia atrás dejó la curva en **120 días** (abril → septiembre) en vez de 12. Con doce días la simulación se leía sola; con ciento veinte se presta a confusión, así que el aviso ahora va **bajo el gráfico**, donde se leen los números, y no al pie: son las posiciones de hoy valoradas a los precios de cada día, no el saldo que tenía la cuenta en abril. La nota que estaba al final decía lo mismo y se quitó.

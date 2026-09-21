@@ -878,6 +878,40 @@ def backfill_prices(rows: list, frame, keep_days: int, today: str) -> list:
 DIAS_RADAR = 40
 
 
+def precio_imposible(prev, cur, nxt) -> bool:
+    """¿La fila del medio contradice a sus dos vecinos, que sí concuerdan?
+
+    Un precio que salta 25% y vuelve al día siguiente no es un movimiento: es un
+    dato malo. El primer día que se guardó historial salió de un run en modo
+    demo y dejó una fila con precios inventados para 74 activos; nadie lo notó
+    hasta que el relleno puso precios reales al lado. Un salto real (SNDK +26%
+    que no vuelve) no lo toca, porque ahí los vecinos no concuerdan entre sí.
+    """
+    try:
+        a, b, c = float(prev["p"]), float(cur["p"]), float(nxt["p"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    if not (a > 0 and b > 0 and c > 0):
+        return False
+    salta = max(a, b) / min(a, b) > 1.25 and max(b, c) / min(b, c) > 1.25
+    return salta and max(a, c) / min(a, c) < 1.10
+
+
+def limpiar_precios(history: dict) -> tuple[dict, int]:
+    """Saca las filas con precios imposibles. Devuelve el historial y cuántas sacó."""
+    fuera = 0
+    for sym, rows in history.items():
+        if len(rows) < 3:
+            continue
+        malas = {i for i in range(1, len(rows) - 1) if precio_imposible(rows[i - 1], rows[i], rows[i + 1])}
+        if precio_imposible({"p": rows[1].get("p")}, rows[0], rows[2]):
+            malas.add(0)
+        if malas:
+            history[sym] = [r for i, r in enumerate(rows) if i not in malas]
+            fuera += len(malas)
+    return history, fuera
+
+
 def update_history(history: dict, tickers: list, today: str, keep_days: int, universe: set,
                    frames: dict | None = None, hondos: set | None = None) -> dict:
     hondos = hondos or set()
@@ -1134,6 +1168,9 @@ def main():
     antes = {k: len(v) for k, v in history.items()}
     history = update_history(history, tickers, today, W["retention"]["history_days"], keep_hist,
                              frames=None if args.demo else hists, hondos=hondos)
+    history, sucias = limpiar_precios(history)
+    if sucias:
+        print(f"-- {sucias} filas con precios imposibles descartadas del historial", flush=True)
     # Segundo freno, por si el historial se acorta por una razón que no vimos venir:
     # que un símbolo pierda días solo puede pasar por retención (120 días).
     tope = lambda k: W["retention"]["history_days"] if k in hondos else min(DIAS_RADAR, W["retention"]["history_days"])
