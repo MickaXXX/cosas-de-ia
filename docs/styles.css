@@ -351,3 +351,20 @@ table.grid tr.mine td:first-child { background: color-mix(in srgb, var(--accent)
 .idea b { font-size: 15px; letter-spacing: .3px; }
 .idea .caret { color: var(--muted); font-size: 18px; flex: none; }
 .idea .ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Motor de decisión: tabla de estados y fichas de movimiento */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th {
+  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-2); font-weight: 700; padding: 6px 6px 8px; border-bottom: 1px solid var(--border);
+}
+.tbl td { padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:active { background: var(--surface-2); }
+.tbl .r { text-align: right; }
+.tbl td.tiny { color: var(--text-2); line-height: 1.35; }
+.mov { padding: 10px 0; border-top: 1px solid var(--border); }
+.mov:first-of-type { border-top: 0; }
+.kvl { display: grid; grid-template-columns: 96px 1fr; gap: 4px 10px; margin-top: 6px; font-size: 12px; }
+.kvl > span { color: var(--text-2); font-weight: 600; }
+.kvl > p { margin: 0; line-height: 1.4; }

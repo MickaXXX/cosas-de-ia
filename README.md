@@ -53,6 +53,42 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.9.0 — Portfolio Decision Engine
+
+La hoja de IA deja de responder "cómo repartir mejor el riesgo" y pasa a responder la pregunta completa, todos los días:
+
+> ¿Cómo debería reorganizarse esta cartera **hoy**, considerando información nueva, riesgo, oportunidades y lo que cambió desde el análisis anterior?
+
+`scripts/decision.py` → `docs/data/decision.json`. Ninguna acción se evalúa sola: cada posición se puntúa en **siete componentes** y el resultado se lee contra la cartera completa y contra el análisis del día anterior.
+
+| Componente | Peso | De dónde sale |
+|---|---|---|
+| Fundamentales y valoración | 25% | P/E fwd, PEG, EV/EBITDA, FCF yield, crecimiento de ingresos y utilidades, potencial de analistas |
+| Calidad y factores | 15% | ROE, margen operativo y bruto, deuda/patrimonio, razón corriente |
+| Técnico y momentum | 15% | Posición vs SMA20/50/200, RSI leído por tramos, MACD, retorno a 3 meses, volumen relativo |
+| Earnings y revisiones | 10% | Movimiento de la estimación de utilidades a 30 y 90 días, balance de revisiones, sorpresas |
+| Macro y régimen | 10% | Sensibilidad de la posición al régimen vigente |
+| Institucionales y sentimiento | 10% | % en manos institucionales e insiders, interés corto y su cambio, gurús |
+| Riesgo de cartera | 15% | Peso, peso del grupo correlacionado, volatilidad propia, beta y correlación media con el resto |
+
+**El puntaje ordena; no decide.** Antes que él mandan los **vetos**: quema de caja con balance frágil, deuda sobre 200%, pérdidas operativas, dilución respecto del análisis anterior, recorte de estimaciones sobre 10% en 90 días y concentración excesiva. Cuando hay veto, el problema se muestra **antes** que el puntaje.
+
+Cada posición cae en uno de cinco estados —🟢 aumentar, 🟢 mantener, 🟡 observar, 🟠 reducir, 🔴 salir— con **histéresis**: un cambio de estado exige que el puntaje se haya movido de verdad, para no proponer operaciones por ruido. "Observar" se reserva para contradicciones reales (el puntaje sube mientras las expectativas de utilidades se recortan) o un reporte de resultados a menos de diez días.
+
+### Régimen macro, sin inventar datos
+
+No hay CPI, PCE ni actas de la Fed en esta fuente y no se fabrican. El régimen se deduce de los precios que reaccionan a esos datos antes que nadie —cobre contra oro y small caps contra el índice para crecimiento; petróleo y la tasa a diez años para precios— y se clasifica en Goldilocks, reflación, desaceleración/desinflación o estanflación, **etiquetado como lo que es**: lectura de mercado, no dato oficial.
+
+### Continuidad
+
+Cada corrida compara contra la anterior y solo reporta lo que cambió: puntaje, componentes, peso, señal. Los movimientos prioritarios se ordenan por **capital que mueven**, no por lo grave que suene el motivo —salir de una posición de US$64 importa menos que recortar una de US$930—, nunca se repite el mismo motivo tres veces, y lo que ya se dijo ayer sin novedades baja en la lista.
+
+### Formato
+
+Diagnóstico (4-6 líneas) → movimientos prioritarios (máximo 3, cada uno con por qué ahora, qué cambió, principal riesgo y qué lo invalidaría) → tabla de reorganización propuesta → alertas de cartera (máximo 3) → qué vigilar (máximo 5) → cómo ejecutarlo, con las ventas financiando exactamente las compras. Tocar cualquier fila de la tabla abre las siete componentes de esa posición y su confianza de dato.
+
+`scripts/rebalance.py` queda como la biblioteca de matemática de asignación y riesgo que este motor usa; ya no publica su propio archivo, para que no existan dos planes que puedan contradecirse.
+
 ## v1.8.0 — cómo reorganizar la cartera
 
 En la hoja de IA, debajo del resumen del día: **🧭 Cómo reorganizar tu cartera**. No adivina qué va a subir —eso no se puede, y el propio historial de esta app lo confirma— sino que responde lo que sí es calculable: cuánto del resultado depende de una sola posición, cuántas apuestas distintas hay de verdad detrás de 27 nombres, y qué posiciones son tan chicas que no cambian nada aunque acierten.
