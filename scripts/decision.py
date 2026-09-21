@@ -552,6 +552,15 @@ def main():
     w_luego = {s: w / 100 for s, w in obj.items()}
     vol_luego = vol_cartera(w_luego, sigma, cor)
     esencial = plan_esencial(plan, pesos, total, sigma, cor, vol_total, vol_luego)
+    # Si reorganizar no baja el riesgo, no hay reorganización que proponer: los
+    # pesos ya están donde deberían y lo que quede son decisiones sobre
+    # posiciones concretas (un veto, una tesis rota), no sobre cuánto pesa cada
+    # una. Listar veinte movimientos igual sería fabricar operaciones por ruido.
+    plan_aporta = (vol_total is not None and vol_luego is not None
+                   and vol_luego < vol_total * 0.97)
+    if not plan_aporta:
+        plan = [f for f in plan if estado_de_sym.get(f["sym"]) in ("SALIR", "REDUCIR")]
+        esencial = {"filas": [], "vol": round(vol_total, 2) if vol_total else None}
     aporte = plan_aporte(pesos, obj, total, 200.0, tks)
     metas = {s: round(w, 1) for s, w in obj.items()}
     for f in filas:                                   # la meta definitiva es la de este plan
@@ -683,6 +692,10 @@ def main():
             f"Régimen {reg['label'].lower()}: {reg['detalle']}"]
     if alertas:
         diag.append(alertas[0]["texto"])
+    if not plan_aporta and vol_total and vol_luego:
+        diag.append(f"Reorganizar los pesos no bajaría el riesgo ({coma(vol_total, 2)}% contra "
+                    f"{coma(vol_luego, 2)}%): la cartera ya está repartida. Lo que queda son "
+                    f"decisiones sobre posiciones concretas, no sobre cuánto pesa cada una.")
     movidos = [f for f in filas if f["cambios"]]
     diag.append(f"Desde el análisis anterior cambió algo en {len(movidos)} de {len(filas)} posiciones."
                 if movidos else "Nada material cambió desde el análisis anterior.")
@@ -699,6 +712,7 @@ def main():
         "posiciones": filas,
         "plan": plan,
         "esencial": esencial,
+        "plan_aporta": plan_aporta,
         "aporte": {"monto": 200.0, "filas": aporte},
         "despues": {"posiciones": len(obj), "vol": round(vol_luego, 2) if vol_luego else None,
                     "mayor": {"sym": max(obj, key=obj.get) if obj else None,
