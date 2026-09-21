@@ -687,8 +687,13 @@ def parse_modules(mods: dict, price_hint=None) -> dict:
         et = tr.get("epsTrend") or {}
         hoy = num(et.get("current"))
         if hoy:
-            for dias, clave in ((30, "days30Ago"), (90, "days90Ago")):
-                antes = num(et.get(clave))
+            for dias in (30, 90):
+                # Yahoo nombra estas claves "30daysAgo"/"90daysAgo". Se buscan por
+                # contenido y no por nombre exacto: es la diferencia entre tener el
+                # dato y publicar un campo vacío en los 899 activos, que fue lo que
+                # pasó la primera vez.
+                clave = next((k for k in et if str(dias) in k and "day" in k.lower()), None)
+                antes = num(et.get(clave)) if clave else None
                 if antes and antes > 0:
                     a[f"eps_rev{dias}"] = round((hoy / antes - 1) * 100, 2)
         re_ = tr.get("revenueEstimate") or {}
