@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presupuesto Suministros 2027</title>
+<meta name="description" content="Defensa del presupuesto de mantención de Suministros 2027 — Planta Antofagasta">
+<style>
+:root{
+  color-scheme:light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ee;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781; --grid:#e1e0d9; --axis:#c3c2b7;
+  --ring:rgba(11,11,11,.10); --accent:#256abf; --good:#006300; --bad:#b42323;
+  --a0:#2a78d6; --a1:#eb6834; --a2:#1baf7a; --a3:#eda100; --a4:#e87ba4; --a5:#008300;
+  --p1:#d03b3b; --p2:#fab219; --p3:#a8a69f; --sc:#898781; --y26:#b9b7ae; --y27:#256abf;
+  --pend-bg:#fff7e6; --pend-bd:#e9c46a;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme:dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781; --grid:#2c2c2a; --axis:#383835;
+    --ring:rgba(255,255,255,.10); --accent:#5598e7; --good:#0ca30c; --bad:#e66767;
+    --a0:#3987e5; --a1:#d95926; --a2:#199e70; --a3:#c98500; --a4:#d55181; --a5:#008300;
+    --p1:#d03b3b; --p2:#fab219; --p3:#6f6e69; --sc:#898781; --y26:#5c5b56; --y27:#5598e7;
+    --pend-bg:#2a2414; --pend-bd:#7a6120;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781; --grid:#2c2c2a; --axis:#383835;
+  --ring:rgba(255,255,255,.10); --accent:#5598e7; --good:#0ca30c; --bad:#e66767;
+  --a0:#3987e5; --a1:#d95926; --a2:#199e70; --a3:#c98500; --a4:#d55181; --a5:#008300;
+  --p1:#d03b3b; --p2:#fab219; --p3:#6f6e69; --sc:#898781; --y26:#5c5b56; --y27:#5598e7;
+  --pend-bg:#2a2414; --pend-bd:#7a6120;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+button,select,input,textarea{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+header.top{background:var(--surface);border-bottom:1px solid var(--ring);position:sticky;top:0;z-index:20}
+.hrow{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 0 8px}
+h1{font-size:19px;margin:0;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--ink-2);font-size:13px}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--ring);background:var(--surface-2);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--axis)}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.legend-prio{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);padding:0 0 8px}
+.legend-prio b{color:var(--ink)}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.sw.P1{background:var(--p1)}.sw.P2{background:var(--p2)}.sw.P3{background:var(--p3)}
+.sw.SC,.hatch{background:repeating-linear-gradient(45deg,var(--sc) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px var(--sc)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin}
+nav.tabs button{border:0;background:none;padding:9px 11px;border-bottom:2px solid transparent;cursor:pointer;color:var(--ink-2);white-space:nowrap;font-size:13.5px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 0 4px;font-size:13px;color:var(--ink-2)}
+.filters label{display:flex;gap:6px;align-items:center}
+.filters select{background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:5px 8px;max-width:190px}
+.chip-active{background:var(--surface-2);border-radius:999px;padding:2px 10px;color:var(--ink)}
+main{padding:8px 0 40px}
+section.view{display:none}
+section.view.on{display:block}
+.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin:12px 0}
+.card h2{font-size:17px;margin:0 0 2px;font-weight:650;letter-spacing:-.01em}
+.card h3{font-size:14.5px;margin:12px 0 6px}
+.card .note{color:var(--ink-2);font-size:13px;margin:2px 0 10px}
+.headline{font-size:20px;font-weight:650;line-height:1.3;margin:4px 0 4px;letter-spacing:-.01em}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.kpi{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:12px 14px}
+.kpi .l{font-size:12.5px;color:var(--ink-2)}
+.kpi .v{font-size:26px;font-weight:650;letter-spacing:-.02em;margin:2px 0}
+.kpi .s{font-size:12px;color:var(--muted)}
+.up{color:var(--bad)} .down{color:var(--good)}
+.pend{background:var(--pend-bg);border:1px dashed var(--pend-bd);border-radius:12px;padding:12px 14px}
+.pend .l{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}
+.pend .v{font-size:14px;margin-top:3px}
+.msg{border-left:4px solid var(--accent);padding:10px 14px;background:var(--surface);border-radius:0 12px 12px 0;font-size:16px;line-height:1.5;margin:12px 0}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-2);margin:6px 0}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
+svg .val{fill:var(--ink);font-weight:600}
+svg .ax{stroke:var(--axis)} svg .gl{stroke:var(--grid)}
+.hit{cursor:pointer}
+.hit:hover{opacity:.82}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--ink-2);font-weight:600;background:var(--surface)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:650;border-top:1px solid var(--axis)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.heat td.c{text-align:center;font-variant-numeric:tabular-nums;cursor:pointer;border:2px solid var(--surface);border-radius:4px;min-width:44px}
+.heat td.c:hover{outline:2px solid var(--accent)}
+.heat td.c.sel{outline:2px solid var(--ink)}
+.flag{color:var(--bad);font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--ring);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:5px 12px;cursor:pointer;font-size:13px}
+.seg button.on{background:var(--accent);color:#fff}
+.ficha{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
+.ficha .card{margin:0;border-top:4px solid var(--c)}
+.ficha dl{margin:8px 0 0;display:grid;gap:8px}
+.ficha dt{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:650}
+.ficha dd{margin:0;font-size:14px}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto;padding:4px 2px;margin:8px 0}
+.bub{padding:10px 12px;border-radius:12px;max-width:92%;font-size:14.5px;white-space:pre-wrap}
+.bub.u{align-self:flex-end;background:var(--accent);color:#fff}
+.bub.a{align-self:flex-start;background:var(--surface-2)}
+.bub .src{display:block;margin-top:6px;font-size:11.5px;color:var(--muted)}
+.ask{display:flex;gap:8px}
+.ask input{flex:1;min-width:0;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:8px 10px}
+.sugs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.sugs button{border:1px solid var(--ring);background:var(--surface);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:12.5px}
+.sugs button:hover,.sugm button:hover{border-color:var(--accent)}
+.sugm td,.sugm th{padding:4px 6px;white-space:nowrap}.sugm button{border:1px solid var(--ring);background:var(--surface);border-radius:999px;padding:3px 10px;cursor:pointer;font-size:12.5px}
+details.cfg{font-size:13px;color:var(--ink-2);margin-top:10px}
+details.cfg input{border:1px solid var(--ring);background:var(--surface);border-radius:6px;padding:5px 8px;width:min(100%,340px)}
+#tip{position:fixed;pointer-events:none;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--ring);box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:8px;padding:8px 10px;font-size:12.5px;max-width:320px;display:none;line-height:1.4}
+#tip b{font-weight:650}
+.muted{color:var(--muted)}
+ol.pl li{margin:6px 0}
+footer{color:var(--muted);font-size:12px;padding:20px 0 40px}
+@media (max-width:600px){ header.top{position:static} h1{font-size:16px} .headline{font-size:17px} .kpi .v{font-size:22px} .card{padding:12px} }
+@media print{
+  header.top{position:static} nav.tabs,.filters,.tools,.ask,.sugs,details.cfg,footer{display:none!important}
+  body{background:#fff} .card,.kpi{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+    <rect width="6" height="6" style="fill:var(--surface)"/><rect width="2.2" height="6" style="fill:var(--sc)"/>
+  </pattern></defs></svg>
+
+<header class="top"><div class="wrap">
+  <div class="hrow">
+    <div>
+      <h1>Presupuesto Mantención Suministros 2027 · Planta Antofagasta</h1>
+      <div class="sub">Montos en MM CLP · Fuente: <span id="src"></span></div>
+    </div>
+    <div class="tools">
+      <button class="btn" id="bPng" title="Descarga la vista actual como imagen">Exportar PNG</button>
+      <button class="btn" id="bPdf" title="Imprimir / guardar como PDF la vista actual">Exportar PDF</button>
+      <button class="btn" id="bTheme" aria-label="Cambiar tema">◐ Tema</button>
+    </div>
+  </div>
+  <div class="legend-prio" id="legPrio"></div>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+</div></header>
+
+<div class="wrap">
+  <div class="filters" id="filters">
+    <label>Área <select id="fArea"></select></label>
+    <label>Prioridad <select id="fPrio"></select></label>
+    <label>Mes <select id="fMes"></select></label>
+    <button class="btn" id="fReset">Limpiar filtros</button>
+    <span id="fInfo"></span>
+  </div>
+</div>
+
+<main class="wrap" id="main">
+  <section class="view" id="v-resumen"></section>
+  <section class="view" id="v-areas"></section>
+  <section class="view" id="v-prio"></section>
+  <section class="view" id="v-matriz"></section>
+  <section class="view" id="v-mensual"></section>
+  <section class="view" id="v-reprog"></section>
+  <section class="view" id="v-fichas"></section>
+  <section class="view" id="v-ia1"></section>
+  <section class="view" id="v-ia2"></section>
+  <section class="view" id="v-traza"></section>
+</main>
+<footer class="wrap">Toda cifra proviene de una fila del Excel fuente (ver pestaña Trazabilidad). Los indicadores sin insumo se muestran como “Dato pendiente”; no se estiman.</footer>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const D = /*__DATA__*/null;
+const MES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESL = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const AREAS = D.areas;
+const SHORT = {'Planta de Agua':'Agua','Planta de RILES':'RILES','Sala Compresores':'Compresores','Planta de Frío':'Frío','SSEE':'SSEE','Sala de Caldera':'Caldera'};
+const ACOL = Object.fromEntries(AREAS.map((a,i)=>[a,`var(--a${i})`]));
+const PR = ['P1','P2','P3','SC'];
+const PRL = {P1:'P1 · Reglamentaria',P2:'P2 · Continuidad operacional o seguridad',P3:'P3 · Otros',SC:'Sin clasificar'};
+const PRS = {P1:'P1',P2:'P2',P3:'P3',SC:'Sin clasificar'};
+const PFILL = {P1:'var(--p1)',P2:'var(--p2)',P3:'var(--p3)',SC:'url(#hatch)'};
+const TABS = [['resumen','1 · Resumen'],['areas','2 · Por área'],['prio','3 · Por prioridad'],['matriz','4 · Área × prioridad'],
+  ['mensual','5 · Mensual'],['reprog','6 · Reprogramación'],['fichas','7 · Fichas técnicas'],['ia1','8 · ¿En qué consiste?'],
+  ['ia2','9 · Justificar prioridad'],['traza','Trazabilidad y pendientes']];
+
+/* ---------- utilidades ---------- */
+const nf1 = new Intl.NumberFormat('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1});
+const nf0 = new Intl.NumberFormat('es-CL',{maximumFractionDigits:0});
+const mm = v => nf1.format(v/1e6);
+const pct = (v,d=0) => (isFinite(v)?new Intl.NumberFormat('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d}).format(v*100):'–')+'%';
+const sgn = v => (v>0?'+':v<0?'−':'')+nf1.format(Math.abs(v)/1e6);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sum = (arr,f=x=>x) => arr.reduce((s,x)=>s+f(x),0);
+const $ = id => document.getElementById(id);
+const actName = a => [a.equipo,a.componente].filter(Boolean).join(' · ');
+const mesesDe = a => {const m=a.meses.map((v,i)=>v?MES[i]:null).filter(Boolean); return m.length===12?'todos los meses':m.join(', ');};
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const tipAct = a => `<b>${esc(actName(a))}</b><br>${esc(a.desc)}<br>${esc(a.area)} · ${PRS[a.prio]}<br>Monto: <b>${mm(a.total)} MM</b> · Meses: ${mesesDe(a)}<br><span class="muted">SUM 2027, fila ${a.fila}</span>`;
+
+/* ---------- estado y filtros ---------- */
+const S = {area:'all',prio:'all',mes:'all',tab:'resumen',year:2027,matrixSel:null};
+try{ const t=localStorage.getItem('sum27-tab'); if(t && TABS.some(x=>x[0]===t)) S.tab=t; }catch(e){}
+const val = a => S.mes==='all'? a.total : a.meses[+S.mes];
+const F27 = () => D.acts.filter(a=>(S.area==='all'||a.area===S.area)&&(S.prio==='all'||a.prio===S.prio)&&val(a)>0);
+const F26 = () => D.p26.filter(a=>(S.area==='all'||a.area===S.area)&&val(a)>0);
+const cmpOK = () => S.prio==='all';   // 2026 no tiene prioridades
+const byArea = (rows,f=val) => Object.fromEntries(AREAS.map(ar=>[ar,sum(rows.filter(r=>r.area===ar),f)]));
+const byPrio = rows => Object.fromEntries(PR.map(p=>[p,sum(rows.filter(r=>r.prio===p),val)]));
+const monthly = rows => MES.map((_,i)=>sum(rows,r=>(S.mes==='all'||+S.mes===i)?r.meses[i]:0));
+
+/* ---------- tooltip ---------- */
+const tip = $('tip');
+document.addEventListener('mousemove',e=>{
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if(!t){tip.style.display='none';return;}
+  tip.innerHTML = t.getAttribute('data-tip'); tip.style.display='block';
+  const w=tip.offsetWidth,h=tip.offsetHeight; let x=e.clientX+14,y=e.clientY+14;
+  if(x+w>innerWidth-8)x=e.clientX-w-14; if(y+h>innerHeight-8)y=e.clientY-h-14;
+  tip.style.left=Math.max(8,x)+'px'; tip.style.top=Math.max(8,y)+'px';
+});
+document.addEventListener('scroll',()=>tip.style.display='none',true);
+const T = s => `data-tip="${esc(s)}"`;
+
+/* ---------- gráficos SVG ---------- */
+function hbars(rows,{w=640,lab=150,rh=30,fmt=v=>mm(v)}={}){
+  const max=Math.max(...rows.map(r=>r.v),1), bw=w-lab-70, h=rows.length*rh+4;
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  rows.forEach((r,i)=>{const y=i*rh+4, L=Math.max(r.v/max*bw,r.v>0?2:0);
+    s+=`<text x="${lab-8}" y="${y+rh/2}" text-anchor="end" dominant-baseline="middle">${esc(r.l)}</text>`;
+    s+=`<g class="hit" ${T(r.tip||'')}${r.click?` data-click="${esc(r.click)}"`:''}><rect x="${lab}" y="${y}" width="${bw+70}" height="${rh-4}" fill="transparent"/>`;
+    s+=`<rect x="${lab}" y="${y+5}" width="${L}" height="${rh-14}" rx="4" style="fill:${r.c}"/></g>`;
+    s+=`<text class="val" x="${lab+L+6}" y="${y+rh/2}" dominant-baseline="middle">${fmt(r.v)}${r.ex?` <tspan style="fill:var(--muted);font-weight:400">${esc(r.ex)}</tspan>`:''}</text>`;});
+  return s+`<line class="ax" x1="${lab}" x2="${lab}" y1="2" y2="${h}"/></svg>`;
+}
+function donut(parts,{size=240,label='',sub=''}={}){
+  const tot=sum(parts,p=>p.v)||1, R=size/2-6, r=R*0.62, cx=size/2, cy=size/2; let a0=-Math.PI/2, s=`<svg viewBox="0 0 ${size} ${size}" style="max-width:${size}px;margin:auto" role="img">`;
+  parts.filter(p=>p.v>0).forEach(p=>{const a1=a0+p.v/tot*2*Math.PI - (parts.filter(q=>q.v>0).length>1?0.012:0); const big=(a1-a0)>Math.PI?1:0;
+    const P=(rad,ang)=>[cx+rad*Math.cos(ang),cy+rad*Math.sin(ang)];
+    const [x0,y0]=P(R,a0),[x1,y1]=P(R,Math.min(a1,a0+2*Math.PI-1e-4)),[x2,y2]=P(r,Math.min(a1,a0+2*Math.PI-1e-4)),[x3,y3]=P(r,a0);
+    s+=`<path class="hit" ${T(p.tip)} d="M${x0} ${y0}A${R} ${R} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${big} 0 ${x3} ${y3}Z" style="fill:${p.c};stroke:var(--surface);stroke-width:2"/>`;
+    a0 += p.v/tot*2*Math.PI;});
+  return s+`<text x="${cx}" y="${cy-4}" text-anchor="middle" class="val" style="font-size:22px">${label}</text><text x="${cx}" y="${cy+16}" text-anchor="middle">${sub}</text></svg>`;
+}
+function vstack(cols,{w=720,h=260,avg=null,avgLabel='',ymaxIn=null}={}){
+  // cols: [{l, segs:[{v,c,tip}] }]
+  const pl=44,pb=22,pt=10, ih=h-pb-pt, n=cols.length, cw=(w-pl)/n, bw=Math.min(cw*0.62,46);
+  const ymax=ymaxIn||Math.max(...cols.map(c=>sum(c.segs,s=>s.v)),avg||0,1)*1.08;
+  const ticks=niceTicks(ymax); let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  ticks.forEach(t=>{const y=pt+ih-t/ymax*ih; s+=`<line class="gl" x1="${pl}" x2="${w}" y1="${y}" y2="${y}"/><text x="${pl-6}" y="${y}" text-anchor="end" dominant-baseline="middle">${nf0.format(t/1e6)}</text>`;});
+  cols.forEach((c,i)=>{const x=pl+i*cw+(cw-bw)/2; let y=pt+ih; const segs=c.segs.filter(q=>q.v>0);
+    segs.forEach((q,k)=>{const hh=q.v/ymax*ih; y-=hh; const top=k===segs.length-1;
+      s+=`<rect class="hit" ${T(q.tip)} x="${x}" y="${y+(k?1:0)}" width="${bw}" height="${Math.max(hh-(k?1:0),0.5)}" ${top?'rx="3"':''} style="fill:${q.c}"/>`;});
+    s+=`<text x="${x+bw/2}" y="${h-6}" text-anchor="middle">${esc(c.l)}</text>`;
+    const tot=sum(c.segs,q=>q.v); if(tot>0 && c.showTot!==false) s+=`<text class="val" x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:11px">${nf1.format(tot/1e6)}</text>`;});
+  s+=`<line class="ax" x1="${pl}" x2="${w}" y1="${pt+ih}" y2="${pt+ih}"/>`;
+  if(avg!=null){const y=pt+ih-avg/ymax*ih; s+=`<line x1="${pl}" x2="${w}" y1="${y}" y2="${y}" style="stroke:var(--ink);stroke-dasharray:5 4;stroke-width:1.5"><title>${esc(avgLabel)}</title></line>`;}
+  return s+'</svg>';
+}
+function vgroup(groups,{w=620,h=240,fmt=v=>pct(v),series}={}){
+  // groups: [{l, vals:[{v,c,tip}]}]
+  const pl=40,pb=24,pt=18, ih=h-pb-pt, n=groups.length, gw=(w-pl)/n, k=groups[0].vals.length, bw=Math.min(gw*0.7/k,40);
+  const ymax=Math.max(...groups.flatMap(g=>g.vals.map(v=>v.v)),1e-9)*1.15; const ticks=niceTicks(ymax);
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  ticks.forEach(t=>{const y=pt+ih-t/ymax*ih; s+=`<line class="gl" x1="${pl}" x2="${w}" y1="${y}" y2="${y}"/><text x="${pl-6}" y="${y}" text-anchor="end" dominant-baseline="middle">${fmt(t)}</text>`;});
+  groups.forEach((g,i)=>{const x0=pl+i*gw+(gw-bw*k-4*(k-1))/2;
+    g.vals.forEach((v,j)=>{const x=x0+j*(bw+4), hh=v.v/ymax*ih, y=pt+ih-hh;
+      s+=`<rect class="hit" ${T(v.tip)} x="${x}" y="${y}" width="${bw}" height="${Math.max(hh,0.5)}" rx="3" style="fill:${v.c}"/>`;
+      if(g.vals.length<=3) s+=`<text class="val" x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:11px">${fmt(v.v)}</text>`;});
+    s+=`<text x="${pl+i*gw+gw/2}" y="${h-6}" text-anchor="middle">${esc(g.l)}</text>`;});
+  return s+`<line class="ax" x1="${pl}" x2="${w}" y1="${pt+ih}" y2="${pt+ih}"/></svg>`;
+}
+function waterfall(steps,{w=720,h=260}={}){
+  // steps: [{l, v, kind:'total'|'delta', c, tip}]
+  const pl=44,pb=34,pt=16, ih=h-pb-pt, n=steps.length, cw=(w-pl)/n, bw=Math.min(cw*0.6,54);
+  let run=0, lo=Infinity, hi=0; const geo=steps.map(st=>{let a,b; if(st.kind==='total'){a=0;b=st.v;run=st.v;} else {a=run;b=run+st.v;run=b;} lo=Math.min(lo,a,b);hi=Math.max(hi,a,b); return {a,b};});
+  const mids=geo.flatMap((g,i)=>steps[i].kind==='total'?[g.b]:[g.a,g.b]); const ymin=Math.max(0,Math.floor(Math.min(...mids)*0.8/5e7)*5e7), ymax=hi*1.06; const Y=v=>pt+ih-(v-ymin)/(ymax-ymin)*ih;
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  niceTicks(ymax,ymin).forEach(t=>{s+=`<line class="gl" x1="${pl}" x2="${w}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)}" text-anchor="end" dominant-baseline="middle">${nf0.format(t/1e6)}</text>`;});
+  steps.forEach((st,i)=>{const g=geo[i], lo2=st.kind==='total'?ymin:g.a, x=pl+i*cw+(cw-bw)/2, y=Y(Math.max(lo2,g.b)), hh=Math.max(Math.abs(Y(lo2)-Y(g.b)),1);
+    s+=`<rect class="hit" ${T(st.tip)} x="${x}" y="${y}" width="${bw}" height="${hh}" rx="3" style="fill:${st.c}"/>`;
+    s+=`<text class="val" x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:11px">${st.kind==='total'?nf1.format(st.v/1e6):sgn(st.v)}</text>`;
+    const words=st.l.split(' '); s+=`<text x="${x+bw/2}" y="${h-19}" text-anchor="middle" style="font-size:11px">${esc(words.slice(0,2).join(' '))}</text>`;
+    if(words.length>2) s+=`<text x="${x+bw/2}" y="${h-6}" text-anchor="middle" style="font-size:11px">${esc(words.slice(2).join(' '))}</text>`;
+    if(i<n-1){const nx=pl+(i+1)*cw+(cw-bw)/2; s+=`<line x1="${x+bw}" x2="${nx}" y1="${Y(g.b)}" y2="${Y(g.b)}" style="stroke:var(--axis);stroke-dasharray:2 2"/>`;}});
+  return s+`<line class="ax" x1="${pl}" x2="${w}" y1="${pt+ih}" y2="${pt+ih}"/></svg>`;
+}
+function hstack100(rows,{w=640,lab=150,rh=30}={}){
+  // rows: [{l, segs:[{v,c,tip}]}]
+  const bw=w-lab-10, h=rows.length*rh+4; let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  rows.forEach((r,i)=>{const y=i*rh+4, tot=sum(r.segs,q=>q.v)||1; let x=lab;
+    s+=`<text x="${lab-8}" y="${y+rh/2}" text-anchor="end" dominant-baseline="middle">${esc(r.l)}</text>`;
+    r.segs.filter(q=>q.v>0).forEach(q=>{const L=q.v/tot*bw; s+=`<rect class="hit" ${T(q.tip)} x="${x}" y="${y+5}" width="${Math.max(L-2,0.5)}" height="${rh-12}" rx="2" style="fill:${q.c}"/>`;
+      if(L>34) s+=`<text x="${x+L/2-1}" y="${y+rh/2+1}" text-anchor="middle" dominant-baseline="middle" style="fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;font-size:11px;font-weight:600">${pct(q.v/tot)}</text>`; x+=L;});});
+  return s+'</svg>';
+}
+function niceTicks(max,min=0){const span=max-min, raw=span/4, p=Math.pow(10,Math.floor(Math.log10(raw))), st=[1,2,2.5,5,10].map(m=>m*p).find(m=>m>=raw)||p*10; const out=[]; for(let t=Math.ceil(min/st)*st;t<=max+1e-9;t+=st) out.push(t); return out;}
+const RAMP=['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab','#184f95','#104281','#0d366b'];
+const heatBg = t => t<=0?'transparent':RAMP[Math.min(RAMP.length-1,Math.floor(Math.sqrt(t)*(RAMP.length-0.01)))];
+const heatFg = t => t<=0?'var(--muted)':(Math.floor(Math.sqrt(t)*(RAMP.length-0.01))>=6?'#fff':'#0b0b0b');
+const legendAreas = () => `<div class="leg">${AREAS.map(a=>`<span><i class="sw" style="background:${ACOL[a]}"></i>${a}</span>`).join('')}</div>`;
+const legendPrio = () => `<div class="leg">${PR.map(p=>`<span><i class="sw ${p}"></i>${PRL[p]}</span>`).join('')}</div>`;
+const pendCard = (x,why='') => `<div class="pend"><div class="l">Dato pendiente</div><div class="v">${esc(x)}</div>${why?`<div class="sub" style="margin-top:4px">${esc(why)}</div>`:''}</div>`;
+const filtNote = () => { const f=[]; if(S.area!=='all')f.push(S.area); if(S.prio!=='all')f.push(PRS[S.prio]); if(S.mes!=='all')f.push(MESL[+S.mes]); return f.length?` <span class="chip-active">Filtro: ${esc(f.join(' · '))}</span>`:''; };
+
+/* ---------- fichas técnicas (estáticas) ---------- */
+const FICHAS = {
+ 'Planta de Agua':{
+  funcion:'Trata y distribuye el agua de proceso: osmosis inversa (OI 1 y 2), desinfección UV (Trojan), filtros de carbón, estanques de 900 m³ y 200 m³ y motobombas de transferencia/recirculación (TK2, TK4, TK20, TK33, TK-A2, CIP).',
+  detiene:'Sin agua tratada no se elaboran bebidas, Manantial ni Nestlé, y no hay CIP. UV, carbón y recirculación son la barrera microbiológica: su falla compromete la inocuidad del producto.',
+  criticos:'Motobombas de alimentación balance TK2 (3), TK4 principal y auxiliar, recirculación TK20/TK33/TK-A2, bomba CIP4, OI 1 y 2, equipos UV, filtros de carbón, estanque 900 m³, caudalímetros por línea (TK2, TK4, Nestlé, PET, PRB, Jarabería, Manantial).',
+  incluye:'Revisión electromecánica y cambio de sellos, orings y empaquetaduras de motobombas; cambio de carbón; mantención de equipos UV; manómetros y caudal en OI; limpieza y saneado anual del estanque 900 m³; calibración anual de caudalímetros; recubrimiento de estanques expuestos a exterior.',
+  riesgo:'Una bomba de transferencia detenida corta el suministro de agua a producción; perder la barrera UV/carbón expone a contaminación microbiológica y retención de producto.',
+  respaldo:'El Excel identifica TK4 con motobomba principal + auxiliar y TK2 con 3 motobombas de alimentación. Para el resto de las bombas, la configuración N/N+1 es dato pendiente.'},
+ 'Planta de RILES':{
+  funcion:'Trata el residuo industrial líquido antes de su descarga: pozo pit, ecualizador, acondicionador, reactor anaerobio, aerobio, clarificador y planta de biogás con antorcha.',
+  detiene:'Una falla lleva a incumplimiento de los parámetros de descarga, riesgo de sanción y restricción de la producción por falta de capacidad de tratamiento.',
+  criticos:'Bombas elevadoras pozo pit PU10/PU11, recirculación ecualizador PU12/PU13, salida a acondicionador PU14, recirculación acondicionador PU15, alimentación anaerobio PU16/PU17, motor de aire del aerobio, clarificador (motoreductor y retorno de lodos), sensores de pH y nivel, caudalímetros.',
+  incluye:'Retiro de lodos del aerobio (mensual, con limpieza de pozo pit) y de piscina (trimestral); revisión electromecánica de bombas; calibración y cambio de sondas de pH y nivel; calibración de caudalímetros; bombas dosificadoras; mantención de biogás y antorcha; limpieza de cámara de muestreo Aguas Antofagasta.',
+  riesgo:'Lodos acumulados o sensores descalibrados hacen perder el control del proceso biológico y llevan el efluente fuera de norma.',
+  respaldo:'El Excel explicita pares principal/respaldo: PU10/PU11, PU12/PU13, PU16/PU17, retorno de lodos del clarificador y bomba de impulso a regadío (Cármamo 2). En PU14, PU15, motor de aire y motoreductor no aparece respaldo en el Excel (validar).'},
+ 'Sala Compresores':{
+  funcion:'Genera y seca el aire comprimido de proceso, soplado e instrumentación: compresores de baja Atlas (ZT45, ZT55 VSD), compresor AF, compresor VH15 y secador MD100A.',
+  detiene:'Sin aire no hay soplado de preformas ni actuación neumática: se detienen la línea PET y el envasado.',
+  criticos:'Compresores de baja Atlas N°1 (ZT55 VSD), N°2 (ZT45) y N°3 con su secador MD100A; compresor AF.',
+  incluye:'Inspección mensual de compresores de baja Atlas; repuestos del mantenimiento anual del compresor AF (junio–julio); cambio de enfriador de aceite e intercooler del ZT45; reparación de caja y válvula de retención del ZT55 VSD; cambio de enfriador de aceite del secador.',
+  riesgo:'La falla de enfriadores o intercooler lleva a disparo por temperatura y pérdida de caudal de aire; si coincide con otro compresor fuera de servicio, se detiene la producción.',
+  respaldo:'El Excel lista tres compresores de baja (N°1, N°2 y N°3). La redundancia efectiva frente a la demanda 2027 es dato pendiente.'},
+ 'Planta de Frío':{
+  funcion:'Entrega agua helada para enfriamiento de proceso y jarabería: chillers N°1 y N°2, dry cooler y motobombas de circulación (Lowara/Omega, 2,2 a 22 kW).',
+  detiene:'Sin frío no se enfría el proceso ni la jarabería: se pierde calidad y capacidad de las líneas.',
+  criticos:'Chiller N°1, Chiller N°2, dry cooler y motobombas 1 a 9.',
+  incluye:'Revisión eléctrica y de componentes mecánicos de chillers y dry cooler (trimestral) y revisión anual con refuerzo en julio de las nueve motobombas.',
+  riesgo:'Una bomba de circulación o un chiller fuera de servicio reduce la capacidad de enfriamiento en plena temporada de mayor volumen.',
+  respaldo:'Hay dos chillers y nueve motobombas en el Excel; qué bombas se respaldan entre sí (N/N+1) es dato pendiente.'},
+ 'SSEE':{
+  funcion:'Recibe y distribuye la energía eléctrica de toda la planta: red de media tensión, transformadores y celdas, tableros generales (TGF), banco de condensadores y grupo electrógeno.',
+  detiene:'Una falla en SSEE detiene la planta completa, todas las líneas y todos los servicios.',
+  criticos:'Transformadores y celdas, TGF y tableros de sala de máquinas, banco de condensadores, grupo electrógeno, red aérea de MT.',
+  incluye:'Análisis y cambio de aceite de transformadores; mantenimiento de trafos y desconectadores; mantención de TG de fuerza y tablero de sala de máquinas; limpieza de red aérea MT; banco de condensadores; grupo electrógeno; servicio de medición de datos; levantamiento de plano unilineal.',
+  riesgo:'El análisis y el cambio de aceite detectan y previenen fallas internas del transformador, que tiene un plazo de reposición largo. (No hay una partida de termografía en el Excel.)',
+  respaldo:'Configuración de respaldo de transformadores (N/N+1): dato pendiente. El grupo electrógeno está en el plan.'},
+ 'Sala de Caldera':{
+  funcion:'Genera el vapor de planta con caldera a gas natural (línea GNL), desaireador y red de vapor/condensado.',
+  detiene:'Sin vapor no hay CIP caliente, pasteurización ni procesos térmicos. Es además un equipo con componentes de seguridad y exigencia normativa.',
+  criticos:'Caldera generadora de vapor, válvulas de seguridad y manifold, alimentador de gas, medidor de flujo de gas, línea de GNL.',
+  incluye:'Mantención anual de la caldera (junio); repuestos de válvulas de seguridad, manifold y componentes; pruebas de hermeticidad de la línea GNL; mantenimiento del alimentador de gas; calibración del medidor de flujo de gas; medidor portátil de gases.',
+  riesgo:'Una falla de las válvulas de seguridad o una fuga en la línea GNL es un riesgo para las personas y detiene la generación de vapor.',
+  respaldo:'Caldera única en el Excel (no hay respaldo identificado). Número de la norma aplicable: dato pendiente de validar antes de citarla.'}
+};
+
+/* ---------- vistas ---------- */
+function vResumen(){
+  const A=F27(), tot=sum(A,val), P=byPrio(A);
+  const tot26=cmpOK()?sum(F26(),val):null, d=tot26!=null?tot-tot26:null;
+  const nEq=new Set(A.map(a=>norm(actName(a)))).size;
+  const bombas=A.filter(a=>/bomba/i.test(a.equipo+' '+a.componente+' '+a.desc));
+  const pr=D.proy, dProd=pr.prod27/pr.prod26_ppto-1, dProdR=pr.prod27/pr.prod26_real-1;
+  const kp=(l,v,s,cls='')=>`<div class="kpi"><div class="l">${l}</div><div class="v ${cls}">${v}</div><div class="s">${s}</div></div>`;
+  // puente por área
+  let bridge='';
+  if(cmpOK()){
+    const a27=byArea(A), a26=byArea(F26()); const areas=AREAS.filter(a=>a27[a]||a26[a]);
+    const steps=[{l:'Ppto 2026',v:tot26,kind:'total',c:'var(--y26)',tip:`<b>Presupuesto 2026</b> (áreas de Suministros)<br>${mm(tot26)} MM · hoja Presupuesto 2026`}]
+      .concat(areas.map(a=>({l:SHORT[a],v:a27[a]-a26[a],kind:'delta',c:ACOL[a],tip:`<b>${a}</b><br>2026: ${mm(a26[a])} MM → 2027: ${mm(a27[a])} MM<br>Δ ${sgn(a27[a]-a26[a])} MM`})))
+      .concat([{l:'Ppto 2027',v:tot,kind:'total',c:'var(--y27)',tip:`<b>Presupuesto 2027</b><br>${mm(tot)} MM · hoja SUM 2027`}]);
+    bridge=waterfall(steps,{w:600,h:260});
+  } else bridge=`<p class="note">El puente 2026→2027 no aplica con filtro de prioridad: el presupuesto 2026 no tiene prioridades.</p>`;
+  const up=d>0;
+  $('v-resumen').innerHTML=`
+  <div class="msg">El mayor volumen de producción 2027 (${nf0.format(pr.prod27)} hl, ${pct(dProd,1)} vs presupuesto 2026) aumenta las horas de operación y la carga de los equipos de servicios.<br>
+  Este presupuesto protege la disponibilidad de agua, vapor, aire, frío, energía y tratamiento de RIL: sin ellos, ninguna línea produce.</div>
+  <div class="kpis">
+   ${kp('Presupuesto 2027'+filtNote(),mm(tot)+' MM',`${A.length} actividades · ${nEq} equipos/partidas`)}
+   ${d!=null?kp('Variación vs Ppto 2026',sgn(d)+' MM',`${pct(d/tot26,1)} · 2026: ${mm(tot26)} MM`,up?'up':'down'):pendCard('Variación vs 2026','No aplica con filtro de prioridad (2026 sin prioridades).')}
+   ${kp('P1 · Reglamentaria',pct(P.P1/tot,1),`${mm(P.P1)} MM ligados a cumplimiento normativo (criterio del Excel: 1 = Reglamentaria)`)}
+   ${kp('Sin prioridad asignada',pct(P.SC/tot,1),`${mm(P.SC)} MM · ${A.filter(a=>a.prio==='SC').length} actividades por clasificar en el Excel`)}
+   ${kp('Actividades sobre bombas',nf0.format(bombas.length),`${mm(sum(bombas,val))} MM · filas con “bomba/motobomba”`)}
+   ${pendCard('N° de motobombas y cuántas sin respaldo +1','Referencia verbal ~45 / ~25; no está en el Excel. Validar antes de citar.')}
+  </div>
+  <div class="grid g2">
+   <div class="card"><h2>Puente 2026 → 2027 por área</h2>
+    <div class="note">${d!=null?`El presupuesto ${up?'sube':'baja'} ${sgn(d)} MM (${pct(d/tot26,1)}); ${bigDelta(A)}`:''}</div>
+    ${bridge}
+    <p class="note">Eje vertical truncado para hacer visibles los cambios por área (MM CLP).</p>
+    ${pendCard('Descomposición en efecto volumen · nuevas actividades · reprogramaciones · precio/IPC','El Excel no vincula actividades 2026↔2027 ni trae supuesto de IPC; sólo se puede abrir por área.')}</div>
+   <div class="card"><h2>Contexto de volumen (hoja Proyección de Gastos)</h2>
+    <div class="note">Mantención de toda la planta, no sólo Suministros.</div>
+    <table><tbody>
+     <tr><td>Producción presupuesto 2026</td><td class="n">${nf0.format(pr.prod26_ppto)} hl</td></tr>
+     <tr><td>Producción real 2026 (B20)</td><td class="n">${nf0.format(pr.prod26_real)} hl</td></tr>
+     <tr><td>Producción presupuesto 2027</td><td class="n">${nf0.format(pr.prod27)} hl<br><span class="muted">${pct(dProd,1)} vs ppto · ${pct(dProdR,1)} vs real</span></td></tr>
+     <tr><td>Mantención planta · PPTO 2027 (C6)</td><td class="n">${mm(pr.mant_ppto27)} MM</td></tr>
+     <tr><td>Mantención planta · gasto proyectado según volumen 2027 (E6)</td><td class="n">${mm(pr.mant_vol27)} MM</td></tr>
+     <tr><td>Diferencia gasto proyectado − PPTO (F6, “DIF AÑO ANTERIOR”)</td><td class="n">${mm(pr.mant_dif)} MM</td></tr>
+     <tr><td>Suministros · Ppto asignado en Proyección (C29)</td><td class="n">${mm(pr.sum_ppto)} MM</td></tr>
+    </tbody></table>
+    <p class="note" style="margin-top:8px">⚠ La asignación a Suministros en esa hoja (${mm(pr.sum_ppto)} MM) difiere del detalle SUM 2027 (${mm(sum(D.acts,a=>a.total))} MM). Ver pendientes.</p>
+   </div>
+  </div>`;
+}
+function bigDelta(A){ if(!cmpOK())return''; const a27=byArea(A),a26=byArea(F26()); const ds=AREAS.map(a=>[a,a27[a]-a26[a]]).filter(x=>x[1]).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
+  return ds.length?`el mayor cambio es ${ds[0][0]} (${sgn(ds[0][1])} MM)`+(ds[1]?` y ${ds[1][0]} (${sgn(ds[1][1])} MM).`:'.'):''; }
+
+function vAreas(){
+  const A=F27(), tot=sum(A,val), a27=byArea(A), a26=cmpOK()?byArea(F26()):null;
+  const rows=AREAS.map(a=>({a,v27:a27[a],v26:a26?a26[a]:null})).filter(r=>r.v27||r.v26).sort((x,y)=>y.v27-x.v27);
+  const top=rows[0];
+  $('v-areas').innerHTML=`<div class="card">
+   <div class="headline">${top?`${top.a} concentra ${pct(top.v27/tot)} del presupuesto${filtNote()?'':' 2027'}; ${rows.slice(0,3).map(r=>r.a).join(', ')} suman ${pct(sum(rows.slice(0,3),r=>r.v27)/tot)}.`:'Sin datos para el filtro.'}</div>${filtNote()}
+   <div class="note">Barra = monto 2027 en MM CLP. Pasa el cursor para ver el detalle.</div>
+   ${hbars(rows.map(r=>({l:r.a,v:r.v27,c:ACOL[r.a],ex:a26?`(2026: ${mm(r.v26)})`:'',tip:`<b>${r.a}</b><br>2027: ${mm(r.v27)} MM (${pct(r.v27/tot,1)})${a26?`<br>2026: ${mm(r.v26)} MM · Δ ${sgn(r.v27-r.v26)} MM`:''}`})),{w:900,lab:140})}
+   <div class="tscroll" style="margin-top:12px"><table><thead><tr><th>Área</th><th class="n">2026</th><th class="n">2027</th><th class="n">Δ MM</th><th class="n">Δ %</th><th class="n">% del total</th><th class="n">Actividades</th></tr></thead><tbody>
+   ${rows.map(r=>`<tr><td><i class="sw" style="background:${ACOL[r.a]}"></i>${r.a}</td><td class="n">${a26?mm(r.v26):'n/d'}</td><td class="n">${mm(r.v27)}</td><td class="n ${a26&&r.v27>r.v26?'up':'down'}">${a26?sgn(r.v27-r.v26):'n/d'}</td><td class="n">${a26&&r.v26?pct(r.v27/r.v26-1,1):'n/d'}</td><td class="n">${pct(r.v27/tot,1)}</td><td class="n">${A.filter(x=>x.area===r.a).length}</td></tr>`).join('')}
+   </tbody><tfoot><tr><td>Total</td><td class="n">${a26?mm(sum(rows,r=>r.v26)):'n/d'}</td><td class="n">${mm(tot)}</td><td class="n">${a26?sgn(tot-sum(rows,r=>r.v26)):'n/d'}</td><td class="n">${a26?pct(tot/sum(rows,r=>r.v26)-1,1):'n/d'}</td><td class="n">100%</td><td class="n">${A.length}</td></tr></tfoot></table></div>
+   ${a26?'':'<p class="note">2026 no disponible con filtro de prioridad (el presupuesto 2026 no tiene prioridades).</p>'}
+   <p class="note">2026 = hoja “Presupuesto 2026” agrupada por “Nombre CC” (caldera → Sala de Caldera).</p></div>`;
+}
+
+function vPrio(){
+  const A=F27(), tot=sum(A,val), P=byPrio(A);
+  const parts=PR.map(p=>({v:P[p],c:PFILL[p],tip:`<b>${PRL[p]}</b><br>${mm(P[p])} MM · ${pct(P[p]/tot,1)}<br>${A.filter(a=>a.prio===p).length} actividades`}));
+  const clas=P.P1+P.P2+P.P3;
+  $('v-prio').innerHTML=`<div class="card">
+   <div class="headline">${pct(P.P1/tot)} del presupuesto es reglamentario (P1); ${pct(P.SC/tot)} aún no tiene prioridad asignada en el Excel.</div>${filtNote()}
+   <div class="note">Del gasto ya clasificado (${mm(clas)} MM), P1 representa ${pct(clas?P.P1/clas:NaN)}. Clasificar el resto es condición para defender el orden de corte.</div>
+   <div class="grid g2" style="align-items:center">
+    <div>${donut(parts,{label:mm(tot),sub:'MM CLP'})}${legendPrio()}</div>
+    <div class="tscroll"><table><thead><tr><th>Prioridad</th><th class="n">MM</th><th class="n">%</th><th class="n">Actividades</th></tr></thead><tbody>
+    ${PR.map(p=>`<tr><td><i class="sw ${p}"></i>${PRL[p]}</td><td class="n">${mm(P[p])}</td><td class="n">${pct(P[p]/tot,1)}</td><td class="n">${A.filter(a=>a.prio===p).length}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="n">${mm(tot)}</td><td class="n">100%</td><td class="n">${A.length}</td></tr></tfoot></table>
+    <p class="note" style="margin-top:8px">Criterio único (encabezado de la hoja SUM 2027): 1 = Reglamentaria · 2 = Continuidad operacional o seguridad · 3 = Otros.</p></div>
+   </div></div>
+   <div class="card"><h2>Mayores partidas sin clasificar</h2><div class="note">Estas son las que más mueven el porcentaje; no se les asigna prioridad por inferencia.</div>
+   ${hbars(A.filter(a=>a.prio==='SC').sort((x,y)=>val(y)-val(x)).slice(0,10).map(a=>({l:trunc(actName(a),26),v:val(a),c:ACOL[a.area],tip:tipAct(a)})),{w:900,lab:200})}${legendAreas()}</div>`;
+}
+const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+
+function vMatriz(){
+  const A=F27(), tot=sum(A,val);
+  const cell=(a,p)=>A.filter(x=>x.area===a&&x.prio===p);
+  const max=Math.max(...AREAS.flatMap(a=>PR.map(p=>sum(cell(a,p),val))),1);
+  const p1top=AREAS.map(a=>[a,sum(cell(a,'P1'),val)]).sort((x,y)=>y[1]-x[1])[0];
+  const scTop=AREAS.map(a=>[a,sum(cell(a,'SC'),val)]).sort((x,y)=>y[1]-x[1])[0];
+  let t=`<div class="tscroll"><table class="heat"><thead><tr><th>Área</th>${PR.map(p=>`<th class="n"><i class="sw ${p}"></i>${PRS[p]}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>`;
+  AREAS.forEach(a=>{const rt=sum(A.filter(x=>x.area===a),val); if(!rt&&S.area!=='all')return;
+    t+=`<tr><td><i class="sw" style="background:${ACOL[a]}"></i>${a}</td>`+PR.map(p=>{const v=sum(cell(a,p),val), r=v/max, n=cell(a,p).length, sel=S.matrixSel===a+'|'+p;
+      return `<td class="c ${sel?'sel':''}" data-cell="${esc(a+'|'+p)}" style="background:${heatBg(r)};color:${heatFg(r)}" ${T(`<b>${a} · ${PRS[p]}</b><br>${mm(v)} MM · ${n} actividades<br>Clic para ver el detalle`)}>${v?mm(v):'–'}</td>`;}).join('')+`<td class="n"><b>${mm(rt)}</b></td></tr>`;});
+  t+=`</tbody><tfoot><tr><td>Total</td>${PR.map(p=>`<td class="n">${mm(sum(A.filter(x=>x.prio===p),val))}</td>`).join('')}<td class="n">${mm(tot)}</td></tr></tfoot></table></div>`;
+  let det='';
+  if(S.matrixSel){const [a,p]=S.matrixSel.split('|'); const L=cell(a,p).sort((x,y)=>val(y)-val(x));
+    det=`<div class="card"><h2>${a} · ${PRL[p]}: ${L.length} actividades, ${mm(sum(L,val))} MM</h2><div class="tscroll"><table><thead><tr><th>Equipo</th><th>Descripción</th><th>Meses</th><th class="n">MM</th><th class="n">Fila</th></tr></thead><tbody>
+    ${L.map(x=>`<tr><td>${esc(actName(x))}</td><td>${esc(x.desc)}${x.flag?`<div class="flag">${esc(x.flag)}</div>`:''}</td><td>${mesesDe(x)}</td><td class="n">${mm(val(x))}</td><td class="n">${x.fila}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Sin actividades en esta celda.</td></tr>'}
+    </tbody></table></div></div>`;}
+  const stack=AREAS.filter(a=>sum(A.filter(x=>x.area===a),val)).map(a=>({l:a,segs:PR.map(p=>{const v=sum(cell(a,p),val);return {v,c:PFILL[p],dark:p==='P1',tip:`<b>${a} · ${PRS[p]}</b><br>${mm(v)} MM`};})}));
+  $('v-matriz').innerHTML=`<div class="card"><div class="headline">${p1top&&p1top[1]?`${p1top[0]} lidera el gasto reglamentario (${mm(p1top[1])} MM en P1); ${scTop[0]} concentra lo no clasificado (${mm(scTop[1])} MM).`:'Sin gasto P1 para el filtro.'}</div>${filtNote()}
+   <div class="note">MM CLP. Color más intenso = mayor monto. Haz clic en una celda para ver sus actividades.</div>${t}</div>${det}
+   <div class="card"><h2>Mezcla de prioridades por área (100%)</h2>${legendPrio()}${hstack100(stack,{w:1000,lab:140,rh:34})}</div>`;
+  document.querySelectorAll('#v-matriz [data-cell]').forEach(td=>td.onclick=()=>{S.matrixSel=S.matrixSel===td.dataset.cell?null:td.dataset.cell;vMatriz();});
+}
+
+function vMensual(){
+  const yr=S.year, rows=yr===2027?F27():(cmpOK()?F26():[]);
+  const m=monthly(rows), tot=sum(m), avg=tot/12;
+  const m27=monthly(F27()), m26=cmpOK()?monthly(F26()):null;
+  const jun27=m27[5]/sum(m27), jun26=m26?m26[5]/sum(m26):null;
+  const cols=MES.map((l,i)=>({l,segs:AREAS.map(a=>{const v=sum(rows.filter(r=>r.area===a),r=>(S.mes==='all'||+S.mes===i)?r.meses[i]:0);return {v,c:ACOL[a],tip:`<b>${a} · ${MESL[i]} ${yr}</b><br>${mm(v)} MM`};})}));
+  const ymax=Math.max(...m27,...(m26||[0]))*1.08;
+  const hm=AREAS.map(a=>MES.map((_,i)=>sum(rows.filter(r=>r.area===a),r=>(S.mes==='all'||+S.mes===i)?r.meses[i]:0)));
+  const hmax=Math.max(...hm.flat(),1);
+  const heat=`<div class="tscroll"><table class="heat"><thead><tr><th>Área</th>${MES.map(x=>`<th class="n">${x}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>
+   ${AREAS.map((a,k)=>`<tr><td style="white-space:nowrap"><i class="sw" style="background:${ACOL[a]}"></i>${a}</td>${hm[k].map((v,i)=>`<td class="c" style="background:${heatBg(v/hmax)};color:${heatFg(v/hmax)};cursor:default" ${T(`<b>${a} · ${MESL[i]} ${yr}</b><br>${mm(v)} MM`+topInMonth(rows,a,i))}>${v?nf1.format(v/1e6):'–'}</td>`).join('')}<td class="n"><b>${mm(sum(hm[k]))}</b></td></tr>`).join('')}
+   </tbody><tfoot><tr><td>Total</td>${m.map(v=>`<td class="n">${v?nf1.format(v/1e6):'–'}</td>`).join('')}<td class="n">${mm(tot)}</td></tr></tfoot></table></div>`;
+  $('v-mensual').innerHTML=`<div class="card">
+   <div class="headline">Junio concentra ${pct(jun27)} del gasto 2027${jun26!=null?` (vs ${pct(jun26)} en 2026)`:''}; fuera de junio, los meses más altos son ${m27.map((v,i)=>[i,v]).filter(x=>x[0]!==5).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>MESL[x[0]]).join(' y ')}.</div>${filtNote()}
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0"><div class="seg" id="yrSeg"><button data-y="2026" class="${yr===2026?'on':''}">Ppto 2026</button><button data-y="2027" class="${yr===2027?'on':''}">Ppto 2027</button></div>
+   <span class="note" style="margin:0">Misma escala en ambos años para comparar la redistribución. Línea punteada = promedio mensual (${mm(avg)} MM/mes).</span></div>
+   ${yr===2026&&!cmpOK()?'<p class="note">2026 no tiene prioridades; quita el filtro de prioridad para verlo.</p>':''}
+   ${legendAreas()}${vstack(cols,{w:1100,h:300,avg,avgLabel:`Promedio ${mm(avg)} MM/mes`,ymaxIn:ymax})}</div>
+   <div class="card"><h2>Mapa de calor área × mes · ${yr}</h2><div class="note">MM CLP. Pasa el cursor para ver las partidas principales del mes.</div>${heat}</div>`;
+  document.querySelectorAll('#yrSeg button').forEach(b=>b.onclick=()=>{S.year=+b.dataset.y;vMensual();});
+}
+function topInMonth(rows,a,i){const L=rows.filter(r=>r.area===a&&r.meses[i]>0).sort((x,y)=>y.meses[i]-x.meses[i]).slice(0,3); return L.length?'<br>'+L.map(r=>`· ${esc(trunc(r.desc||actName(r),48))}: ${mm(r.meses[i])}`).join('<br>'):'';}
+
+function vReprog(){
+  const A27=F27(), A26=cmpOK()?F26():null;
+  const m27=monthly(A27), t27=sum(m27), m26=A26?monthly(A26):null, t26=A26?sum(m26):null;
+  const idx=[[3,'Abril'],[5,'Junio'],[8,'Septiembre']];
+  const groups=idx.map(([i,l])=>({l,vals:[...(A26?[{v:m26[i]/t26,c:'var(--y26)',tip:`<b>${l} 2026</b><br>${pct(m26[i]/t26,1)} del año · ${mm(m26[i])} MM`}]:[]),{v:m27[i]/t27,c:'var(--y27)',tip:`<b>${l} 2027</b><br>${pct(m27[i]/t27,1)} del año · ${mm(m27[i])} MM`}]}));
+  const n27=MES.map((_,i)=>A27.filter(a=>a.meses[i]>0).length), n26=A26?MES.map((_,i)=>A26.filter(a=>a.meses[i]>0).length):null;
+  const cg=MES.map((l,i)=>({l,vals:[...(n26?[{v:n26[i],c:'var(--y26)',tip:`<b>${MESL[i]} 2026</b><br>${n26[i]} actividades con gasto`}]:[]),{v:n27[i],c:'var(--y27)',tip:`<b>${MESL[i]} 2027</b><br>${n27[i]} actividades con gasto`}]}));
+  const jun=A27.filter(a=>a.meses[5]>0), junA=AREAS.map(a=>[a,sum(jun.filter(x=>x.area===a),x=>x.meses[5])]).filter(x=>x[1]).sort((x,y)=>y[1]-x[1]);
+  const junShare=m27[5]/t27, jun26s=A26?m26[5]/t26:null;
+  const moved = A26? (junShare<jun26s):null;
+  const as27=(m27[3]+m27[8])/t27, as26=A26?(m26[3]+m26[8])/t26:null;
+  $('v-reprog').innerHTML=`<div class="card">
+   <div class="headline">${A26?`Junio baja de ${pct(jun26s)} a ${pct(junShare)} del gasto anual; abril + septiembre suben de ${pct(as26)} a ${pct(as27)}.`:`Junio concentra ${pct(junShare)} del gasto 2027.`}</div>${filtNote()}
+   <p>Históricamente las mantenciones de Suministros se concentraban en junio, junto con la mantención mayor. Para 2027 se redistribuyen actividades hacia <b>abril y septiembre</b> para:</p>
+   <ul><li>no saturar la capacidad del equipo de operadores mantenedores y contratistas;</li><li>asegurar el cumplimiento (OTIF) del plan de mantenimiento;</li><li>evitar que las motobombas prioritarias queden intervenidas en la misma ventana;</li><li>reducir el riesgo de arranque simultáneo después de la parada.</li></ul>
+   ${A26&&!moved?'<p class="flag">⚠ Con los filtros actuales, junio 2027 no baja su participación respecto de 2026.</p>':''}
+   </div>
+   <div class="grid g2">
+    <div class="card"><h2>% del gasto anual por mes clave</h2><div class="leg">${A26?'<span><i class="sw" style="background:var(--y26)"></i>Ppto 2026</span>':''}<span><i class="sw" style="background:var(--y27)"></i>Ppto 2027</span></div>${vgroup(groups,{w:520,h:230})}
+     ${A26?'':'<p class="note">2026 no disponible con filtro de prioridad.</p>'}</div>
+    <div class="card"><h2>Carga: actividades con gasto por mes</h2><div class="note">Proxy de N° de OT (una fila del Excel con monto en el mes = una intervención).</div>
+     <div class="leg">${n26?'<span><i class="sw" style="background:var(--y26)"></i>2026</span>':''}<span><i class="sw" style="background:var(--y27)"></i>2027</span></div>${vgroup(cg,{w:620,h:230,fmt:v=>nf0.format(v)})}
+     ${pendCard('Capacidad de HH disponibles por mes','Operadores mantenedores + contratistas; necesaria para la línea de capacidad.')}</div>
+   </div>
+   <div class="card"><h2>Qué se mantiene en junio 2027 y por qué</h2>
+    <div class="note">Junio sigue siendo el mes más alto (${mm(m27[5])} MM): quedan ahí las actividades que requieren la parada mayor o planta detenida.</div>
+    ${hbars(junA.map(([a,v])=>({l:a,v,c:ACOL[a],tip:`<b>${a} · junio 2027</b><br>${mm(v)} MM`+topInMonth(A27,a,5)})),{w:900,lab:140})}
+    <div class="tscroll" style="margin-top:10px"><table><thead><tr><th>Área</th><th>Principales partidas de junio</th><th>Por qué en la parada</th></tr></thead><tbody>
+    ${junA.map(([a])=>`<tr><td>${a}</td><td>${jun.filter(x=>x.area===a).sort((x,y)=>y.meses[5]-x.meses[5]).slice(0,3).map(x=>`${esc(trunc(actName(x),34))} — ${esc(trunc(x.desc,48))} (${mm(x.meses[5])})`).join('<br>')}</td><td>${JUNWHY[a]||''}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+const JUNWHY={'Sala Compresores':'Mantenimiento anual del compresor AF (28,0 MM en junio + 17,0 en julio): requiere sacarlo de servicio junto con la parada.',
+ 'SSEE':'Trafos, desconectadores, TGF y tableros sólo se intervienen desenergizados: dependen de la parada de planta.',
+ 'Sala de Caldera':'Mantención anual de caldera: exige equipo fuera de servicio, sin demanda de vapor.',
+ 'Planta de Agua':'UV, OI, estanques y bombas de transferencia se intervienen cuando no hay demanda de agua de producción (validar con planificación).',
+ 'Planta de RILES':'El retiro de lodos es mensual/trimestral y coincide con junio; no depende de la parada.',
+ 'Planta de Frío':'Revisión trimestral de chillers y dry cooler (mar–jun–sep–dic); no depende de la parada.'};
+
+function vFichas(){
+  const all=D.acts, T0=sum(all,a=>a.total);
+  $('v-fichas').innerHTML=`<div class="card"><div class="headline">Cada área de Suministros alimenta a todas las líneas: si una falla, la planta no produce.</div><div class="note">Fichas estáticas: siempre disponibles, aunque falle el asistente. Los montos corresponden al total 2027 sin filtros.</div></div>
+  <div class="ficha">${AREAS.map(a=>{const f=FICHAS[a], L=all.filter(x=>x.area===a), t=sum(L,x=>x.total), p1=sum(L.filter(x=>x.prio==='P1'),x=>x.total);
+   return `<div class="card" style="--c:${ACOL[a]}"><h2>${a}</h2><div class="note">${mm(t)} MM · ${pct(t/T0,1)} del total · ${L.length} actividades · P1 ${mm(p1)} MM</div><dl>
+    <dt>Función en la planta</dt><dd>${f.funcion}</dd><dt>Qué detiene su falla</dt><dd>${f.detiene}</dd><dt>Equipos críticos</dt><dd>${f.criticos}</dd>
+    <dt>Qué incluye la mantención</dt><dd>${f.incluye}</dd><dt>Riesgo de no ejecutarla</dt><dd>${f.riesgo}</dd><dt>Respaldo existente (N / N+1)</dt><dd>${f.respaldo}</dd></dl></div>`;}).join('')}</div>`;
+}
+
+/* ---------- asistentes ---------- */
+const AKEY=[['Planta de Agua',/agua|osmosis|\buv\b|carbon|tk ?2\b|tk ?4|tk ?20|tk ?33|nestle|manantial/],['Planta de RILES',/\bril|riles|lodo|anaerob|aerob|clarific|biogas|pozo pit|ecualiz/],
+ ['Sala Compresores',/compres|aire|atlas|secador/],['Planta de Frío',/\bfrio|chiller|dry cooler|lowara|enfriamiento/],['SSEE',/ssee|subestac|electric|trafo|transformador|tgf|condensador|electrogeno|media tension/],['Sala de Caldera',/caldera|vapor|gnl|\bgas\b/]];
+const areaOf=q=>{const n=norm(q); const h=AKEY.find(([,re])=>re.test(n)); return h?h[0]:null;};
+const prioOf=q=>{const n=norm(q); if(/sin clasif|sin prioridad/.test(n))return'SC'; const m=n.match(/\bp\s*([123])\b|prioridad\s*([123])/); if(m)return 'P'+(m[1]||m[2]); if(/reglament/.test(n))return'P1'; if(/continuidad|seguridad/.test(n))return'P2'; return null;};
+const words=s=>s.split(/\s+/).filter(Boolean).length;
+const clip=(s,n=120)=>{const w=s.split(/\s+/); return w.length<=n?s:w.slice(0,n).join(' ')+'…';};
+const monthsOf=L=>{const ms=MES.map((_,i)=>sum(L,x=>x.meses[i])); return ms.map((v,i)=>[i,v]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>MESL[x[0]]);};
+function ansConsiste(a){
+  const L=D.acts.filter(x=>x.area===a); if(!L.length) return 'No está en el presupuesto cargado.';
+  const t=sum(L,x=>x.total), T0=sum(D.acts,x=>x.total), top=[...L].sort((x,y)=>y.total-x.total).slice(0,3), p1=sum(L.filter(x=>x.prio==='P1'),x=>x.total);
+  return clip(`${a}: ${mm(t)} MM (${pct(t/T0)} del total 2027) en ${L.length} actividades; ${mm(p1)} MM son P1. Lo principal: ${top.map(x=>`${trunc(actName(x),32)} – ${trunc(x.desc,40)} (${mm(x.total)} MM, ${mesesDe(x)})`).join('; ')}. Meses de mayor gasto: ${monthsOf(L).join(', ')}. Riesgo evitado: ${FICHAS[a].riesgo}`);
+}
+const PDEF={P1:'reglamentaria',P2:'continuidad operacional o seguridad',P3:'otros (mejora o respaldo)'};
+function ansJustifica(a,p){
+  const L=D.acts.filter(x=>x.area===a&&x.prio===p).sort((x,y)=>y.total-x.total), LA=D.acts.filter(x=>x.area===a);
+  if(!L.length) return `No hay actividades ${PRS[p]} de ${a} en el presupuesto cargado.`;
+  const t=sum(L,x=>x.total), tA=sum(LA,x=>x.total), top=L.slice(0,3), bombas=L.filter(x=>/bomba/i.test(x.equipo+x.componente+x.desc)).length;
+  if(p==='SC') return clip(`Las ${L.length} actividades sin prioridad de ${a} suman ${mm(t)} MM (${pct(t/tA)} del área). El Excel no les asigna prioridad, así que no corresponde justificar una que no está declarada. Las mayores: ${top.map(x=>`${trunc(x.desc||actName(x),50)} (${mm(x.total)} MM, ${mesesDe(x)})`).join('; ')}. Recomendación: clasificarlas antes de la presentación.`);
+  return clip(`Las ${p} de ${a} (criterio: ${PDEF[p]}) suman ${mm(t)} MM, ${pct(t/tA)} del área, en ${L.length} actividades${bombas?`, ${bombas} sobre bombas`:''}. Se concentran en ${top.slice(0,2).map(x=>`${trunc(actName(x),32)}: ${trunc(x.desc,40)} (${mm(x.total)} MM, ${mesesDe(x)})`).join('; ')}. Riesgo evitado: ${FICHAS[a].riesgo}`);
+}
+function ansLibre(q,mode){
+  const a=areaOf(q), p=prioOf(q);
+  if(a&&p) return ansJustifica(a,p);
+  if(a) return mode==='ia2'?ansJustifica(a,'P1'):ansConsiste(a);
+  const toks=norm(q).split(/[^a-z0-9]+/).filter(w=>w.length>3&&!['mantencion','mantenimiento','consiste','prioridad','justifica','cuanto','donde','cuales','sobre','para','planta'].includes(w));
+  const hits=D.acts.filter(x=>toks.some(w=>norm(x.equipo+' '+x.componente+' '+x.desc).includes(w))).sort((x,y)=>y.total-x.total);
+  if(!hits.length) return 'No está en el presupuesto cargado.';
+  return clip(`Encontré ${hits.length} actividades (${mm(sum(hits,x=>x.total))} MM): `+hits.slice(0,4).map(x=>`${x.area} · ${trunc(actName(x),35)}: ${trunc(x.desc,45)} (${PRS[x.prio]}, ${mm(x.total)} MM, ${mesesDe(x)}, fila ${x.fila})`).join('; ')+'.');
+}
+function ctxForLLM(){
+  return JSON.stringify({criterio:'P1=Reglamentaria; P2=Continuidad operacional o seguridad; P3=Otros; SC=Sin clasificar (no inferir)',fichas:FICHAS,
+    actividades:D.acts.map(a=>[a.fila,a.area,a.prio,actName(a),a.desc,+(a.total/1e6).toFixed(2),mesesDe(a)])});
+}
+const SYS=`Eres el asistente del Gerente de Planta para defender el presupuesto de mantención de Suministros 2027 (Planta Antofagasta). Responde en español, en 120 palabras o menos, para una audiencia gerencial no técnica. Usa SOLO el contexto JSON (actividades: [fila, área, prioridad, equipo, descripción, monto MM CLP, meses] y fichas técnicas). Incluye monto en MM CLP con 1 decimal, meses y riesgo evitado. No inventes datos, normas ni cantidades de equipos; si algo no está en el contexto responde exactamente "no está en el presupuesto cargado". No asignes prioridad a actividades "SC".`;
+async function askClaude(q,mode){
+  let key='',model='claude-sonnet-5'; try{key=sessionStorage.getItem('sum27-key')||'';model=sessionStorage.getItem('sum27-model')||model;}catch(e){}
+  if(!key) return null;
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model,max_tokens:400,system:SYS+'\n\nCONTEXTO:\n'+ctxForLLM(),messages:[{role:'user',content:(mode==='ia2'?'Justifica la prioridad solicitada. ':'')+q}]})});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json(); return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
+}
+function chatView(id,title,headline,sugs,mode){
+  const el=$('v-'+id);
+  el.innerHTML=`<div class="card"><div class="headline">${headline}</div><div class="note">${title}</div>
+   ${typeof sugs==='string'?sugs:`<div class="sugs">${sugs.map(s=>`<button data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div>`}
+   <div class="chat" id="chat-${id}"></div>
+   <form class="ask" id="f-${id}"><input id="q-${id}" placeholder="Escribe tu pregunta…" autocomplete="off"><button class="btn primary">Preguntar</button></form>
+   <details class="cfg"><summary>Motor de respuesta: local (sin conexión) · opcional: conectar Claude</summary>
+    <p>Por defecto responde un motor local que arma la respuesta con las filas del Excel y las fichas (no requiere internet). Si ingresas una API key de Anthropic, las preguntas se envían a Claude con el mismo contexto; si falla, se usa el motor local. La key se guarda sólo en esta pestaña del navegador.</p>
+    <label>API key <input type="password" id="k-${id}" placeholder="sk-ant-…"></label> <label>Modelo <input id="m-${id}" value="claude-sonnet-5" style="width:160px"></label> <button class="btn" id="s-${id}" type="button">Guardar</button></details></div>`;
+  const chat=$('chat-'+id);
+  const push=(cls,txt,src)=>{const d=document.createElement('div');d.className='bub '+cls;d.textContent=txt;if(src){const s=document.createElement('span');s.className='src';s.textContent=src;d.appendChild(s);}chat.appendChild(d);chat.scrollTop=chat.scrollHeight;};
+  const go=async q=>{if(!q.trim())return; push('u',q);
+    let out=null,src='Motor local · filas SUM 2027 + fichas';
+    try{out=await askClaude(q,mode); if(out)src='Claude · contexto embebido';}catch(e){src='Motor local (Claude no respondió: '+e.message+')';}
+    if(!out) out=mode==='ia2'&&!areaOf(q)?'Indica el área (y la prioridad) que quieres justificar, por ejemplo: “Justifica la prioridad P1 en Planta de Agua”.':ansLibre(q,mode);
+    push('a',out,src);};
+  el.querySelectorAll('button[data-q]').forEach(b=>b.onclick=()=>go(b.dataset.q));
+  $('f-'+id).onsubmit=e=>{e.preventDefault();const i=$('q-'+id);go(i.value);i.value='';};
+  $('s-'+id).onclick=()=>{try{sessionStorage.setItem('sum27-key',$('k-'+id).value.trim());sessionStorage.setItem('sum27-model',$('m-'+id).value.trim()||'claude-sonnet-5');}catch(e){} $('s-'+id).textContent='Guardado ✓';};
+}
+function vIA(){
+  chatView('ia1','Pregunta por un área. Respuestas de ≤ 120 palabras con monto, meses y riesgo evitado, sólo con datos del presupuesto cargado.','¿En qué consiste la mantención de cada área?',AREAS.map(a=>`¿En qué consiste la mantención de ${a}?`),'ia1');
+  const s2=`<div class="tscroll"><table class="sugm"><thead><tr><th>Preguntas sugeridas</th>${PR.map(p=>`<th><i class="sw ${p}"></i>${PRS[p]}</th>`).join('')}</tr></thead><tbody>${AREAS.map(a=>`<tr><td>${a}</td>${PR.map(p=>{const n=D.acts.filter(x=>x.area===a&&x.prio===p).length; return `<td>${n?`<button data-q="${esc(`Justifica la prioridad ${PRS[p]} en ${a}`)}">Justificar (${n})</button>`:'<span class="muted">–</span>'}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
+  chatView('ia2','Elige una combinación área × prioridad. Si la prioridad no está declarada en el Excel, el asistente lo dice en vez de inventarla.','Justifica la prioridad de cada partida',s2,'ia2');
+}
+
+function vTraza(){
+  const A=F27().sort((x,y)=>AREAS.indexOf(x.area)-AREAS.indexOf(y.area)||PR.indexOf(x.prio)-PR.indexOf(y.prio)||val(y)-val(x));
+  $('v-traza').innerHTML=`<div class="card"><h2>Datos pendientes e inconsistencias detectadas</h2><div class="note">Resolver antes de la presentación; ningún indicador de esta lista se estimó.</div>
+   <ol class="pl">${D.pendientes.map(p=>`<li>${esc(p)}</li>`).join('')}</ol>
+   <h3>Notas de limpieza</h3><ul class="note">${D.notas.map(n=>`<li>${esc(n)}</li>`).join('')}<li>Áreas normalizadas (trim, mayúsculas, tildes). Filas con total 0 excluidas; textos “$ -” o “#REF!” en meses = 0. Filas sin prioridad = “Sin clasificar”.</li></ul></div>
+   <div class="card"><h2>Tabla de trazabilidad · ${A.length} actividades · ${mm(sum(A,val))} MM</h2>${filtNote()}
+   <div class="note">Respeta los filtros globales. <button class="btn" id="bCsv">Descargar CSV</button></div>
+   <div class="tscroll"><table><thead><tr><th>Área</th><th>Prioridad</th><th>Equipo</th><th>Actividad</th><th>Meses</th><th class="n">MM</th><th class="n">Fila SUM 2027</th></tr></thead><tbody>
+   ${A.map(a=>`<tr><td>${a.area}</td><td><i class="sw ${a.prio}"></i>${PRS[a.prio]}</td><td>${esc(actName(a))}</td><td>${esc(a.desc)}${a.flag?`<div class="flag">${esc(a.flag)}</div>`:''}</td><td>${mesesDe(a)}</td><td class="n">${mm(val(a))}</td><td class="n">${a.fila}</td></tr>`).join('')}
+   </tbody></table></div></div>`;
+  $('bCsv').onclick=()=>{const rows=[['Área','Prioridad','Equipo','Actividad','Meses','Monto CLP','Hoja','Fila origen','Observación']].concat(A.map(a=>[a.area,PRS[a.prio],actName(a),a.desc,mesesDe(a),val(a),'SUM 2027',a.fila,a.flag]));
+    const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n'); const b=new Blob([csv],{type:'text/csv'}); const u=URL.createObjectURL(b);
+    const l=document.createElement('a');l.href=u;l.download='trazabilidad_suministros_2027.csv';l.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
+}
+
+/* ---------- montaje ---------- */
+function renderAll(){
+  vResumen();vAreas();vPrio();vMatriz();vMensual();vReprog();vTraza();
+  $('fInfo').innerHTML=filtNote();
+}
+function setTab(t){S.tab=t; try{localStorage.setItem('sum27-tab',t);}catch(e){}
+  document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+t));
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  $('filters').style.display=['fichas','ia1','ia2'].includes(t)?'none':'flex';}
+function init(){
+  $('src').textContent=D.generado+' · hojas SUM 2027, Presupuesto 2026, Proyección de Gastos';
+  $('legPrio').innerHTML='<b>Criterio de prioridad:</b>'+PR.map(p=>`<span><i class="sw ${p}"></i>${PRL[p]}</span>`).join('');
+  $('tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" data-t="${k}">${l}</button>`).join('');
+  $('tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t);};
+  $('fArea').innerHTML='<option value="all">Todas</option>'+AREAS.map(a=>`<option>${a}</option>`).join('');
+  $('fPrio').innerHTML='<option value="all">Todas</option>'+PR.map(p=>`<option value="${p}">${PRS[p]}</option>`).join('');
+  $('fMes').innerHTML='<option value="all">Año completo</option>'+MESL.map((m,i)=>`<option value="${i}">${m[0].toUpperCase()+m.slice(1)}</option>`).join('');
+  const onF=()=>{S.area=$('fArea').value;S.prio=$('fPrio').value;S.mes=$('fMes').value;S.matrixSel=null;renderAll();};
+  ['fArea','fPrio','fMes'].forEach(i=>$(i).onchange=onF);
+  $('fReset').onclick=()=>{$('fArea').value='all';$('fPrio').value='all';$('fMes').value='all';onF();};
+  $('bTheme').onclick=()=>{const r=document.documentElement; const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme=dark?'light':'dark'; try{localStorage.setItem('sum27-theme',r.dataset.theme);}catch(e){}};
+  try{const th=localStorage.getItem('sum27-theme'); if(th)document.documentElement.dataset.theme=th;}catch(e){}
+  $('bPdf').onclick=()=>window.print();
+  $('bPng').onclick=exportPng;
+  vFichas();vIA();renderAll();setTab(S.tab);
+}
+async function exportPng(){
+  const b=$('bPng'); b.textContent='Generando…';
+  try{
+    if(!window.html2canvas) await new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=ok;s.onerror=()=>ko(new Error('sin conexión'));document.head.appendChild(s);});
+    const node=$('v-'+S.tab); const bg=getComputedStyle(document.body).backgroundColor;
+    const c=await html2canvas(node,{backgroundColor:bg,scale:2});
+    const a=document.createElement('a'); a.download=`suministros2027_${S.tab}.png`; a.href=c.toDataURL('image/png'); a.click();
+  }catch(e){ alert('No se pudo generar el PNG ('+e.message+'). Usa “Exportar PDF”.'); }
+  b.textContent='Exportar PNG';
+}
+init();
+</script>
+</body>
+</html>
