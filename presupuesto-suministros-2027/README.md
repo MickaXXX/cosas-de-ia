@@ -1,6 +1,14 @@
 # Dashboard · Presupuesto Mantención Suministros 2027 (Planta Antofagasta)
 
-Dashboard ejecutivo para defender técnicamente el presupuesto ante el Gerente de Planta. Tiene 5 vistas: Resumen ejecutivo · Presupuesto por área y prioridad · Plan anual y carga · Criticidad y continuidad · Detalle + Asistente IA.
+Dashboard ejecutivo para defender técnicamente el presupuesto ante el Gerente de Planta. Tiene 5 vistas:
+
+1. **Resumen**: KPIs y Sankey Suministros → Área → Sistema.
+2. **Árbol de activos**: descomposición Área → Sistema → Subsistema/equipo → Actividad, con el valor 2026 comparable en cada nodo.
+3. **2026 → 2027**: puente por tipo de cambio (eliminadas, reducidas, aumentadas, nuevas), indicadores de mejora del presupuesto, cambios por sistema, distribución mensual y tabla partida a partida con su fundamento.
+4. **Prioridad y calendario**: matriz área × prioridad, monto e intervenciones por mes, calidad de datos y criticidad.
+5. **Detalle + Asistente IA**: botón "Defender este gasto" y trazabilidad por fila.
+
+Los sistemas se obtienen agrupando "Máquina / Equipamiento" con reglas explícitas por área (`SYS_RULES` en `template.html`). Si la base trae columnas `Sistema` y `Subsistema`, se usan esas. Las partidas 2026↔2027 se emparejan por área y similitud de texto, luego por mismo equipo, y luego por mismo sistema con igual monto y meses. Los pares se pueden revisar en la vista 3.
 
 ## Fuente de datos
 

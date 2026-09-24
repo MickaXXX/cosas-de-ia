@@ -157,6 +157,16 @@ details.drill .in{padding-left:18px}
 .chain .svc .mm{font-size:12px;color:var(--muted);margin-top:4px}
 .arrow{text-align:center;font-size:13px;color:var(--ink-2);margin:10px 0}
 .prod{border:2px solid var(--ink);border-radius:12px;padding:10px 14px;text-align:center;font-weight:650}
+.tree{position:relative;display:flex;gap:34px;overflow-x:auto;padding:6px 2px 12px;align-items:flex-start}
+.tlinks{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;width:auto}
+.tcol{display:flex;flex-direction:column;gap:4px;width:180px;flex:none;position:relative;z-index:1}
+.tcol[data-col="3"]{width:260px}
+.tcol .th{font-size:12px;color:var(--ink-2);font-weight:650;border-bottom:2px solid var(--accent);padding-bottom:3px;margin-bottom:6px}
+.tnode{all:unset;box-sizing:border-box;cursor:pointer;display:block;padding:4px 6px;border-radius:6px;width:100%}
+.tnode:hover{background:var(--surface-2)} .tnode:focus-visible{outline:2px solid var(--accent)}
+.tnode.on .tl{font-weight:700} .tnode.root{cursor:default}
+.tbar{display:block;height:12px;background:var(--grid);border-radius:3px;overflow:hidden}.tbar i{display:block;height:100%;border-radius:3px}
+.tl{display:block;font-size:13px;margin-top:3px;line-height:1.25} .tv{display:block;font-size:12px;color:var(--ink-2)}
 #tip{position:fixed;pointer-events:none;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--ring);box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:8px;padding:8px 10px;font-size:12.5px;max-width:330px;display:none;line-height:1.4}
 .muted{color:var(--muted)}
 ol.pl li{margin:5px 0}
@@ -193,14 +203,13 @@ footer{color:var(--muted);font-size:12px;padding:16px 0 40px}
 
 <div class="wrap noprint">
   <div class="filters" id="filters1"></div>
-  <details class="more" id="moreF"><summary>Más filtros (equipo, componente, tipo, cuenta, redundancia, rol, riesgo)</summary><div class="filters" id="filters2"></div></details>
 </div>
 
 <main class="wrap" id="main">
   <section class="view" id="v-resumen"></section>
-  <section class="view" id="v-area"></section>
-  <section class="view" id="v-plan"></section>
-  <section class="view" id="v-crit"></section>
+  <section class="view" id="v-arbol"></section>
+  <section class="view" id="v-comp"></section>
+  <section class="view" id="v-prio"></section>
   <section class="view" id="v-detalle"></section>
 </main>
 <footer class="wrap">Toda cifra proviene de una fila o celda de la base (ver “Detalle + Asistente IA”). Lo que la base no trae se muestra como “Dato pendiente” o “Información no incorporada en la base”; no se estima.</footer>
@@ -224,7 +233,7 @@ const CRIT = ['Crítica','Alta','Media','Baja'];
 const CFILL = {'Crítica':'var(--c0)','Alta':'var(--c1)','Media':'var(--c2)','Baja':'var(--c3)'};
 const REDS = ['N+1 disponible','N+1 parcial','Sin respaldo','Respaldo fuera de servicio','No aplica'];
 const NOINC = 'Información no incorporada en la base';
-const TABS = [['resumen','1 · Resumen ejecutivo'],['area','2 · Presupuesto por área y prioridad'],['plan','3 · Plan anual y carga'],['crit','4 · Criticidad y continuidad'],['detalle','5 · Detalle + Asistente IA']];
+const TABS = [['resumen','1 · Resumen'],['arbol','2 · Árbol de activos'],['comp','3 · 2026 → 2027'],['prio','4 · Prioridad y calendario'],['detalle','5 · Detalle + Asistente IA']];
 
 /* ================= utilidades ================= */
 const nf1 = new Intl.NumberFormat('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -267,10 +276,10 @@ function parseBase(raw){
     rol:idx(H,h=>(h.includes('principal')||h.includes('backup')||h==='respaldo'||h==='rol'||h.startsWith('rol '))&&!h.includes('redundancia')),
     riesgo:idx(H,h=>h.includes('tipo de riesgo')||h==='riesgo'),cons:idx(H,h=>h.includes('consecuencia')&&!/1-5|1 a 5|puntaje|score|nivel/.test(h)),consN:idx(H,h=>h.includes('consecuencia')&&/1-5|1 a 5|puntaje|score|nivel/.test(h)),funcion:idx(H,h=>h.includes('funcion')),
     just:idx(H,h=>h.includes('justificacion')),prob:idx(H,h=>h.includes('probabilidad')||h.includes('exposicion')),
-    trec:idx(H,h=>h.includes('recuperacion')),rep:idx(H,h=>h.includes('repuesto'))};
+    trec:idx(H,h=>h.includes('recuperacion')),rep:idx(H,h=>h.includes('repuesto')),sis:idx(H,h=>h==='sistema'||h.startsWith('sistema ')),sub:idx(H,h=>h.includes('subsistema'))};
   if(C.total<12) throw new Error('No encontré la columna TOTAL en "SUM 2027".');
   const M0=C.total-12;
-  const cols={}; ['crit','red','rol','riesgo','cons','consN','funcion','just','prob','trec','rep'].forEach(k=>{if(C[k]>=0)cols[k]=clean(header[C[k]]);});
+  const cols={}; ['crit','red','rol','riesgo','cons','consN','funcion','just','prob','trec','rep','sis','sub'].forEach(k=>{if(C[k]>=0)cols[k]=clean(header[C[k]]);});
   const acts=[]; let lastArea=null; const unknownAreas=new Set();
   for(const [r,c] of sum27){ if(r<=hr) continue;
     const g=i=>i>=0?c[i]:null;
@@ -300,6 +309,7 @@ function parseBase(raw){
     a.riesgo=clean(g(C.riesgo)); a.funcion=clean(g(C.funcion)); a.just=clean(g(C.just)); a.trec=clean(g(C.trec)); a.rep=clean(g(C.rep));
     const cv=g(C.cons), cn=g(C.consN); if(typeof cn==='number') a.consScore=cn; if(typeof cv==='number'){ if(a.consScore==null) a.consScore=cv; } else a.consTxt=clean(cv);
     const pv=g(C.prob); if(typeof pv==='number') a.probScore=pv;
+    a.sistema=clean(g(C.sis))||sistemaDe(area,a.equipo,a.componente,a.desc); a.subsistema=clean(g(C.sub))||subsistemaDe(a.equipo||a.desc);
     acts.push(a);
   }
   const areas=[...BASE_AREAS.filter(x=>acts.some(a=>a.area===x)),...[...new Set(acts.map(a=>a.area))].filter(x=>!BASE_AREAS.includes(x))];
@@ -316,7 +326,7 @@ function parseBase(raw){
   if(p26s){ const h2=findHeader(p26s,H=>H.includes('total')&&H.some(h=>h&&h.includes('nombre cc')));
     if(h2){ const [r2,H2]=h2, ti=idx(H2,h=>h==='total'), ni=idx(H2,h=>h.includes('nombre cc')), ei=idx(H2,h=>h.includes('maquina')), di=idx(H2,h=>h.includes('descripcion'));
       for(const [r,c] of p26s){ if(r<=r2) continue; const t=num(c[ti]); if(!t) continue; const area=AREA_MAP[norm(c[ni])]; if(!area) continue;
-        p26.push({fila:r,area,equipo:clean(c[ei]),desc:clean(c[di]),meses:[...Array(12)].map((_,m)=>num(c[ti-12+m])),total:t}); } } }
+        const eq=clean(c[ei]), ds=clean(c[di]); p26.push({fila:r,area,equipo:eq,desc:ds,sistema:sistemaDe(area,eq,'',ds),subsistema:subsistemaDe(eq||ds),meses:[...Array(12)].map((_,m)=>num(c[ti-12+m])),total:t}); } } }
   // ---- Proyección de Gastos
   const proy={}, find=(label,col=0)=>proys&&proys.find(([r,c])=>norm(c[col])===label);
   if(proys){ const m=find('mantencion'); if(m){const [r,c]=m; Object.assign(proy,{mantReal:c[1],mantPpto:c[2],mantVol:c[4],mantDif:c[5],refMant:`B${r}/C${r}/E${r}`});}
@@ -352,16 +362,13 @@ async function bytesToRaw(bytes,source,origin){
 
 /* ================= estado ================= */
 let D=null;
-const FDEF=[['area','Área'],['prio','Prioridad'],['crit','Criticidad'],['mes','Mes'],['equipo','Máquina/Equipo'],['componente','Componente'],['tipo','Tipo de actividad'],['cuenta','Cuenta'],['red','Redundancia'],['rol','Principal/Respaldo'],['riesgo','Tipo de riesgo']];
-const S={f:Object.fromEntries(FDEF.map(([k])=>[k,'all'])),cmp26:true,tab:'resumen',matrixSel:null,planColor:'prio',heatOnlyBombas:false,cut:0,cutSel:new Set(),aiMode:'area',defend:null,cap:+store.get('sum27-cap')||0};
+const FDEF=[['area','Área'],['sistema','Sistema'],['prio','Prioridad'],['mes','Mes'],['crit','Criticidad']];
+const S={f:Object.fromEntries(FDEF.map(([k])=>[k,'all'])),cmp26:true,tab:'resumen',matrixSel:null,planColor:'prio',heatOnlyBombas:false,cutSel:new Set(),tree:[],aiMode:'area',defend:null,cap:+store.get('sum27-cap')||0};
 {const t=store.get('sum27-tab2'); if(t&&TABS.some(x=>x[0]===t))S.tab=t;}
 const rolOf = a => a.rol||a.rolTxt;
 const val = a => S.f.mes==='all'? a.total : a.meses[+S.f.mes];
-function F27(){ const f=S.f; return D.acts.filter(a=>(f.area==='all'||a.area===f.area)&&(f.prio==='all'||a.prio===f.prio)&&(f.crit==='all'||(a.crit||'(sin dato)')===f.crit)
-  &&(f.equipo==='all'||a.equipo===f.equipo)&&(f.componente==='all'||a.componente===f.componente)&&(f.tipo==='all'||a.tipo===f.tipo)&&(f.cuenta==='all'||a.nombreCuenta===f.cuenta)
-  &&(f.red==='all'||(a.red||'(sin dato)')===f.red)&&(f.rol==='all'||(rolOf(a)||'(sin dato)')===f.rol)&&(f.riesgo==='all'||(a.riesgo||'(sin dato)')===f.riesgo)&&val(a)>0); }
-const onlyAreaMes = () => Object.entries(S.f).every(([k,v])=>v==='all'||k==='area'||k==='mes');
-const F26 = () => onlyAreaMes()? D.p26.filter(a=>(S.f.area==='all'||a.area===S.f.area)&&val(a)>0) : null;
+function F27(){ const f=S.f; return D.acts.filter(a=>(f.area==='all'||a.area===f.area)&&(f.sistema==='all'||a.sistema===f.sistema)&&(f.prio==='all'||a.prio===f.prio)&&(f.crit==='all'||(a.crit||'(sin dato)')===f.crit)&&val(a)>0); }
+const F26 = () => (S.f.prio==='all'&&S.f.crit==='all')? D.p26.filter(a=>(S.f.area==='all'||a.area===S.f.area)&&(S.f.sistema==='all'||a.sistema===S.f.sistema)&&val(a)>0) : null;
 const ACOL = a => `var(--a${Math.max(0,D.areas.indexOf(a))%8})`;
 const byArea = (rows,f=val) => Object.fromEntries(D.areas.map(ar=>[ar,sum(rows.filter(r=>r.area===ar),f)]));
 const byPrio = rows => Object.fromEntries(PR.map(p=>[p,sum(rows.filter(r=>r.prio===p),val)]));
@@ -476,245 +483,290 @@ function prodCtx(){ const p=D.proy; if(!p.prod27||!p.prodReal||!p.mantPpto||!p.m
   const dProd=p.prod27/p.prodReal-1, dMant=p.mantPpto/p.mantReal-1, u0=p.mantReal/p.prodReal, u1=p.mantPpto/p.prod27;
   return {prodRef:p.prodReal,prod27:p.prod27,dProd,mantRef:p.mantReal,mant27:p.mantPpto,dMant,u0,u1,dU:u1/u0-1,ref:`Proyección de Gastos, ${p.refProd}, ${p.refMant}`}; }
 
-/* ================= VISTA 1: resumen ejecutivo ================= */
+/* ================= jerarquía de activos: Área → Sistema → Subsistema ================= */
+// Reglas explícitas (editables) para agrupar el texto de "Máquina / Equipamiento" en sistemas.
+// Si la base trae columnas "Sistema" / "Subsistema", se usan esas y estas reglas no aplican.
+const SYS_RULES = {
+ 'Planta de Agua':{by:'equipo',r:[['Medición de caudal',/caudal/],['Infraestructura',/infraestructura|infra estructura/],['Osmosis inversa',/osmosis/],['Desinfección UV',/\buv\b/],['Filtración por carbón',/carbon/],['Bombeo y recirculación',/bomba|motobomba|\btk|cip/],['Estanques de acumulación',/estanque|m3/]]},
+ 'Planta de RILES':{by:'equipo',r:[['Biogás',/biogas/],['Instrumentación y dosificación',/sensor|caudal|dosificadora|intrumento|instrumento/],['Pozo pit',/pozo pit|pit a ecualizador|calamidad/],['Ecualizador',/ecualizador/],['Acondicionador',/acondicionador/],['Reactor anaerobio',/anaerob|\bran\b/],['Reactor aerobio',/aerobio|aireador/],['Clarificador',/clarificador/],['Regadío y lodos',/regadio|carmamo|piscina/],['Estructural',/baranda|tuberia|valvula|estructural/]]},
+ 'Sala Compresores':{by:'equipo',r:[['Secado de aire',/secador/],['Filtración de aire',/filtro/],['Compresor AF',/\baf\b/],['Compresor VH15',/vh15/],['Compresores de baja (Atlas)',/atlas|baja/]]},
+ 'Planta de Frío':{by:'equipo',r:[['Chillers',/chiller/],['Dry cooler',/dry cooler/],['Bombeo de agua helada',/bomba/]]},
+ 'SSEE':{by:'desc',r:[['Grupo electrógeno',/electrogeno/],['Transformadores y celdas',/trafo|transformador|desconectador|celda/],['Banco de condensadores',/condensador/],['Red de media tensión',/red .*mt\b|media tension|red mt|\bmt\b/],['Tableros y circuitos',/tablero|\btg\b|tgf|circuito|unilineal/],['Medición de energía',/medicion/]]},
+ 'Sala de Caldera':{by:'desc',r:[['Instrumentación y seguridad',/medidor|sensor|calibracion|isocinet/],['Suministro de gas (GNL)',/\bgas\b|gnl/],['Red de vapor y condensado',/trampa|redes de vapor|condensado/],['Infraestructura',/infraestructura|infra estructura|puertas/],['Caldera',/caldera/],['Desaireador',/desaireador/]]}
+};
+const GENERIC=/^(motobomba|motombomba|estructural|proceso|intrumentos|instrumentos|valvulas|limpieza|antorcha|aireador|aspas)$/;
+const SYSWORD=/^(pozo pit|ecualizador|acondicionador|anaerobio|aerobio|clarificador|carmamo 2|tk aerobio|tk-aerobio|reactor anaerobio|reactor aerobio|planta de biogas|planta biogas|osmosis 1|osmosis 2)$/;
+function sistemaDe(area,equipo,componente,desc){
+  const R=SYS_RULES[area]; if(!R) return 'Otros';
+  const eq=norm(equipo+' '+componente), ds=norm(desc), order=R.by==='desc'?[ds,eq]:[eq,ds];
+  for(const t of order){ const h=R.r.find(([,re])=>re.test(t)); if(h) return h[0]; }
+  return 'Otros';
+}
+function subsistemaDe(equipo){
+  const parts=String(equipo||'').split('/').map(s=>s.trim()).filter(Boolean);
+  if(!parts.length) return '(sin equipo)';
+  let keep=parts.filter(p=>!GENERIC.test(norm(p)));
+  if(keep.length>1&&SYSWORD.test(norm(keep[0]))) keep=keep.slice(1);
+  const s=(keep.length?keep:parts).join(' · ');
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+/* ================= comparación 2026 ↔ 2027 (emparejamiento por texto) ================= */
+const STOPW=new Set(['mantencion','mantenimiento','mant','del','las','los','con','para','por','general','revision','servicio','planta','agua','equipos','equipo']);
+const toks=s=>new Set(norm(s).replace(/motombomba/g,'motobomba').replace(/\bbbas\b/g,'bombas').replace(/[^a-z0-9]+/g,' ').split(' ').filter(w=>(w.length>=3||/\d/.test(w))&&!STOPW.has(w)));
+function jacc(a,b){let i=0; a.forEach(x=>{if(b.has(x))i++;}); const u=a.size+b.size-i; return u?i/u:0;}
+function compareYears(){
+  const A=D.acts, B=D.p26, pairs=[];
+  const ta=A.map(a=>toks(a.equipo+' '+a.componente+' '+a.desc)), tb=B.map(b=>toks(b.equipo+' '+b.desc));
+  A.forEach((a,i)=>B.forEach((b,j)=>{ if(a.area!==b.area) return; const s=jacc(ta[i],tb[j])+(a.sistema===b.sistema?0.12:0); if(s>=0.42) pairs.push([s,i,j]); }));
+  pairs.sort((x,y)=>y[0]-x[0]); const ua=new Set(), ub=new Set(), M=[];
+  for(const [s,i,j] of pairs){ if(ua.has(i)||ub.has(j)) continue; ua.add(i); ub.add(j); M.push({a:A[i],b:B[j],s}); }
+  // segunda pasada: mismo equipo (único en ambos años) aunque cambie la descripción
+  const key=x=>x.area+'|'+norm(x.subsistema), cA=groupBy(A.filter((_,i)=>!ua.has(i)),key), cB=groupBy(B.filter((_,j)=>!ub.has(j)),key);
+  Object.keys(cA).forEach(k=>{ if(cA[k].length===1&&cB[k]&&cB[k].length===1&&!/sin equipo/.test(k)){ const a=cA[k][0], b=cB[k][0]; ua.add(A.indexOf(a)); ub.add(B.indexOf(b)); M.push({a,b,s:0.4}); } });
+  // tercera pasada: mismo sistema, mismo monto y mismos meses (partida renombrada)
+  A.forEach((a,i)=>{ if(ua.has(i)) return; const j=B.findIndex((b,jj)=>!ub.has(jj)&&b.area===a.area&&b.sistema===a.sistema&&Math.abs(b.total-a.total)<1&&b.meses.every((v,k)=>(v>0)===(a.meses[k]>0))); if(j>=0){ua.add(i);ub.add(j);M.push({a,b:B[j],s:0.3});} });
+  const nuevas=A.filter((_,i)=>!ua.has(i)), elim=B.filter((_,j)=>!ub.has(j));
+  M.forEach(m=>{ m.d=m.a.total-m.b.total; const ma=m.a.meses.map(v=>v>0), mb=m.b.meses.map(v=>v>0); m.reprog=ma.some((v,k)=>v!==mb[k]); m.fa=nInt(m.a); m.fb=nInt(m.b); });
+  return {M,nuevas,elim};
+}
+const mesesLst = m => { const x=m.map((v,i)=>v>0?MES[i]:null).filter(Boolean); return x.length===12?'todos los meses':x.join(', '); };
+function motivo(m){
+  const r=[]; if(Math.abs(m.d)>=1e4) r.push(`monto ${mm(m.b.total)} → ${mm(m.a.total)} MM`);
+  if(m.fa!==m.fb) r.push(`frecuencia ${m.fb} → ${m.fa} intervenciones/año`);
+  else if(m.reprog) r.push(`meses ${mesesLst(m.b.meses)} → ${mesesLst(m.a.meses)}`);
+  if(m.a.prio!=='SC') r.push(`ahora clasificada ${PRS[m.a.prio]}`);
+  return r.join('; ')||'sin cambios';
+}
+
+/* ================= gráficos nuevos ================= */
+function sankey(A){
+  const tot=sum(A,val); if(!tot) return '<p class="note">Sin datos para el filtro.</p>';
+  const areas=D.areas.map(a=>({a,v:sum(A.filter(x=>x.area===a),val)})).filter(x=>x.v>0).sort((x,y)=>y.v-x.v);
+  const sys=areas.map(ar=>Object.entries(groupBy(A.filter(x=>x.area===ar.a),x=>x.sistema)).map(([s,L])=>({a:ar.a,s,v:sum(L,val),n:L.length})).sort((x,y)=>y.v-x.v));
+  const nS=sys.flat().length, W=1040, H=Math.max(420,nS*24), nw=12, X=[150,470,760], gS=5, gA=22;
+  const k=(H-gS*(nS-1)-gA*(areas.length-1))/tot;
+  let s=`<svg viewBox="0 0 ${W} ${H+10}" style="min-width:760px" role="img" aria-label="Flujo del presupuesto: total, área y sistema">`;
+  const hT=tot*k, yT=(H-hT)/2; let yA=0, yS=0, oT=yT, sysLab=[];
+  const band=(x0,y0,x1,y1,h,c,t)=>{const xm=(x0+x1)/2; return `<path class="hit" ${T(t)} d="M${x0},${y0} C${xm},${y0} ${xm},${y1} ${x1},${y1} L${x1},${y1+h} C${xm},${y1+h} ${xm},${y0+h} ${x0},${y0+h} Z" style="fill:${c};fill-opacity:.28"/>`;};
+  areas.forEach((ar,i)=>{ const h=ar.v*k, c=ACOL(ar.a);
+    s+=band(X[0]+nw,oT,X[1],yA,h,c,`<b>${esc(ar.a)}</b><br>${mm(ar.v)} MM · ${pct(ar.v/tot,1)} del total`); oT+=h;
+    let oA=yA; sys[i].forEach(sy=>{ const hs=sy.v*k;
+      s+=band(X[1]+nw,oA,X[2],yS,hs,c,`<b>${esc(sy.s)}</b> (${esc(ar.a)})<br>${mm(sy.v)} MM · ${sy.n} actividades · ${pct(sy.v/ar.v,1)} del área`);
+      s+=`<rect x="${X[2]}" y="${yS}" width="${nw}" height="${Math.max(hs,1)}" style="fill:${c}"/>`;
+      sysLab.push({y:yS+hs/2,t:`${sy.s}: ${nf1.format(sy.v/1e6)}`}); oA+=hs; yS+=hs+gS; });
+    s+=`<rect x="${X[1]}" y="${yA}" width="${nw}" height="${h}" rx="2" style="fill:${c}"/>`;
+    s+=`<text x="${X[1]+nw+6}" y="${yA+h/2-7}" class="val" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">${esc(ar.a)}</text><text x="${X[1]+nw+6}" y="${yA+h/2+8}" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">${mm(ar.v)} MM · ${pct(ar.v/tot)}</text>`;
+    yA+=h+gA+(sys[i].length-1)*gS; });
+  // etiquetas de sistemas sin superposición
+  for(let i=1;i<sysLab.length;i++) if(sysLab[i].y-sysLab[i-1].y<13) sysLab[i].y=sysLab[i-1].y+13;
+  sysLab.forEach(l=>{s+=`<text x="${X[2]+nw+6}" y="${l.y}" dominant-baseline="middle">${esc(l.t)}</text>`;});
+  s+=`<rect x="${X[0]}" y="${yT}" width="${nw}" height="${hT}" rx="2" style="fill:var(--ink)"/><text x="${X[0]-8}" y="${yT+hT/2-8}" text-anchor="end" class="val">Suministros 2027</text><text x="${X[0]-8}" y="${yT+hT/2+9}" text-anchor="end">${mm(tot)} MM</text>`;
+  return s+'</svg>';
+}
+function waterfall(steps,{w=720,h=270}={}){
+  const pl=48,pb=36,pt=18, ih=h-pb-pt, n=steps.length, cw=(w-pl)/n, bw=Math.min(cw*0.6,62);
+  let run=0; const geo=steps.map(st=>{let a,b; if(st.kind==='total'){a=0;b=st.v;run=st.v;} else {a=run;b=run+st.v;run=b;} return {a,b};});
+  const mids=geo.flatMap((g,i)=>steps[i].kind==='total'?[g.b]:[g.a,g.b]), ymin=Math.max(0,Math.floor(Math.min(...mids)*0.8/5e7)*5e7), ymax=Math.max(...mids)*1.06, Y=v=>pt+ih-(v-ymin)/(ymax-ymin)*ih;
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  niceTicks(ymax,ymin).forEach(t=>{s+=`<line class="gl" x1="${pl}" x2="${w}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)}" text-anchor="end" dominant-baseline="middle">${nf0.format(t/1e6)}</text>`;});
+  steps.forEach((st,i)=>{const g=geo[i], lo=st.kind==='total'?ymin:g.a, x=pl+i*cw+(cw-bw)/2, y=Y(Math.max(lo,g.b)), hh=Math.max(Math.abs(Y(lo)-Y(g.b)),1);
+    s+=`<rect class="hit" ${T(st.tip)} x="${x}" y="${y}" width="${bw}" height="${hh}" rx="3" style="fill:${st.c}"/>`;
+    s+=`<text class="val" x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:11.5px">${st.kind==='total'?nf1.format(st.v/1e6):sgn(st.v)}</text>`;
+    st.l.split('\n').forEach((ln,k)=>{s+=`<text x="${x+bw/2}" y="${h-21+k*13}" text-anchor="middle" style="font-size:11px">${esc(ln)}</text>`;});
+    if(i<n-1){const nx=pl+(i+1)*cw+(cw-bw)/2; s+=`<line x1="${x+bw}" x2="${nx}" y1="${Y(g.b)}" y2="${Y(g.b)}" style="stroke:var(--axis);stroke-dasharray:2 2"/>`;}});
+  return s+`<line class="ax" x1="${pl}" x2="${w}" y1="${pt+ih}" y2="${pt+ih}"/></svg>`;
+}
+function dumbbell(rows,{w=640,lab=210,rh=26}={}){
+  const max=Math.max(...rows.flatMap(r=>[r.v0,r.v1]),1), bw=w-lab-70, h=rows.length*rh+26, X=v=>lab+v/max*bw;
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  niceTicks(max).forEach(t=>{s+=`<line class="gl" x1="${X(t)}" x2="${X(t)}" y1="0" y2="${h-22}"/><text x="${X(t)}" y="${h-6}" text-anchor="middle">${nf0.format(t/1e6)}</text>`;});
+  rows.forEach((r,i)=>{const y=i*rh+rh/2, up=r.v1>=r.v0;
+    s+=`<g class="hit" ${T(r.tip)}><rect x="0" y="${y-rh/2}" width="${w}" height="${rh}" fill="transparent"/>`;
+    s+=`<text x="${lab-8}" y="${y}" text-anchor="end" dominant-baseline="middle">${esc(r.l)}</text>`;
+    s+=`<line x1="${X(r.v0)}" x2="${X(r.v1)}" y1="${y}" y2="${y}" style="stroke:${up?'var(--bad)':'var(--good)'};stroke-width:3"/>`;
+    s+=`<circle cx="${X(r.v0)}" cy="${y}" r="5.5" style="fill:var(--y26);stroke:var(--surface);stroke-width:2"/><circle cx="${X(r.v1)}" cy="${y}" r="5.5" style="fill:var(--y27);stroke:var(--surface);stroke-width:2"/>`;
+    s+=`<text class="val" x="${Math.max(X(r.v0),X(r.v1))+10}" y="${y}" dominant-baseline="middle" style="font-size:11.5px;fill:${up?'var(--bad)':'var(--good)'}">${sgn(r.v1-r.v0)}</text></g>`;});
+  return s+'</svg>';
+}
+function lines(series,{w=620,h=240,fmt=v=>pct(v)}={}){
+  const pl=44,pb=24,pt=14, ih=h-pb-pt, iw=w-pl-16, max=Math.max(...series.flatMap(s=>s.v))*1.12, X=i=>pl+i/11*iw, Y=v=>pt+ih-v/max*ih;
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img">`;
+  niceTicks(max).forEach(t=>{s+=`<line class="gl" x1="${pl}" x2="${w-16}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)}" text-anchor="end" dominant-baseline="middle">${fmt(t)}</text>`;});
+  MES.forEach((m,i)=>{s+=`<text x="${X(i)}" y="${h-6}" text-anchor="middle">${m}</text>`;});
+  series.forEach(se=>{s+=`<polyline points="${se.v.map((v,i)=>X(i)+','+Y(v)).join(' ')}" style="fill:none;stroke:${se.c};stroke-width:2.5;stroke-linejoin:round"/>`;
+    se.v.forEach((v,i)=>{s+=`<circle class="hit" ${T(`<b>${MESL[i]} · ${esc(se.n)}</b><br>${fmt(v)} del gasto anual`)} cx="${X(i)}" cy="${Y(v)}" r="4.5" style="fill:${se.c};stroke:var(--surface);stroke-width:2"/>`;});});
+  return s+`<line class="ax" x1="${pl}" x2="${w-16}" y1="${pt+ih}" y2="${pt+ih}"/></svg>`;
+}
+
+/* ================= VISTA 1: resumen ================= */
 function vResumen(){
-  const A=F27(), tot=sum(A,val), P=byPrio(A), clas=P.P1+P.P2+P.P3, pc=prodCtx();
-  const eq=new Set(A.map(a=>norm(actName(a)))).size, nI=sum(A,a=>S.f.mes==='all'?nInt(a):1);
-  const perM=MES.map((_,i)=>A.filter(a=>a.meses[i]>0&&(S.f.mes==='all'||+S.f.mes===i)).length), mx=Math.max(...perM), mxM=perM.indexOf(mx);
-  const hasRed=!!D.cols.red, sinRed=A.filter(a=>a.red==='Sin respaldo'||a.red==='Respaldo fuera de servicio'), critSin=hasRed&&D.cols.crit?new Set(sinRed.filter(a=>a.crit==='Crítica').map(a=>norm(actName(a)))).size:null;
-  const topA=D.areas.map(a=>[a,sum(A.filter(x=>x.area===a),val)]).sort((x,y)=>y[1]-x[1]);
-  // mensaje automático (sólo afirma lo que los datos sostienen)
-  const prot=clas?(P.P1+P.P2)/clas:NaN;
-  let msg=`El presupuesto de mantención 2027 de Suministros suma ${mm(tot)} MM en ${A.length} actividades sobre ${eq} equipos o partidas.`;
-  if(pc) msg+=` La producción proyectada crece ${sgnp(pc.dProd)} (${nf0.format(pc.prod27)} hl), lo que aumenta las horas de operación de los servicios auxiliares.`;
-  if(clas) msg+=` Del presupuesto con prioridad asignada, ${pct(prot)} corresponde a actividades reglamentarias (P1) o de continuidad operacional y seguridad (P2), concentradas en ${topA.slice(0,3).map(x=>x[0]).join(', ')}: sistemas cuya falla afecta la disponibilidad de agua, vapor, aire comprimido, frío, energía o tratamiento de RIL.`;
-  if(P.SC) msg+=` ${pct(P.SC/tot)} del monto (${mm(P.SC)} MM) aún no tiene prioridad asignada.`;
-  // gráfico producción vs gasto
-  const pcChart=pc?vgroup([{l:'Producción (hl)',vals:[{v:pc.dProd,c:'var(--y27)',tip:`<b>Producción</b><br>Referencia ${nf0.format(pc.prodRef)} hl → 2027 ${nf0.format(pc.prod27)} hl<br>${sgnp(pc.dProd)}`}]},
-    {l:'Gasto mantención planta',vals:[{v:pc.dMant,c:'var(--y26)',tip:`<b>Mantención planta</b><br>Referencia ${mm(pc.mantRef)} MM → PPTO 2027 ${mm(pc.mant27)} MM<br>${sgnp(pc.dMant)}`}]}],{w:420,h:200,fmt:v=>sgnp(v)}):pendCard('Producción y gasto de referencia','No se encontraron las filas "Producción [hl]" y "Mantención" en Proyección de Gastos.');
-  const mon=monthly(A);
+  const A=F27(), tot=sum(A,val), P=byPrio(A), clas=P.P1+P.P2+P.P3, pc=prodCtx(), F=S.cmp26?F26():null, t26=F?sum(F,val):null;
+  const perM=MES.map((_,i)=>A.filter(a=>a.meses[i]>0&&(S.f.mes==='all'||+S.f.mes===i)).length), mx=Math.max(...perM), nI=sum(perM);
+  const nSys=new Set(A.map(a=>a.area+'|'+a.sistema)).size, nSub=new Set(A.map(a=>a.area+'|'+a.subsistema)).size;
+  const topA=D.areas.map(a=>[a,sum(A.filter(x=>x.area===a),val)]).sort((x,y)=>y[1]-x[1]).filter(x=>x[1]);
+  const topS=Object.entries(groupBy(A,a=>a.sistema+' ('+(SHORT[a.area]||a.area)+')')).map(([k,L])=>[k,sum(L,val)]).sort((x,y)=>y[1]-x[1]);
+  let msg=`${mm(tot)} MM para mantener ${nSys} sistemas y ${nSub} equipos de Suministros`+(pc?`, frente a una producción que crece ${sgnp(pc.dProd)}.`:'.');
+  if(topS.length>2) msg+=` Tres sistemas concentran ${pct((topS[0][1]+topS[1][1]+topS[2][1])/tot)} del gasto: ${topS.slice(0,3).map(x=>x[0]).join(', ')}.`;
+  if(clas) msg+=` Del monto con prioridad asignada, ${pct((P.P1+P.P2)/clas)} es reglamentario o de continuidad operacional/seguridad.`;
   $('v-resumen').innerHTML=`
   <div class="msg">${esc(msg)}</div>
   <div class="kpis">
-   ${kp('Presupuesto Suministros 2027'+filtNote(),mm(tot)+' MM',`${A.length} actividades · clasificado P1/P2/P3: ${mm(clas)} MM`)}
-   ${kp('Cumplimiento, seguridad y continuidad',pct(prot),`(P1+P2) / presupuesto clasificado · P1 = ${pct(clas?P.P1/clas:NaN)} del clasificado, ${pct(P.P1/tot)} del total`)}
-   ${kp('Sin prioridad asignada',mm(P.SC)+' MM',`${pct(P.SC/tot)} del total · ${A.filter(a=>a.prio==='SC').length} actividades por clasificar`,P.SC?'up':'')}
-   ${pc?kp('Producción proyectada 2027',nf0.format(pc.prod27)+' hl',`${sgnp(pc.dProd)} vs referencia ${nf0.format(pc.prodRef)} hl`):pendCard('Producción 2027')}
-   ${pc?kp('Mantención planta por hl',`$${nf0.format(pc.u1)}/hl`,`${sgnp(pc.dU)} vs $${nf0.format(pc.u0)}/hl de referencia`,'down'):pendCard('Costo de mantención por hl')}
-   ${kp('Equipos intervenidos · mantenciones',`${eq} · ${nI}`,'equipos o partidas distintas · intervenciones programadas (meses con monto)')}
-   ${kp('Máx. intervenciones en un mes',nf0.format(mx),`en ${MESL[mxM]} · promedio ${nf1.format(sum(perM)/12)}/mes`)}
-   ${critSin!=null?kp('Equipos críticos sin N+1',nf0.format(critSin),'según columnas Criticidad y Redundancia'):pendCard('Equipos críticos sin redundancia N+1','Agregar columnas "Criticidad" y "Redundancia" en la base.')}
+   ${kp('Presupuesto 2027'+filtNote(),mm(tot)+' MM',t26?`${sgnp(tot/t26-1)} vs Ppto 2026 (${mm(t26)} MM)`:`${A.length} actividades`,'')}
+   ${pc?kp('Producción 2027 vs costo unitario',`${sgnp(pc.dProd)} hl`,`Mantención planta por hl ${sgnp(pc.dU)}: $${nf0.format(pc.u0)} → $${nf0.format(pc.u1)}/hl`):pendCard('Producción 2027')}
+   ${kp('Cumplimiento, seguridad y continuidad',pct(clas?(P.P1+P.P2)/clas:NaN),`P1+P2 sobre lo clasificado · P1 ${pct(clas?P.P1/clas:NaN)}`)}
+   ${kp('Sin prioridad asignada',mm(P.SC)+' MM',`${pct(P.SC/tot)} del total · ${A.filter(a=>a.prio==='SC').length} actividades`,P.SC?'up':'')}
+   ${kp('Intervenciones programadas',nf0.format(nI),`máx. ${mx} en ${MESL[perM.indexOf(mx)]} · ${A.length} actividades`)}
   </div>
-  <div class="grid g2">
-   <div class="card"><h2>La producción crece más que el gasto de mantención</h2>
-    <div class="note">${pc?`Producción ${sgnp(pc.dProd)} vs gasto de mantención de planta ${sgnp(pc.dMant)}: el costo unitario baja ${sgnp(pc.dU)} ($${nf0.format(pc.u0)} → $${nf0.format(pc.u1)}/hl). Fuente: ${esc(pc.ref)}. Referencia = columna "Real".`:''}</div>${pcChart}</div>
-   <div class="card"><h2>${topA[0]?`${esc(topA[0][0])} y ${esc(topA[1]?.[0]||'')} concentran ${pct((topA[0][1]+(topA[1]?.[1]||0))/tot)} del presupuesto`:'Presupuesto por área'}</h2>
-    <div class="note">Ranking por área, apilado por prioridad (MM).</div>${legendPrio()}
-    ${hstack(topA.filter(x=>x[1]).map(([a])=>({l:a,segs:PR.map(p=>{const v=sum(A.filter(x=>x.area===a&&x.prio===p),val);return {v,c:PFILL[p],tip:`<b>${a} · ${PRS[p]}</b><br>${mm(v)} MM`};})})),{w:560,lab:130})}</div>
-   <div class="card"><h2>Distribución mensual: junio concentra ${pct(mon[5]/sum(mon))} del gasto</h2>
-    <div class="note">Monto mensual por prioridad (MM). Ver vista 3 para la carga en N° de intervenciones.</div>
-    ${vstack(MES.map((l,i)=>({l,segs:PR.map(p=>{const v=sum(A.filter(a=>a.prio===p),a=>(S.f.mes==='all'||+S.f.mes===i)?a.meses[i]:0);return {v,c:PFILL[p],tip:`<b>${MESL[i]} · ${PRS[p]}</b><br>${mm(v)} MM`};})})),{w:580,h:230})}</div>
-   <div class="card"><h2>Suministros sostiene a todas las líneas</h2><div class="note">Una falla de un servicio auxiliar puede limitar o detener líneas aun con las máquinas de producción disponibles.</div>${chainMini(A)}</div>
-  </div>
+  <div class="card"><h2>Cómo se reparte el presupuesto: Suministros → Área → Sistema</h2>
+   <div class="note">El ancho de cada flujo es proporcional al monto. Pasa el cursor para ver el detalle; el “Árbol de activos” permite bajar hasta cada actividad.</div>
+   <div class="tscroll">${sankey(A)}</div></div>
   <div class="concl">Este presupuesto no debe analizarse únicamente como gasto: es un plan de aseguramiento de disponibilidad de los sistemas de Suministros que soportan el aumento proyectado de producción.</div>`;
 }
-function chainMini(A){ return `<div class="chain">${D.areas.map(a=>`<div class="svc" style="--c:${ACOL(a)}"><b>${esc(ficha(a).servicio)}</b><span>${esc(a)}</span><div class="mm">${mm(sum(A.filter(x=>x.area===a),val))} MM</div></div>`).join('')}</div><div class="arrow">▼ alimentan ▼</div><div class="prod">Líneas productivas (PET, PRB, Manantial, Nestlé, jarabería, CIP)</div>`; }
 
-/* ================= VISTA 2: presupuesto por área y prioridad ================= */
-function vArea(){
-  const A=F27(), tot=sum(A,val), P=byPrio(A), clas=P.P1+P.P2+P.P3, a26=S.cmp26&&F26()?byArea(F26()):null;
-  const rows=D.areas.map(a=>{const L=A.filter(x=>x.area===a); return {a,L,t:sum(L,val),p:Object.fromEntries(PR.map(p=>[p,sum(L.filter(x=>x.prio===p),val)])),crit:D.cols.crit?new Set(L.filter(x=>x.crit==='Crítica').map(x=>norm(actName(x)))).size:null};}).filter(r=>r.t).sort((x,y)=>y.t-x.t);
-  const pcard=p=>`<div class="kpi"><div class="l"><i class="sw ${p}"></i>${PRL[p]}</div><div class="v">${mm(P[p])} MM</div><div class="s">${pct(P[p]/tot,1)} del total${p!=='SC'?` · ${pct(clas?P[p]/clas:NaN,1)} del clasificado`:''} · ${A.filter(a=>a.prio===p).length} act.</div></div>`;
-  // matriz
+/* ================= VISTA 2: árbol de activos (descomposición) ================= */
+const LEVELS=[['area','Área'],['sistema','Sistema'],['subsistema','Subsistema / equipo'],['act','Actividad']];
+function vArbol(){
+  const A=F27(), tot=sum(A,val), path=S.tree, map26=S.cmp26&&F26()?F26():null;
+  const cols=[]; let rows=A, rows26=map26;
+  for(let lv=0;lv<LEVELS.length;lv++){
+    const [key]=LEVELS[lv];
+    let items;
+    if(key==='act') items=rows.map(a=>({k:String(a.fila),l:(a.componente?a.componente+' · ':'')+a.desc,v:val(a),a})).sort((x,y)=>y.v-x.v);
+    else items=Object.entries(groupBy(rows,a=>a[key])).map(([k,L])=>({k,l:k,v:sum(L,val),n:L.length,v26:rows26&&key!=='subsistema'?sum(rows26.filter(b=>b[key]===k),val):null})).sort((x,y)=>y.v-x.v);
+    const parentV=sum(rows,val); cols.push({lv,key,items,parentV});
+    const sel=path[lv]; if(sel==null||key==='act'||!items.some(i=>i.k===sel)) { path.length=lv; break; }
+    rows=rows.filter(a=>a[key]===sel); if(rows26) rows26=rows26.filter(b=>b[key]===sel);
+  }
+  const selTxt=path.map((p,i)=>esc(p)).join(' → ');
+  const nodeHtml=(c,it)=>{const on=path[c.lv]===it.k, w=c.parentV?Math.max(it.v/c.parentV*100,1):0;
+    return `<button class="tnode ${on?'on':''}" data-lv="${c.lv}" data-k="${esc(it.k)}" ${it.a?`data-defend="${it.a.fila}"`:''} ${T(it.a?tipAct(it.a):`<b>${esc(it.l)}</b><br>${mm(it.v)} MM · ${pct(it.v/tot,1)} del total${it.n?` · ${it.n} actividades`:''}${it.v26!=null?`<br>Ppto 2026 (mismo agrupamiento): ${mm(it.v26)} MM`:''}`)}>
+      <span class="tbar"><i style="width:${w}%;background:${c.lv===0?ACOL(it.k):c.lv>0?ACOL(path[0]):'var(--accent)'}"></i></span>
+      <span class="tl">${esc(trunc(it.l,c.key==='act'?70:44))}</span><span class="tv">${mm(it.v)} MM · ${pct(it.v/c.parentV)}${it.v26!=null&&it.v26>0?` <span class="muted">(2026: ${mm(it.v26)})</span>`:it.v26===0?' <span class="tag">nuevo</span>':''}</span></button>`;};
+  $('v-arbol').innerHTML=`
+  <div class="card"><div class="headline">Árbol de activos: ¿en qué se gasta cada peso?</div>${filtNote()}
+   <div class="note">Haz clic en un nodo para descomponerlo en el siguiente nivel: Área → Sistema → Subsistema/equipo → Actividad. En el último nivel, clic en la actividad para defender el gasto. ${selTxt?`Ruta: <b>${selTxt}</b> <button class="btn sm" id="tReset">Volver al inicio</button>`:''}</div>
+   <div class="tree" id="tree"><svg class="tlinks" id="tlinks"></svg>
+    <div class="tcol"><div class="th">Presupuesto 2027</div><button class="tnode on root" ${T(`${mm(tot)} MM`)}><span class="tbar"><i style="width:100%;background:var(--ink)"></i></span><span class="tl"><b>Suministros</b></span><span class="tv">${mm(tot)} MM</span></button></div>
+    ${cols.map(c=>`<div class="tcol" data-col="${c.lv}"><div class="th">${LEVELS[c.lv][1]}</div>${c.items.map(it=>nodeHtml(c,it)).join('')}</div>`).join('')}
+   </div>
+   <p class="note" style="margin-top:10px">Sistemas: agrupación del campo “Máquina / Equipamiento” con reglas explícitas por área (se reemplazan automáticamente si la base trae columnas “Sistema” y “Subsistema”). Valores 2026 agrupados con las mismas reglas.</p></div>`;
+  document.querySelectorAll('#tree .tnode[data-lv]').forEach(b=>{ if(b.dataset.defend) return; b.onclick=()=>{const lv=+b.dataset.lv; if(S.tree[lv]===b.dataset.k) S.tree.length=lv; else {S.tree.length=lv; S.tree[lv]=b.dataset.k;} vArbol();};});
+  const r=$('tReset'); if(r) r.onclick=()=>{S.tree=[];vArbol();};
+  requestAnimationFrame(()=>{ drawTreeLinks(); const t=$('tree'); if(t&&S.tree.length) t.scrollLeft=t.scrollWidth; });
+}
+function drawTreeLinks(){
+  const tree=$('tree'), svg=$('tlinks'); if(!tree||!svg||!tree.offsetParent) return;
+  const R=tree.getBoundingClientRect(), cols=[...tree.querySelectorAll('.tcol')]; let p='';
+  svg.setAttribute('width',tree.scrollWidth); svg.setAttribute('height',tree.scrollHeight);
+  for(let i=0;i<cols.length-1;i++){ const src=cols[i].querySelector('.tnode.on'); if(!src) continue;
+    const a=src.querySelector('.tbar').getBoundingClientRect(), x0=a.right-R.left+tree.scrollLeft, y0=a.top+a.height/2-R.top;
+    cols[i+1].querySelectorAll('.tnode').forEach(n=>{const b=n.querySelector('.tbar').getBoundingClientRect(), x1=b.left-R.left+tree.scrollLeft, y1=b.top+b.height/2-R.top, xm=(x0+x1)/2, on=n.classList.contains('on');
+      p+=`<path d="M${x0},${y0} C${xm},${y0} ${xm},${y1} ${x1},${y1}" style="fill:none;stroke:${on?'var(--accent)':'var(--grid)'};stroke-width:${on?2.5:1.2}"/>`;});}
+  svg.innerHTML=p;
+}
+addEventListener('resize',()=>requestAnimationFrame(drawTreeLinks));
+
+/* ================= VISTA 3: 2026 → 2027 ================= */
+function vComp(){
+  const C=compareYears(), t26=sum(D.p26,b=>b.total), t27=sum(D.acts,a=>a.total);
+  const up=C.M.filter(m=>m.d>=1e4), dn=C.M.filter(m=>m.d<=-1e4);
+  const sN=sum(C.nuevas,a=>a.total), sE=sum(C.elim,b=>b.total), sU=sum(up,m=>m.d), sD=sum(dn,m=>m.d), rep=C.M.filter(m=>m.reprog);
+  const steps=[{l:'Ppto\n2026',v:t26,kind:'total',c:'var(--y26)',tip:`<b>Presupuesto 2026</b><br>${D.p26.length} partidas · ${mm(t26)} MM`},
+    {l:'Partidas\neliminadas',v:-sE,kind:'d',c:'var(--good)',tip:`<b>${C.elim.length} partidas 2026 que no siguen</b><br>−${mm(sE)} MM`},
+    {l:'Montos\nreducidos',v:sD,kind:'d',c:'var(--good)',tip:`<b>${dn.length} partidas con menor monto</b><br>${sgn(sD)} MM`},
+    {l:'Montos\naumentados',v:sU,kind:'d',c:'var(--bad)',tip:`<b>${up.length} partidas con mayor monto</b><br>${sgn(sU)} MM`},
+    {l:'Partidas\nnuevas',v:sN,kind:'d',c:'var(--bad)',tip:`<b>${C.nuevas.length} partidas nuevas en 2027</b><br>+${mm(sN)} MM`},
+    {l:'Ppto\n2027',v:t27,kind:'total',c:'var(--y27)',tip:`<b>Presupuesto 2027</b><br>${D.acts.length} partidas · ${mm(t27)} MM`}];
+  // sistemas
+  const keys=[...new Set([...D.acts.map(a=>a.area+'|'+a.sistema),...D.p26.map(b=>b.area+'|'+b.sistema)])];
+  const sysR=keys.map(k=>{const [ar,s]=k.split('|'); const v0=sum(D.p26.filter(b=>b.area===ar&&b.sistema===s),b=>b.total), v1=sum(D.acts.filter(a=>a.area===ar&&a.sistema===s),a=>a.total);
+    return {l:`${s} · ${SHORT[ar]||ar}`,v0,v1,tip:`<b>${esc(s)}</b> (${esc(ar)})<br>2026: ${mm(v0)} MM → 2027: ${mm(v1)} MM<br>Δ ${sgn(v1-v0)} MM`};}).filter(r=>Math.abs(r.v1-r.v0)>=5e5).sort((x,y)=>Math.abs(y.v1-y.v0)-Math.abs(x.v1-x.v0)).slice(0,14);
+  // distribución mensual
+  const m26=MES.map((_,i)=>sum(D.p26,b=>b.meses[i])/t26), m27=MES.map((_,i)=>sum(D.acts,a=>a.meses[i])/t27);
+  const n26i=MES.map((_,i)=>D.p26.filter(b=>b.meses[i]>0).length), n27i=MES.map((_,i)=>D.acts.filter(a=>a.meses[i]>0).length);
+  // calidad del presupuesto
+  const inst=L=>L.filter(x=>/calibr|sensor|caudalimetro|medidor|instrument|intrument|manometro|sonda/.test(norm(x.equipo+' '+(x.componente||'')+' '+x.desc)));
+  const tag=L=>L.filter(x=>/\bpu\s?\d+|motobomba\s?\d|bomba\s?\d|n°\s?\d/.test(norm(x.equipo+' '+(x.componente||'')+' '+x.desc)));
+  const clas=sum(D.acts.filter(a=>a.prio!=='SC'),a=>a.total);
+  const sc=[['Partidas presupuestadas',D.p26.length,D.acts.length,'Mayor desagregación del plan'],
+    ['Equipos / subsistemas identificados',new Set(D.p26.map(b=>b.area+b.subsistema)).size,new Set(D.acts.map(a=>a.area+a.subsistema)).size,'Presupuesto asignado a equipos concretos'],
+    ['Partidas con equipo identificado por TAG o número',tag(D.p26).length,tag(D.acts).length,'p. ej. bombas PU10–PU17 de RILES con principal/respaldo'],
+    ['Partidas de instrumentación y calibración',`${inst(D.p26).length} · ${mm(sum(inst(D.p26),b=>b.total))} MM`,`${inst(D.acts).length} · ${mm(sum(inst(D.acts),a=>a.total))} MM`,'Caudalímetros, sondas pH/nivel, medidores de gas'],
+    ['Criterio de prioridad (P1/P2/P3)','No existía',`${pct(clas/t27)} del monto clasificado`,'Permite defender el orden de corte'],
+    ['Gasto concentrado en junio',pct(m26[5]),pct(m27[5]),'Menor saturación de la ventana de parada'],
+    ['Intervenciones en junio',n26i[5],n27i[5],'Carga del equipo en la parada']];
+  const all=[...C.M.map(m=>({t:m.d>=1e4?'Aumenta':m.d<=-1e4?'Disminuye':m.reprog?'Reprogramada':'Sin cambio',a:m.a,b:m.b,d:m.d,why:motivo(m)})),
+    ...C.nuevas.map(a=>({t:'Nueva',a,d:a.total,why:`nueva en 2027 (${mesesDe(a)})${a.prio!=='SC'?' · '+PRS[a.prio]:''}`})),...C.elim.map(b=>({t:'Eliminada',b,d:-b.total,why:`no se repite en 2027 (2026: ${mesesLst(b.meses)})`}))]
+    .sort((x,y)=>Math.abs(y.d)-Math.abs(x.d));
+  const TT={'Nueva':'tag w','Aumenta':'tag w','Eliminada':'tag','Disminuye':'tag','Reprogramada':'tag','Sin cambio':'tag'};
+  $('v-comp').innerHTML=`
+  <div class="card"><div class="headline">De ${mm(t26)} a ${mm(t27)} MM (${sgnp(t27/t26-1)}): un presupuesto más desagregado, con prioridad y mejor distribuido en el año.</div>
+   <div class="note">Compara la hoja “Presupuesto 2026” (áreas de Suministros) con “SUM 2027”. Las partidas se emparejan automáticamente por área y similitud de texto; revisa los pares en la tabla de cambios.</div>
+   <div class="grid g2" style="margin-top:8px">
+    <div><h3>Puente 2026 → 2027 por tipo de cambio</h3>${waterfall(steps,{w:560,h:270})}<p class="note">Eje truncado para ver los cambios. Verde reduce, rojo aumenta.</p></div>
+    <div><h3>Qué se hizo mejor</h3><div class="tscroll"><table><thead><tr><th>Indicador</th><th class="n">2026</th><th class="n">2027</th><th>Por qué importa</th></tr></thead><tbody>
+     ${sc.map(r=>`<tr><td>${r[0]}</td><td class="n muted">${r[1]}</td><td class="n"><b>${r[2]}</b></td><td class="muted" style="font-size:12.5px">${r[3]}</td></tr>`).join('')}</tbody></table></div></div>
+   </div></div>
+  <div class="grid g2">
+   <div class="card"><h2>Cambios por sistema</h2><div class="leg"><span><i class="sw" style="background:var(--y26);border-radius:50%"></i>Ppto 2026</span><span><i class="sw" style="background:var(--y27);border-radius:50%"></i>Ppto 2027</span><span class="muted">MM · 14 mayores cambios</span></div>${dumbbell(sysR,{w:600,lab:230})}</div>
+   <div class="card"><h2>Distribución del gasto en el año: menos concentración en junio</h2><div class="leg"><span><i class="sw" style="background:var(--y26)"></i>2026</span><span><i class="sw" style="background:var(--y27)"></i>2027</span><span class="muted">% del gasto anual por mes</span></div>${lines([{n:'Ppto 2026',c:'var(--y26)',v:m26},{n:'Ppto 2027',c:'var(--y27)',v:m27}],{w:600,h:250})}
+    <p class="note">Junio ${pct(m26[5])} → ${pct(m27[5])}; abril + septiembre ${pct(m26[3]+m26[8])} → ${pct(m27[3]+m27[8])}. ${rep.length} partidas mantenidas cambiaron de mes o frecuencia.</p></div>
+  </div>
+  <div class="card"><h2>Cambios partida a partida (${all.filter(x=>x.t!=='Sin cambio').length})</h2>
+   <div class="row">${['Nueva','Aumenta','Disminuye','Eliminada','Reprogramada'].map(t=>`<span class="${TT[t]}">${t==='Reprogramada'?'Sólo reprogramada':t}: ${all.filter(x=>x.t===t).length}</span>`).join(' ')}</div>
+   <div class="tscroll tall"><table><thead><tr><th>Cambio</th><th>Área</th><th>Partida 2027</th><th>Partida 2026</th><th class="n">Δ MM</th><th>Fundamento en la base</th></tr></thead><tbody>
+   ${all.filter(x=>x.t!=='Sin cambio').map(x=>{const r=x.a||x.b; return `<tr><td><span class="${TT[x.t]}">${x.t}</span></td><td>${esc(SHORT[r.area]||r.area)}</td><td>${x.a?`${esc(trunc(actName(x.a),34))} — ${esc(trunc(x.a.desc,50))} <span class="muted">(f. ${x.a.fila})</span>`:'<span class="muted">—</span>'}</td><td>${x.b?`${esc(trunc(x.b.equipo,30))} — ${esc(trunc(x.b.desc,50))} <span class="muted">(f. ${x.b.fila})</span>`:'<span class="muted">—</span>'}</td><td class="n ${x.d>0?'up':'down'}">${sgn(x.d)}</td><td style="font-size:12.5px">${esc(x.why)}</td></tr>`;}).join('')}
+   </tbody></table></div></div>`;
+}
+
+/* ================= VISTA 4: prioridad y calendario ================= */
+function vPrio(){
+  const A=F27(), tot=sum(A,val), P=byPrio(A), clas=P.P1+P.P2+P.P3;
+  const rows=D.areas.map(a=>{const L=A.filter(x=>x.area===a); return {a,t:sum(L,val),p:Object.fromEntries(PR.map(p=>[p,sum(L.filter(x=>x.prio===p),val)]))};}).filter(r=>r.t).sort((x,y)=>y.t-x.t);
   const cell=(a,p)=>A.filter(x=>x.area===a&&x.prio===p), maxC=Math.max(...rows.flatMap(r=>PR.map(p=>r.p[p])),1);
   let mt=`<div class="tscroll"><table class="heat"><thead><tr><th>Área</th>${PR.map(p=>`<th class="n"><i class="sw ${p}"></i>${PRS[p]}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>`;
   rows.forEach(r=>{mt+=`<tr><td><i class="sw" style="background:${ACOL(r.a)}"></i>${r.a}</td>`+PR.map(p=>{const v=r.p[p],t=v/maxC,k=r.a+'|'+p;
     return `<td class="c ${S.matrixSel===k?'sel':''}" data-cell="${esc(k)}" style="background:${heatBg(t)};color:${heatFg(t)}" ${T(`<b>${r.a} · ${PRS[p]}</b><br>${mm(v)} MM · ${cell(r.a,p).length} actividades<br>Clic para ver detalle`)}>${v?mm(v):'–'}</td>`;}).join('')+`<td class="n"><b>${mm(r.t)}</b></td></tr>`;});
-  mt+=`</tbody></table></div>`;
+  mt+=`</tbody><tfoot><tr><td>Total</td>${PR.map(p=>`<td class="n">${mm(P[p])}<div class="muted" style="font-size:11px;font-weight:400">${pct(P[p]/tot)}</div></td>`).join('')}<td class="n">${mm(tot)}</td></tr></tfoot></table></div>`;
   let det='';
   if(S.matrixSel){const [a,p]=S.matrixSel.split('|'); const L=cell(a,p).sort((x,y)=>val(y)-val(x));
-    const redOK=L.some(x=>x.red), sinR=L.filter(x=>x.red==='Sin respaldo'||x.red==='Respaldo fuera de servicio');
-    det=`<div class="card"><h2>${esc(a)} · ${PRL[p]}: ${L.length} actividades · ${mm(sum(L,val))} MM</h2>
-     ${redOK&&sinR.length?`<p class="note"><b>${esc(a)} → activos sin redundancia efectiva (${sinR.length} actividades, ${mm(sum(sinR,val))} MM).</b> Estas intervenciones se concentran en equipos cuyo funcionamiento es requerido para mantener el servicio de ${esc(ficha(a).servicio.toLowerCase())}. Sin redundancia efectiva +1, una falla se convierte directamente en pérdida de disponibilidad del proceso; la intervención programada busca reducir la probabilidad de falla no planificada.</p>`:''}
-     <div class="tscroll"><table><thead><tr><th>Equipo</th><th>Actividad</th><th>Mes</th><th class="n">MM</th><th>Justificación técnica</th><th>Consecuencia de no ejecutar</th><th>Respaldo</th><th></th></tr></thead><tbody>
-     ${L.map(x=>`<tr><td>${esc(actName(x))}</td><td>${esc(x.desc)}${x.flag?`<div class="flag">${esc(x.flag)}</div>`:''}</td><td>${mesesDe(x)}</td><td class="n">${mm(val(x))}</td><td>${esc(x.just||NOINC)}</td><td>${esc(x.consTxt||NOINC)}</td><td>${esc(x.red||(x.rolTxt?x.rolTxt+' (según descripción)':NOINC))}</td><td><button class="btn sm" data-defend="${x.fila}">Defender</button></td></tr>`).join('')||'<tr><td colspan="8" class="muted">Sin actividades en esta celda.</td></tr>'}
-     </tbody></table></div></div>`;}
-  // drill-down
-  const drill=rows.map(r=>{const eqs=groupBy(r.L,x=>x.equipo||'(sin equipo)');
-    return `<details class="drill"><summary><i class="sw" style="background:${ACOL(r.a)}"></i><span class="dsum"><b>${esc(r.a)}</b> <span class="muted">${Object.keys(eqs).length} equipos</span></span><span class="dval">${mm(r.t)} MM</span></summary><div class="in">
-     ${Object.entries(eqs).sort((x,y)=>sum(y[1],val)-sum(x[1],val)).map(([e,L])=>{const cps=groupBy(L,x=>x.componente||'—');
-      return `<details class="drill"><summary><span class="dsum">${esc(e)} ${L.some(isBomba)?'<span class="tag">bomba</span>':''}${L.some(x=>x.red==='Sin respaldo')?'<span class="tag w">sin respaldo</span>':''}</span><span class="dval">${mm(sum(L,val))}</span></summary><div class="in">
-       ${Object.entries(cps).map(([c,LL])=>`<details class="drill" ${c==='—'?'open':''}><summary><span class="dsum">${c==='—'?'<span class="muted">Componente no indicado</span>':esc(c)}</span><span class="dval">${mm(sum(LL,val))}</span></summary><div class="in"><table><tbody>
-        ${LL.map(x=>`<tr><td><i class="sw ${x.prio}"></i>${esc(x.desc)}<span class="tag">${esc(x.tipo||'tipo s/d')}</span></td><td>${mesesDe(x)}</td><td class="n">${mm(val(x))}</td><td class="n muted">fila ${x.fila}</td><td><button class="btn sm" data-defend="${x.fila}">Defender</button></td></tr>`).join('')}
-       </tbody></table></div></details>`).join('')}</div></details>`;}).join('')}</div></details>`;}).join('');
-  // top por prioridad
-  const topP=PR.filter(p=>P[p]).map(p=>{const L=A.filter(a=>a.prio===p).sort((x,y)=>val(y)-val(x)).slice(0,5);
-    return `<h3><i class="sw ${p}"></i>${PRL[p]}: ${mm(P[p])} MM</h3><table><tbody>${L.map(x=>`<tr class="click" data-defend="${x.fila}" ${T(tipAct(x))}><td>${esc(x.area)}</td><td>${esc(trunc(actName(x),40))} — ${esc(trunc(x.desc,60))}</td><td class="n">${mm(val(x))}</td><td class="n">${pct(val(x)/P[p])}</td></tr>`).join('')}</tbody></table>`;}).join('');
-  // pareto
-  const par=[...A].sort((x,y)=>val(y)-val(x)).slice(0,15); let acc=0;
-  const parT=par.map((x,i)=>{acc+=val(x); return `<tr class="click" data-defend="${x.fila}"><td class="n">${i+1}</td><td>${esc(trunc(actName(x),38))}<div class="muted" style="font-size:12px">${esc(trunc(x.desc,70))}</div></td><td>${esc(SHORT[x.area]||x.area)}</td><td><i class="sw ${x.prio}"></i>${PRS[x.prio]}</td><td class="n">${mm(val(x))}</td><td class="n">${pct(val(x)/tot,1)}</td><td class="n"><b>${pct(acc/tot,1)}</b></td></tr>`;}).join('');
-  const top15=sum(par,val)/tot;
-  // calidad de datos
+    det=`<h3>${esc(a)} · ${PRL[p]}: ${L.length} actividades · ${mm(sum(L,val))} MM</h3><div class="tscroll"><table><thead><tr><th>Sistema</th><th>Equipo</th><th>Actividad</th><th>Meses</th><th class="n">MM</th><th></th></tr></thead><tbody>
+     ${L.map(x=>`<tr><td>${esc(x.sistema)}</td><td>${esc(x.subsistema)}</td><td>${esc(x.desc)}</td><td>${mesesDe(x)}</td><td class="n">${mm(val(x))}</td><td><button class="btn sm" data-defend="${x.fila}">Defender</button></td></tr>`).join('')}</tbody></table></div>`;}
+  const inM=i=>A.filter(a=>a.meses[i]>0&&(S.f.mes==='all'||+S.f.mes===i)), nI=MES.map((_,i)=>inM(i).length), m27=monthly(A), cap=S.cap||null;
+  const colsA=MES.map((l,i)=>({l,segs:PR.map(p=>{const v=sum(A.filter(a=>a.prio===p),a=>(S.f.mes==='all'||+S.f.mes===i)?a.meses[i]:0);return {v,c:PFILL[p],tip:`<b>${MESL[i]} · ${PRS[p]}</b><br>${mm(v)} MM`};})}));
+  const colsB=MES.map((l,i)=>({l,segs:[{v:nI[i],c:'var(--y27)',tip:`<b>${MESL[i]}</b><br>${nI[i]} intervenciones${cap?` · ${pct(nI[i]/cap)} de la capacidad`:''}`}]}));
   const SCA=A.filter(a=>a.prio==='SC').sort((x,y)=>val(y)-val(x));
-  $('v-area').innerHTML=`
-  <div class="card"><div class="headline">${pct(clas?(P.P1+P.P2)/clas:NaN)} del presupuesto clasificado es P1 o P2; ${pct(P.SC/tot)} del total aún no tiene prioridad.</div>${filtNote()}
-   <div class="note">Criterio único de la base: P1 = Reglamentaria · P2 = Continuidad operacional o seguridad · P3 = Otros. P1 no equivale a “activo crítico”: la criticidad operacional es una dimensión aparte (vista 4).</div>
-   <div class="kpis" style="margin:8px 0 0">${PR.map(pcard).join('')}</div></div>
-  <div class="card"><h2>Presupuesto por área</h2><div class="note">Clic en una fila para desplegar Área → Equipo → Componente → Actividad (más abajo).${a26?' Δ vs Presupuesto 2026 del área.':''}</div>
-   <div class="tscroll"><table><thead><tr><th>Área</th><th class="n">PPTO 2027</th><th class="n">% total</th>${PR.map(p=>`<th class="n"><i class="sw ${p}"></i>${PRS[p]}</th>`).join('')}<th class="n">N° act.</th><th class="n">Activos críticos</th>${a26?'<th class="n">Δ vs 2026</th>':''}</tr></thead><tbody>
-   ${rows.map(r=>`<tr><td><i class="sw" style="background:${ACOL(r.a)}"></i>${r.a}</td><td class="n"><b>${mm(r.t)}</b></td><td class="n">${pct(r.t/tot,1)}</td>${PR.map(p=>`<td class="n">${r.p[p]?mm(r.p[p]):'–'}</td>`).join('')}<td class="n">${r.L.length}</td><td class="n">${r.crit==null?'<span class="muted" title="'+NOINC+'">s/d</span>':r.crit}</td>${a26?`<td class="n ${r.t>a26[r.a]?'up':'down'}">${sgn(r.t-a26[r.a])}</td>`:''}</tr>`).join('')}
-   </tbody><tfoot><tr><td>Total</td><td class="n">${mm(tot)}</td><td class="n">100%</td>${PR.map(p=>`<td class="n">${mm(P[p])}</td>`).join('')}<td class="n">${A.length}</td><td class="n">${D.cols.crit?sum(rows,r=>r.crit):'s/d'}</td>${a26?`<td class="n">${sgn(tot-sum(Object.values(a26)))}</td>`:''}</tr></tfoot></table></div>
-   ${D.cols.crit?'':`<p class="note">“Activos críticos”: ${NOINC.toLowerCase()} (agregar columna Criticidad).</p>`}</div>
+  $('v-prio').innerHTML=`
+  <div class="card"><div class="headline">${pct(clas?(P.P1+P.P2)/clas:NaN)} de lo clasificado es reglamentario (P1) o de continuidad/seguridad (P2); ${pct(P.SC/tot)} del total aún no tiene prioridad.</div>${filtNote()}
+   <div class="note">Criterio de la base: P1 = Reglamentaria · P2 = Continuidad operacional o seguridad · P3 = Otros. Clic en una celda para ver sus actividades.</div>${mt}${det}</div>
   <div class="grid g2">
-   <div class="card"><h2>Mezcla de prioridades por área (100%)</h2>${legendPrio()}${hstack(rows.map(r=>({l:r.a,segs:PR.map(p=>({v:r.p[p],c:PFILL[p],tip:`<b>${r.a} · ${PRS[p]}</b><br>${mm(r.p[p])} MM · ${pct(r.p[p]/r.t,1)}`}))})),{w:560,lab:130,pct100:true})}</div>
-   <div class="card"><h2>Matriz Área × Prioridad</h2><div class="note">MM CLP. Clic en una celda para ver equipos, actividades, meses, justificación y respaldo.</div>${mt}</div>
-  </div>${det}
-  <div class="card"><h2>Drill-down: Área → Equipo → Componente → Actividad</h2>${legendPrio()}${drill}</div>
-  <div class="grid g2">
-   <div class="card"><h2>Pareto: las 15 mayores partidas explican ${pct(top15)} del presupuesto</h2><div class="note">Clic en una fila para defender el gasto.</div>
-    <div class="tscroll"><table><thead><tr><th class="n">#</th><th>Equipo / actividad</th><th>Área</th><th>Prio.</th><th class="n">MM</th><th class="n">% ppto</th><th class="n">% acum.</th></tr></thead><tbody>${parT}</tbody></table></div></div>
-   <div class="card"><h2>Principales actividades por prioridad</h2><div class="note">Top 5 por monto; % = participación dentro de su prioridad.</div>${topP}</div>
+   <div class="card"><h2>Monto mensual por prioridad</h2><div class="note">MM · línea punteada = promedio ${mm(sum(m27)/12)} MM/mes. Un mes caro no implica un mes saturado.</div>${legendPrio()}${vstack(colsA,{w:580,h:240,avg:sum(m27)/12})}</div>
+   <div class="card"><h2>Carga: intervenciones por mes</h2>
+    <div class="row"><label class="note" style="margin:0">Capacidad mensual (intervenciones): <input type="number" id="capIn" min="0" step="1" value="${S.cap||''}" placeholder="ingresar"></label></div>
+    ${vstack(colsB,{w:580,h:230,cap,fmtAx:t=>nf0.format(t),fmtTop:v=>nf0.format(v)})}
+    ${cap?`<p class="note">Meses sobre capacidad: ${MES.filter((_,i)=>nI[i]>cap).join(', ')||'ninguno'}.</p>`:pendCard('Capacidad mensual de ejecución','Ingrésala (equipo propio + contratistas) para ver la línea y el % de utilización.')}</div>
   </div>
-  <div class="card"><h2>Calidad de datos · presupuesto pendiente de clasificación</h2>
-   <div class="kpis" style="margin:6px 0">${kp('Monto sin clasificar',mm(P.SC)+' MM',pct(P.SC/tot,1)+' del total')}${kp('Actividades sin prioridad',SCA.length,'de '+A.length)}
-    ${D.areas.filter(a=>SCA.some(x=>x.area===a)).map(a=>kp(a,mm(sum(SCA.filter(x=>x.area===a),val))+' MM',SCA.filter(x=>x.area===a).length+' actividades')).join('')}</div>
-   <details><summary class="note" style="cursor:pointer">Ver las ${SCA.length} actividades sin prioridad</summary><div class="tscroll tall"><table><thead><tr><th>Área</th><th>Equipo</th><th>Descripción</th><th class="n">MM</th><th class="n">Fila</th></tr></thead><tbody>
-    ${SCA.map(x=>`<tr><td>${esc(x.area)}</td><td>${esc(actName(x))}</td><td>${esc(x.desc)}</td><td class="n">${mm(val(x))}</td><td class="n">${x.fila}</td></tr>`).join('')}</tbody></table></div></details>
-   <p class="note">Al completar la columna Prioridad en la base y pulsar “Actualizar desde Drive”, estas actividades se reclasifican solas.</p></div>`;
-  document.querySelectorAll('#v-area [data-cell]').forEach(td=>td.onclick=()=>{S.matrixSel=S.matrixSel===td.dataset.cell?null:td.dataset.cell;vArea();});
+  <div class="grid g2">
+   <div class="card"><h2>Calidad de datos: ${mm(P.SC)} MM sin prioridad</h2><div class="note">${SCA.length} actividades. Al completar la prioridad en el Excel y actualizar desde Drive se reclasifican solas.</div>
+    ${hbars(D.areas.map(a=>({l:a,v:sum(SCA.filter(x=>x.area===a),val),c:'url(#hatch)',tip:`<b>${a}</b><br>${SCA.filter(x=>x.area===a).length} actividades sin prioridad`})).filter(r=>r.v).sort((x,y)=>y.v-x.v),{w:560,lab:130})}
+    <details><summary class="note" style="cursor:pointer">Ver actividades sin prioridad</summary><div class="tscroll tall"><table><tbody>${SCA.map(x=>`<tr><td>${esc(SHORT[x.area]||x.area)}</td><td>${esc(x.subsistema)} — ${esc(x.desc)}</td><td class="n">${mm(val(x))}</td><td class="n muted">f. ${x.fila}</td></tr>`).join('')}</tbody></table></div></details></div>
+   <div class="card"><h2>Criticidad operacional y redundancia</h2>
+    ${D.cols.crit||D.cols.red?`<div class="kpis" style="margin:4px 0">${D.cols.crit?CRIT.map(c=>kp(c,mm(sum(A.filter(a=>a.crit===c),val))+' MM',A.filter(a=>a.crit===c).length+' actividades')).join(''):''}${D.cols.red?kp('Sin redundancia efectiva',pct(sum(A.filter(a=>/sin|fuera/i.test(a.red)),val)/tot,1),'del presupuesto'):''}</div>`
+     :pendCard('Criticidad y redundancia no incorporadas en la base','La prioridad P1 no equivale a activo crítico. Agrega las columnas “Criticidad” y “Redundancia” en SUM 2027: el dashboard las lee solo.')}
+    <div class="row noprint"><button class="btn" id="bTpl">Descargar plantilla de criticidad (CSV)</button></div></div>
+  </div>`;
+  document.querySelectorAll('#v-prio [data-cell]').forEach(td=>td.onclick=()=>{S.matrixSel=S.matrixSel===td.dataset.cell?null:td.dataset.cell;vPrio();});
+  $('capIn').onchange=e=>{S.cap=Math.max(0,+e.target.value||0);store.set('sum27-cap',String(S.cap));vPrio();};
+  $('bTpl').onclick=()=>saveFile('plantilla_criticidad_SUM2027.csv',toCSV([['Fila SUM 2027','Área','Sistema','Equipo','Componente','Actividad','Monto','Criticidad','Redundancia','Principal/Respaldo','Tipo de riesgo','Función','Justificación técnica','Consecuencia de falla','Probabilidad (1-5)','Consecuencia (1-5)'],
+    ...D.acts.map(a=>[a.fila,a.area,a.sistema,a.equipo,a.componente,a.desc,Math.round(a.total),a.crit,a.red,a.rol||a.rolTxt,a.riesgo,a.funcion,a.just,a.consTxt||'',a.probScore??'',a.consScore??''])]),$('bTpl'));
 }
 const groupBy=(L,f)=>L.reduce((o,x)=>((o[f(x)]=o[f(x)]||[]).push(x),o),{});
-
-/* ================= VISTA 3: plan anual y carga ================= */
-function vPlan(){
-  const A=F27(), m27=monthly(A), t27=sum(m27), F=F26(), m26=S.cmp26&&F?monthly(F):null, t26=m26?sum(m26):null;
-  const inM=i=>A.filter(a=>a.meses[i]>0&&(S.f.mes==='all'||+S.f.mes===i));
-  const nI=MES.map((_,i)=>inM(i).length), nC=MES.map((_,i)=>inM(i).filter(a=>a.crit==='Crítica').length), nE=MES.map((_,i)=>new Set(inM(i).map(a=>norm(actName(a)))).size);
-  const n26=m26?MES.map((_,i)=>F.filter(a=>a.meses[i]>0).length):null;
-  const mxI=nI.indexOf(Math.max(...nI)), mx$=m27.indexOf(Math.max(...m27)), avg=t27/12;
-  const colsA=MES.map((l,i)=>({l,segs:(S.planColor==='prio'?PR.map(p=>({k:PRS[p],c:PFILL[p],f:a=>a.prio===p})):D.areas.map(a=>({k:a,c:ACOL(a),f:x=>x.area===a}))).map(g=>{const v=sum(A.filter(g.f),a=>(S.f.mes==='all'||+S.f.mes===i)?a.meses[i]:0);return {v,c:g.c,tip:`<b>${MESL[i]} · ${esc(g.k)}</b><br>${mm(v)} MM`};})}));
-  const cap=S.cap||null;
-  const colsB=MES.map((l,i)=>({l,segs:D.cols.crit?[{v:nC[i],c:'var(--c0)',tip:`<b>${MESL[i]}</b><br>${nC[i]} intervenciones en equipos críticos`},{v:nI[i]-nC[i],c:'var(--y27)',tip:`<b>${MESL[i]}</b><br>${nI[i]-nC[i]} intervenciones en otros equipos`}]:[{v:nI[i],c:'var(--y27)',tip:`<b>${MESL[i]}</b><br>${nI[i]} intervenciones · ${nE[i]} equipos`}]}));
-  const shJ=t27?m27[5]/t27:0, shJ26=m26?m26[5]/t26:null, as27=t27?(m27[3]+m27[8])/t27:0, as26=m26?(m26[3]+m26[8])/t26:null;
-  const nivelado = m26 && shJ<shJ26 && as27>as26;
-  // heatmap del plan por equipo
-  let H=A; if(S.heatOnlyBombas) H=H.filter(isBomba);
-  const eqG=groupBy(H,a=>a.area+'¦'+(actName(a)));
-  const eqRows=Object.entries(eqG).map(([k,L])=>{const [ar,n]=k.split('¦'); const mv=MES.map((_,i)=>sum(L,a=>(S.f.mes==='all'||+S.f.mes===i)?a.meses[i]:0)); return {ar,n,L,mv,t:sum(mv)};})
-    .sort((x,y)=>D.areas.indexOf(x.ar)-D.areas.indexOf(y.ar)||y.t-x.t);
-  const hmax=Math.max(...eqRows.flatMap(r=>r.mv),1);
-  const bombas=Object.values(groupBy(A.filter(a=>isBomba(a)&&!/general/i.test(a.equipo)),a=>norm(actName(a))));
-  const bombJun=bombas.filter(L=>L.some(a=>a.meses[5]>0)).length, bombMax=MES.map((_,i)=>bombas.filter(L=>L.some(a=>a.meses[i]>0)).length);
-  const heat=`<div class="tscroll tall"><table class="heat plan"><thead><tr><th>Equipo / familia</th>${MES.map(m=>`<th class="n">${m}</th>`).join('')}<th class="n">MM</th></tr></thead><tbody>
-   ${eqRows.map(r=>{const crit=r.L.some(a=>a.crit==='Crítica'), sinR=r.L.some(a=>a.red==='Sin respaldo'||a.red==='Respaldo fuera de servicio');
-     return `<tr><td style="white-space:nowrap"><i class="sw" style="background:${ACOL(r.ar)}"></i>${esc(trunc(r.n,46))}${isBomba(r.L[0])?'<span class="tag">bomba</span>':''}${crit?'<span class="tag w">crítica</span>':''}${sinR?'<span class="tag w">sin N+1</span>':''}</td>
-     ${r.mv.map((v,i)=>`<td class="c" style="background:${heatBg(v/hmax)};color:${heatFg(v/hmax)}" ${T(`<b>${esc(r.n)}</b><br>${MESL[i]}: ${mm(v)} MM`)}>${v?nf1.format(v/1e6):''}</td>`).join('')}<td class="n">${mm(r.t)}</td></tr>`;}).join('')}
-   </tbody></table></div>`;
-  $('v-plan').innerHTML=`
-  <div class="card"><div class="headline">${mx$===mxI?`${MESL[mx$][0].toUpperCase()+MESL[mx$].slice(1)} concentra a la vez el mayor monto (${mm(m27[mx$])} MM) y el mayor número de intervenciones (${nI[mxI]}): es la ventana de mantención mayor.`:`Concentración económica no es saturación: ${MESL[mx$]} tiene el mayor monto (${mm(m27[mx$])} MM) y ${MESL[mxI]} el mayor número de intervenciones (${nI[mxI]}).`}</div>${filtNote()}
-   <div class="note">Un trabajo costoso puede elevar el gasto de un mes con pocas intervenciones. La carga del equipo se mide en N° de intervenciones (gráfico B), no en pesos.</div></div>
-  <div class="grid g2">
-   <div class="card"><h2>A · Monto mensual (MM)</h2>
-    <div class="row"><div class="seg" id="segColor"><button data-c="prio" class="${S.planColor==='prio'?'on':''}">Por prioridad</button><button data-c="area" class="${S.planColor==='area'?'on':''}">Por área</button></div><span class="note" style="margin:0">Línea punteada = promedio ${mm(avg)} MM/mes</span></div>
-    ${S.planColor==='prio'?legendPrio():legendAreas()}${vstack(colsA,{w:580,h:250,avg})}</div>
-   <div class="card"><h2>B · N° de intervenciones mensuales</h2>
-    <div class="row"><label class="note" style="margin:0">Capacidad mensual razonable (intervenciones): <input type="number" id="capIn" min="0" step="1" value="${S.cap||''}" placeholder="ingresar"></label></div>
-    <div class="leg">${D.cols.crit?'<span><i class="sw" style="background:var(--c0)"></i>Equipos críticos</span><span><i class="sw" style="background:var(--y27)"></i>Otros</span>':'<span><i class="sw" style="background:var(--y27)"></i>Intervenciones (fila con monto en el mes)</span>'}${cap?'<span style="color:var(--bad)">— capacidad ingresada</span>':''}</div>
-    ${vstack(colsB,{w:580,h:250,cap,fmtAx:t=>nf0.format(t),fmtTop:v=>nf0.format(v)})}
-    ${cap?'':pendCard('Capacidad mensual de ejecución','Ingresa la capacidad (equipo propio + contratistas) para ver la línea y el % de utilización.')}
-    ${D.cols.crit?'':'<p class="note">Intervenciones críticas: '+NOINC.toLowerCase()+'.</p>'}</div>
-  </div>
-  <div class="card"><h2>Balance de carga del Plan Anual de Mantención</h2>
-   <p>${nivelado?`La distribución anual fue nivelada para evitar una concentración excesiva durante la ventana de mantención mayor: junio baja de ${pct(shJ26)} a ${pct(shJ)} del gasto anual y abril + septiembre suben de ${pct(as26)} a ${pct(as27)}. Esto balancea recursos internos y externos, mejora la capacidad efectiva de supervisión y aumenta la probabilidad de cumplimiento OTIF del Plan de Mantención. La reprogramación no es una postergación: es nivelación de carga.`:m26?`<span class="flag">Con los filtros actuales la base no muestra la nivelación junio → abril/septiembre (junio ${pct(shJ26)} → ${pct(shJ)}; abril + septiembre ${pct(as26)} → ${pct(as27)}).</span>`:'Comparación con 2026 no disponible con estos filtros.'}</p>
-   <p class="note">Una planificación excesivamente concentrada genera competencia por mano de obra, proveedores, repuestos, permisos de trabajo y supervisión, y aumenta el riesgo de incumplimiento del plan.</p>
-   <div class="tscroll"><table><thead><tr><th>Mes</th><th class="n">N° mantenciones</th><th class="n">N° críticas</th><th class="n">Equipos</th><th class="n">MM</th><th class="n">% del año</th>${n26?'<th class="n">N° 2026</th><th class="n">% año 2026</th>':''}<th class="n">Capacidad</th><th class="n">% utilización</th></tr></thead><tbody>
-    ${MES.map((m,i)=>`<tr><td>${MESL[i]}</td><td class="n">${nI[i]}</td><td class="n">${D.cols.crit?nC[i]:'s/d'}</td><td class="n">${nE[i]}</td><td class="n">${mm(m27[i])}</td><td class="n">${pct(m27[i]/t27,1)}</td>${n26?`<td class="n">${n26[i]}</td><td class="n">${pct(m26[i]/t26,1)}</td>`:''}<td class="n">${cap?nf0.format(cap):'—'}</td><td class="n ${cap&&nI[i]>cap?'up':''}">${cap?pct(nI[i]/cap):'—'}</td></tr>`).join('')}
-   </tbody><tfoot><tr><td>Total</td><td class="n">${sum(nI)}</td><td class="n">${D.cols.crit?sum(nC):'s/d'}</td><td class="n"></td><td class="n">${mm(t27)}</td><td class="n">100%</td>${n26?`<td class="n">${sum(n26)}</td><td class="n">100%</td>`:''}<td></td><td></td></tr></tfoot></table></div></div>
-  <div class="card"><h2>Heatmap del plan anual por equipo</h2>
-   <div class="note">Intensidad = monto del mes. Equipos con “bomba” en su nombre en la base: <b>${bombas.length}</b>; ${bombJun} con intervención en junio; máximo en un mes: ${Math.max(...bombMax)} (${MESL[bombMax.indexOf(Math.max(...bombMax))]}). N° real de motobombas de planta y cuántas sin +1: ${D.cols.red?'ver vista 4':'dato pendiente'}.</div>
-   <div class="row"><label><input type="checkbox" id="onlyB" ${S.heatOnlyBombas?'checked':''}> Sólo motobombas</label>${legendAreas()}</div>${heat}</div>`;
-  document.querySelectorAll('#segColor button').forEach(b=>b.onclick=()=>{S.planColor=b.dataset.c;vPlan();});
-  $('onlyB').onchange=e=>{S.heatOnlyBombas=e.target.checked;vPlan();};
-  $('capIn').onchange=e=>{S.cap=Math.max(0,+e.target.value||0);store.set('sum27-cap',String(S.cap));vPlan();};
-}
-
-/* ================= VISTA 4: criticidad y continuidad ================= */
-function vCrit(){
-  const A=F27(), tot=sum(A,val), hasRed=!!D.cols.red, hasCrit=!!D.cols.crit, hasMap=D.cols.prob&&A.some(a=>a.probScore!=null&&a.consScore!=null);
-  const sinRed=A.filter(a=>a.red==='Sin respaldo'||a.red==='Respaldo fuera de servicio');
-  const redByCat=REDS.map(r=>[r,sum(A.filter(a=>a.red===r),val)]);
-  // tabla de redundancia por equipo
-  const eqs=Object.values(groupBy(A,a=>a.area+'¦'+norm(a.equipo||actName(a)))).map(L=>({area:L[0].area,eq:L[0].equipo||actName(L[0]),L,t:sum(L,val),
-    fun:[...new Set(L.map(a=>a.funcion).filter(Boolean))].join('; '),rol:[...new Set(L.map(a=>a.rol||(a.rolTxt?a.rolTxt+' (texto)':'')).filter(Boolean))].join(', '),
-    red:[...new Set(L.map(a=>a.red).filter(Boolean))].join(', '),crit:[...new Set(L.map(a=>a.crit).filter(Boolean))].join(', '),cons:[...new Set(L.map(a=>a.consTxt).filter(Boolean))].join('; ')}))
-    .sort((x,y)=>D.areas.indexOf(x.area)-D.areas.indexOf(y.area)||y.t-x.t);
-  const critDist=hasCrit?CRIT.map(c=>({v:sum(A.filter(a=>a.crit===c),val),c:CFILL[c],tip:`<b>${c}</b><br>${mm(sum(A.filter(a=>a.crit===c),val))} MM`})):null;
-  // mapa de riesgo
-  let map='';
-  if(hasMap){const pts=Object.values(groupBy(A.filter(a=>a.probScore!=null&&a.consScore!=null),a=>norm(a.equipo||actName(a)))).map(L=>({x:Math.max(...L.map(a=>a.probScore)),y:Math.max(...L.map(a=>a.consScore)),v:sum(L,val),c:ACOL(L[0].area),
-    tip:`<b>${esc(L[0].equipo||actName(L[0]))}</b><br>${esc(L[0].area)} · ${mm(sum(L,val))} MM<br>Prob. ${Math.max(...L.map(a=>a.probScore))} · Cons. ${Math.max(...L.map(a=>a.consScore))}${L.some(a=>a.red==='Sin respaldo')?'<br><b>Sin respaldo</b>':''}`}));
-    map=`${legendAreas()}${bubbles(pts,{w:640,h:380})}<p class="note">Zona sombreada = alto impacto + alta exposición. Tamaño = presupuesto anual del activo.</p>`;}
-  else map=pendCard('Evaluación de criticidad pendiente','El mapa necesita las columnas "Probabilidad (1-5)" y "Consecuencia (1-5)" en SUM 2027. No se asigna riesgo ficticio.');
-  $('v-crit').innerHTML=`
-  <div class="card"><div class="headline">¿Qué riesgo controla cada parte del presupuesto?</div>${filtNote()}
-   <div class="note">Suministros no es un área aislada: si falla un servicio auxiliar, las líneas se limitan o detienen aunque sus máquinas estén disponibles.</div>
-   ${chainMini(A)}</div>
-  <div class="kpis">
-   ${hasRed?kp('% del presupuesto en equipos sin redundancia efectiva',pct(sum(sinRed,val)/tot,1),`${mm(sum(sinRed,val))} MM · ${new Set(sinRed.map(a=>norm(actName(a)))).size} equipos (sin respaldo o respaldo fuera de servicio)`):pendCard('% del presupuesto en equipos sin redundancia efectiva','Agregar columna "Redundancia" en SUM 2027 (N+1 disponible / N+1 parcial / Sin respaldo / Respaldo fuera de servicio / No aplica).')}
-   ${hasCrit?kp('Presupuesto en equipos de criticidad Crítica',pct(sum(A.filter(a=>a.crit==='Crítica'),val)/tot,1),mm(sum(A.filter(a=>a.crit==='Crítica'),val))+' MM'):pendCard('Criticidad operacional','Agregar columna "Criticidad" (Crítica / Alta / Media / Baja).')}
-   ${kp('Equipos con rol principal/respaldo identificado',new Set(A.filter(a=>rolOf(a)).map(a=>norm(actName(a)))).size,D.cols.rol?'según columna de la base':'según el texto del equipo en la base (principal / respaldo / auxiliar)')}
-  </div>
-  <div class="grid g2">
-   <div class="card"><h2>Criticidad operacional</h2><div class="note">Dimensión distinta de la prioridad presupuestaria. Debe considerar redundancia, respaldo N+1, consecuencia de la falla, tiempo de recuperación, repuestos, impacto productivo, ambiental, legal y de seguridad, e interdependencia con otros procesos.</div>
-    ${hasCrit?`<div class="leg">${CRIT.map(c=>`<span><i class="sw" style="background:${CFILL[c]}"></i>${c}</span>`).join('')}</div>${hstack([{l:'Presupuesto',segs:critDist}],{w:560,lab:90,pct100:true})}
-     ${hstack(D.areas.filter(a=>A.some(x=>x.area===a)).map(a=>({l:a,segs:CRIT.map(c=>({v:sum(A.filter(x=>x.area===a&&x.crit===c),val),c:CFILL[c],tip:`<b>${a} · ${c}</b>`}))})),{w:560,lab:130,pct100:true})}`
-     :pendCard('Criticidad no incorporada en la base','Usa “Descargar plantilla” para completar criticidad y redundancia por actividad y copiarlas al Excel.')}
-    <div class="row noprint"><button class="btn" id="bTpl">Descargar plantilla de criticidad (CSV)</button></div></div>
-   <div class="card"><h2>Mapa de riesgo operacional</h2>${map}</div>
-  </div>
-  <div class="card"><h2>Redundancia por equipo</h2><div class="note">${hasRed?'':'Columnas de redundancia y criticidad aún no están en la base: se muestran como “s/d”. El rol principal/respaldo se toma del texto cuando existe.'}</div>
-   ${hasRed?`<div class="leg">${redByCat.filter(r=>r[1]).map(([r,v])=>`<span>${r}: <b>${mm(v)} MM</b></span>`).join('')}</div>`:''}
-   <div class="tscroll tall"><table><thead><tr><th>Sistema</th><th>Equipo</th><th>Función</th><th>Principal / respaldo</th><th>Redundancia</th><th>Criticidad</th><th>Consecuencia de falla</th><th class="n">MM</th></tr></thead><tbody>
-   ${eqs.map(e=>`<tr><td>${esc(ficha(e.area).servicio)}</td><td>${esc(e.eq)}${e.L.some(isBomba)?'<span class="tag">bomba</span>':''}</td><td>${esc(e.fun||'s/d')}</td><td>${esc(e.rol||'s/d')}</td><td>${e.red?`<span class="${/sin|fuera/i.test(e.red)?'flag':''}">${esc(e.red)}</span>`:'s/d'}</td><td>${esc(e.crit||'s/d')}</td><td>${esc(e.cons||'s/d')}</td><td class="n">${mm(e.t)}</td></tr>`).join('')}
-   </tbody></table></div></div>
-  ${simulator(A)}
-  <div class="card"><h2>Fichas técnicas por área</h2><div class="note">Contenido técnico base (estático). Montos: total 2027 sin filtros.</div>
-   <div class="ficha">${D.areas.map(a=>{const f=ficha(a),L=D.acts.filter(x=>x.area===a); return `<div class="card" style="--c:${ACOL(a)}"><h2>${esc(a)}</h2><div class="note">${mm(sum(L,x=>x.total))} MM · ${L.length} actividades · P1 ${mm(sum(L.filter(x=>x.prio==='P1'),x=>x.total))} MM</div><dl>
-    <dt>Función</dt><dd>${esc(f.funcion)}</dd><dt>Qué detiene su falla</dt><dd>${esc(f.detiene)}</dd><dt>Riesgo de no ejecutar</dt><dd>${esc(f.riesgo)}</dd><dt>Respaldo</dt><dd>${esc(f.respaldo)}</dd></dl></div>`;}).join('')}</div></div>`;
-  $('bTpl').onclick=()=>saveFile('plantilla_criticidad_SUM2027.csv',toCSV([['Fila SUM 2027','Área','Equipo','Componente','Actividad','Monto','Criticidad','Redundancia','Principal/Respaldo','Tipo de riesgo','Función','Justificación técnica','Consecuencia de falla','Probabilidad (1-5)','Consecuencia (1-5)','Tiempo de recuperación','Disponibilidad de repuestos'],
-    ...D.acts.map(a=>[a.fila,a.area,a.equipo,a.componente,a.desc,Math.round(a.total),a.crit,a.red,a.rol||a.rolTxt,a.riesgo,a.funcion,a.just,a.consTxt||a.consScore||'',a.probScore??'','',a.trec,a.rep])]),$('bTpl'));
-  bindSim(A);
-}
-function simulator(A){
-  const tot=sum(A,val), target=tot*S.cut/100, sel=A.filter(a=>S.cutSel.has(a.fila)), sv=sum(sel,val);
-  const P1=sel.filter(a=>a.prio==='P1'), P2=sel.filter(a=>a.prio==='P2'), crit=sel.filter(a=>a.crit==='Crítica'), sinR=sel.filter(a=>a.red==='Sin respaldo'||a.red==='Respaldo fuera de servicio');
-  const pools=PR.map(p=>[p,sum(A.filter(a=>a.prio===p),val)]);
-  const outside=pools.find(x=>x[0]==='P3')[1];
-  return `<div class="card" id="simCard"><h2>Simulador de recorte presupuestario</h2>
-   <div class="note">No recomienda qué eliminar: muestra las consecuencias cuantitativas de las actividades que tú marques.</div>
-   <div class="row"><div class="seg" id="segCut">${[0,5,10,15].map(c=>`<button data-c="${c}" class="${S.cut===c?'on':''}">${c?'−'+c+'%':'0%'}</button>`).join('')}</div>
-   <span>Monto a retirar: <b>${mm(target)} MM</b> · marcado: <b>${mm(sv)} MM</b> ${S.cut?`(${pct(target?sv/target:0)} de la meta)`:''}</span>${S.cutSel.size?'<button class="btn sm" id="cutClr">Limpiar selección</button>':''}</div>
-   ${S.cut?`<p class="note">Referencia: el total P3 (“Otros”) es ${mm(outside)} MM; ${target>outside?`<b>un recorte de ${mm(target)} MM supera todo el P3</b> y necesariamente alcanza actividades sin clasificar (prioridad desconocida) o P1/P2.`:'el recorte cabe dentro del monto P3.'}</p>`:''}
-   <div class="kpis">${kp('Intervenciones afectadas',sum(sel,nInt),sel.length+' actividades')}${kp('Activos involucrados',new Set(sel.map(a=>norm(actName(a)))).size,'equipos o partidas')}
-    ${kp('P1 involucradas',P1.length,mm(sum(P1,val))+' MM')}${kp('P2 involucradas',P2.length,mm(sum(P2,val))+' MM')}
-    ${D.cols.crit?kp('Activos críticos involucrados',new Set(crit.map(a=>norm(actName(a)))).size,''):pendCard('Activos críticos involucrados','Criticidad no incorporada.')}
-    ${D.cols.red?kp('Equipos sin redundancia involucrados',new Set(sinR.map(a=>norm(actName(a)))).size,''):pendCard('Equipos sin redundancia involucrados','Redundancia no incorporada.')}</div>
-   ${P1.length||crit.length?`<div class="warn">⚠ La selección elimina ${P1.length?`${P1.length} actividades P1 (reglamentarias)`:''}${P1.length&&crit.length?' y ':''}${crit.length?`${crit.length} intervenciones en activos críticos`:''}. Revisar exposición reglamentaria y de continuidad antes de aceptar el escenario.</div>`:''}
-   ${S.cut?`<details ${S.cutSel.size?'open':''}><summary class="note" style="cursor:pointer">Marcar actividades a retirar (${A.length})</summary><div class="tscroll tall"><table><thead><tr><th></th><th>Área</th><th>Actividad</th><th>Prio.</th><th class="n">MM</th></tr></thead><tbody>
-    ${[...A].sort((x,y)=>val(y)-val(x)).map(a=>`<tr><td><input type="checkbox" data-cut="${a.fila}" ${S.cutSel.has(a.fila)?'checked':''}></td><td>${esc(SHORT[a.area]||a.area)}</td><td>${esc(trunc(actName(a),40))} — ${esc(trunc(a.desc,50))}</td><td><i class="sw ${a.prio}"></i>${PRS[a.prio]}</td><td class="n">${mm(val(a))}</td></tr>`).join('')}
-   </tbody></table></div></details>`:''}</div>`;
-}
-function bindSim(A){
-  document.querySelectorAll('#segCut button').forEach(b=>b.onclick=()=>{S.cut=+b.dataset.c; if(!S.cut)S.cutSel.clear(); rerenderSim();});
-  const c=$('cutClr'); if(c) c.onclick=()=>{S.cutSel.clear();rerenderSim();};
-  document.querySelectorAll('[data-cut]').forEach(x=>x.onchange=()=>{const f=+x.dataset.cut; x.checked?S.cutSel.add(f):S.cutSel.delete(f); rerenderSim();});
-}
-function rerenderSim(){const A=F27(); const el=$('simCard'); const open=el.querySelector('details')?.open, sc=el.querySelector('.tscroll')?.scrollTop||0; el.outerHTML=simulator(A); bindSim(A); const d=$('simCard').querySelector('details'); if(d&&open){d.open=true; const t=d.querySelector('.tscroll'); if(t)t.scrollTop=sc;}}
 
 /* ================= VISTA 5: detalle + asistentes ================= */
 function defendText(a){
   const pc=prodCtx(), f=ficha(a.area), aT=sum(D.acts.filter(x=>x.area===a.area),x=>x.total);
-  return [['Activo',actName(a)],['Actividad',a.desc||NOINC],['Monto',`${mm(a.total)} MM (${pct(a.total/aT,1)} del presupuesto de ${a.area})`],['Mes',mesesDe(a)],
+  return [['Sistema',`${a.area} → ${a.sistema} → ${a.subsistema}`],['Activo',actName(a)],['Actividad',a.desc||NOINC],['Monto',`${mm(a.total)} MM (${pct(a.total/aT,1)} del presupuesto de ${a.area})`],['Mes',mesesDe(a)],
    ['Prioridad',PRL[a.prio]+(a.prio==='SC'?' — completar en la base antes de defender':'')],['Criticidad',a.crit||NOINC],['Redundancia',a.red||(a.rolTxt?`Equipo ${a.rolTxt.toLowerCase()} según su descripción; redundancia efectiva: ${NOINC.toLowerCase()}`:NOINC)],
    ['Función',a.funcion||`${f.funcion} (ficha del área)`],['Justificación técnica',a.just||`${a.tipo?a.tipo.replace(/\.$/,'')+': ':''}${a.desc.replace(/\.+$/,'')}. ${NOINC} para esta actividad específica.`],
    ['Consecuencia de no ejecutar',a.consTxt||`${f.riesgo} (ficha del área)`],['Relación con continuidad productiva',`${a.area} entrega ${f.servicio.toLowerCase()} a las líneas: ${f.detiene}`],
@@ -739,8 +791,8 @@ function vDetalle(){
    <div class="note" id="aiEngine" style="margin-top:6px"></div></div>
   <div class="card"><h2>Detalle de actividades · ${A.length} filas · ${mm(sum(A,val))} MM</h2>${filtNote()}
    <div class="row noprint"><button class="btn" id="bCsv">Descargar CSV de trazabilidad</button><span class="note" style="margin:0">Clic en “Defender” para generar el argumento del ítem.</span></div>
-   <div class="tscroll tall"><table><thead><tr><th>Área</th><th>Prio.</th><th>Equipo</th><th>Actividad</th><th>Tipo</th><th>Meses</th><th class="n">MM</th><th class="n">Fila</th><th></th></tr></thead><tbody>
-   ${A.map(a=>`<tr><td>${esc(SHORT[a.area]||a.area)}</td><td><i class="sw ${a.prio}"></i>${PRS[a.prio]}</td><td>${esc(actName(a))}</td><td>${esc(a.desc)}${a.flag?`<div class="flag">${esc(a.flag)}</div>`:''}</td><td class="muted" style="font-size:12px">${esc(a.tipo)}</td><td>${mesesDe(a)}</td><td class="n">${mm(val(a))}</td><td class="n">${a.fila}</td><td><button class="btn sm" data-defend="${a.fila}">Defender</button></td></tr>`).join('')}
+   <div class="tscroll tall"><table><thead><tr><th>Área</th><th>Prio.</th><th>Sistema</th><th>Equipo</th><th>Actividad</th><th>Tipo</th><th>Meses</th><th class="n">MM</th><th class="n">Fila</th><th></th></tr></thead><tbody>
+   ${A.map(a=>`<tr><td>${esc(SHORT[a.area]||a.area)}</td><td><i class="sw ${a.prio}"></i>${PRS[a.prio]}</td><td>${esc(a.sistema)}</td><td>${esc(actName(a))}</td><td>${esc(a.desc)}${a.flag?`<div class="flag">${esc(a.flag)}</div>`:''}</td><td class="muted" style="font-size:12px">${esc(a.tipo)}</td><td>${mesesDe(a)}</td><td class="n">${mm(val(a))}</td><td class="n">${a.fila}</td><td><button class="btn sm" data-defend="${a.fila}">Defender</button></td></tr>`).join('')}
    </tbody></table></div></div>
   <div class="card"><h2>Datos pendientes e inconsistencias de la base</h2><div class="note">Se recalculan cada vez que se actualiza la base.</div>
    <ol class="pl">${D.pend.map(p=>`<li>${esc(p)}</li>`).join('')}</ol>
@@ -748,7 +800,7 @@ function vDetalle(){
    <h3>Columnas opcionales reconocidas en SUM 2027</h3><p class="note">${Object.keys(D.cols).length?Object.entries(D.cols).map(([k,v])=>`${esc(v)}`).join(' · '):'Ninguna todavía. El dashboard reconoce automáticamente columnas llamadas Criticidad, Redundancia, Principal/Respaldo, Tipo de riesgo, Función, Justificación técnica, Consecuencia de falla, Probabilidad (1-5), Consecuencia (1-5), Tiempo de recuperación y Repuestos.'}</p></div>`;
   if(d){$('dClose').onclick=()=>{S.defend=null;vDetalle();}; $('dCopy').onclick=()=>{const t=defendText(d).map(([k,v])=>k.toUpperCase()+': '+v).join('\n'); navigator.clipboard?.writeText(t).then(()=>{$('dCopy').textContent='Copiado ✓';},()=>{});};}
   document.querySelectorAll('#segAi button').forEach(b=>b.onclick=()=>{S.aiMode=b.dataset.m;vDetalle();});
-  $('bCsv').onclick=()=>saveFile('trazabilidad_suministros_2027.csv',toCSV([['Área','Prioridad','Criticidad','Redundancia','Equipo','Actividad','Tipo','Meses','Monto CLP','Hoja','Fila origen','Observación'],...A.map(a=>[a.area,PRS[a.prio],a.crit,a.red,actName(a),a.desc,a.tipo,mesesDe(a),Math.round(val(a)),'SUM 2027',a.fila,a.flag])]),$('bCsv'));
+  $('bCsv').onclick=()=>saveFile('trazabilidad_suministros_2027.csv',toCSV([['Área','Sistema','Prioridad','Criticidad','Redundancia','Equipo','Actividad','Tipo','Meses','Monto CLP','Hoja','Fila origen','Observación'],...A.map(a=>[a.area,a.sistema,PRS[a.prio],a.crit,a.red,actName(a),a.desc,a.tipo,mesesDe(a),Math.round(val(a)),'SUM 2027',a.fila,a.flag])]),$('bCsv'));
   bindChat();
 }
 
@@ -763,7 +815,7 @@ let lastArea=null;
 function ansArea(a,q){
   const L=D.acts.filter(x=>x.area===a); if(!L.length) return `No hay actividades de ${a} en la base cargada.`;
   const t=sum(L,x=>x.total), T0=sum(D.acts,x=>x.total), p1=sum(L.filter(x=>x.prio==='P1'),x=>x.total), f=ficha(a), top=[...L].sort((x,y)=>y.total-x.total);
-  const eqs=Object.entries(groupBy(L,x=>x.equipo||actName(x))).sort((x,y)=>sum(y[1],z=>z.total)-sum(x[1],z=>z.total)).slice(0,5).map(e=>e[0]);
+  const eqs=Object.entries(groupBy(L,x=>x.sistema)).sort((x,y)=>sum(y[1],z=>z.total)-sum(x[1],z=>z.total)).slice(0,5).map(e=>e[0]);
   const crit=L.some(x=>x.crit)?CRIT.map(c=>[c,L.filter(x=>x.crit===c).length]).filter(x=>x[1]).map(([c,n])=>`${c}: ${n}`).join(', '):NOINC;
   const sinR=L.filter(x=>x.red==='Sin respaldo').map(x=>x.equipo||actName(x));
   const n=norm(q||'');
@@ -795,7 +847,7 @@ function ctxForAI(q){
   const {L}=S.aiMode==='filtro'?rowsForQuery(q):{L:D.acts.filter(x=>!areaOf(q)||x.area===(areaOf(q)))};
   return JSON.stringify({criterio:'P1=Reglamentaria; P2=Continuidad operacional o seguridad; P3=Otros; SC=Sin clasificar (no inferir). P1 no equivale a activo crítico.',
     produccion:prodCtx(),fichas:FICHAS,columnas_opcionales:D.cols,
-    filas:L.slice(0,200).map(a=>({fila:a.fila,area:a.area,prio:a.prio,equipo:actName(a),actividad:a.desc,MM:+(a.total/1e6).toFixed(2),meses:mesesDe(a),criticidad:a.crit||null,redundancia:a.red||null,rol:rolOf(a)||null,funcion:a.funcion||null,justificacion:a.just||null,consecuencia:a.consTxt||null}))});
+    filas:L.slice(0,200).map(a=>({fila:a.fila,area:a.area,sistema:a.sistema,prio:a.prio,equipo:actName(a),actividad:a.desc,MM:+(a.total/1e6).toFixed(2),meses:mesesDe(a),criticidad:a.crit||null,redundancia:a.red||null,rol:rolOf(a)||null,funcion:a.funcion||null,justificacion:a.just||null,consecuencia:a.consTxt||null}))});
 }
 const AI_RULES={area:`Responde en español con exactamente estos 6 puntos numerados: 1. FUNCIÓN DEL ÁREA 2. PRINCIPALES ACTIVOS 3. MANTENCIONES 2027 4. MONTO 5. CRITICIDAD 6. CONSECUENCIA POTENCIAL DE NO EJECUCIÓN. Máximo 170 palabras.`,
   filtro:`Responde en español con una explicación gerencial de máximo 150 palabras con esta estructura: "Las actividades seleccionadas corresponden principalmente a [equipos]. Su objetivo es [función]. La criticidad se relaciona con [redundancia/continuidad/regulación/seguridad]. Una falla podría afectar [proceso] según la información disponible. El presupuesto asociado es $X MM y representa Y% del presupuesto del área."`};
@@ -841,7 +893,7 @@ function srcBar(){
   $('srcbar').innerHTML=`<span>Base: <b>${esc(D.source)}</b> · ${D.origin==='drive'?'Google Drive':D.origin==='file'?'archivo local':'copia incluida en la página'} · ${esc(when)}</span><span class="st" id="srcSt"></span>`;
 }
 function applyRaw(raw,persist){
-  const nd=parseBase(raw); D=nd; S.matrixSel=null; S.cutSel.clear(); S.defend=null;
+  const nd=parseBase(raw); D=nd; S.matrixSel=null; S.tree=[]; S.defend=null;
   if(persist) store.set('sum27-raw',JSON.stringify(raw));
   buildFilters(); srcBar(); renderAll();
 }
@@ -882,21 +934,22 @@ async function loadLocalFile(file){
 
 /* ================= montaje ================= */
 function buildFilters(){
-  const vals=k=>{const get={area:a=>a.area,crit:a=>a.crit||'(sin dato)',equipo:a=>a.equipo,componente:a=>a.componente,tipo:a=>a.tipo,cuenta:a=>a.nombreCuenta,red:a=>a.red||'(sin dato)',rol:a=>rolOf(a)||'(sin dato)',riesgo:a=>a.riesgo||'(sin dato)'}[k];
-    let v=[...new Set(D.acts.map(get).filter(Boolean))]; if(k==='area') v=D.areas; else v.sort((a,b)=>a.localeCompare(b,'es')); return v;};
-  const sel=(k,l)=>{let opts; if(k==='prio') opts=PR.map(p=>[p,PRS[p]]); else if(k==='mes') opts=MESL.map((m,i)=>[String(i),m[0].toUpperCase()+m.slice(1)]); else opts=vals(k).map(v=>[v,v]);
-    const empty=opts.length===0||(opts.length===1&&opts[0][0]==='(sin dato)'); if(S.f[k]!=='all'&&!opts.some(o=>o[0]===S.f[k])) S.f[k]='all';
-    return `<label>${l} <select data-f="${k}" ${empty?'disabled title="'+NOINC+'"':''}><option value="all">${empty?'(no incorporado)':k==='mes'?'Año completo':'Todos'}</option>${opts.map(([v,t])=>`<option value="${esc(v)}" ${S.f[k]===v?'selected':''}>${esc(trunc(t,40))}</option>`).join('')}</select></label>`;};
-  $('filters1').innerHTML=`<label>Año <select disabled><option>2027</option></select></label>`+FDEF.slice(0,4).map(([k,l])=>sel(k,l)).join('')+`<label><input type="checkbox" id="cmp26" ${S.cmp26?'checked':''}> Comparar con Ppto 2026</label><button class="btn" id="fReset">Limpiar filtros</button>`;
-  $('filters2').innerHTML=FDEF.slice(4).map(([k,l])=>sel(k,l)).join('');
-  document.querySelectorAll('[data-f]').forEach(s=>s.onchange=()=>{S.f[s.dataset.f]=s.value; S.matrixSel=null; S.cutSel.clear(); renderAll();});
+  const sel=(k,l)=>{let opts;
+    if(k==='prio') opts=PR.map(p=>[p,PRS[p]]); else if(k==='mes') opts=MESL.map((m,i)=>[String(i),m[0].toUpperCase()+m.slice(1)]);
+    else if(k==='area') opts=D.areas.map(v=>[v,v]);
+    else if(k==='sistema') opts=[...new Set(D.acts.filter(a=>S.f.area==='all'||a.area===S.f.area).map(a=>a.sistema))].sort((x,y)=>x.localeCompare(y,'es')).map(v=>[v,v]);
+    else { if(!D.cols.crit) return ''; opts=CRIT.filter(c=>D.acts.some(a=>a.crit===c)).map(v=>[v,v]); }
+    if(S.f[k]!=='all'&&!opts.some(o=>o[0]===S.f[k])) S.f[k]='all';
+    return `<label>${l} <select data-f="${k}"><option value="all">${k==='mes'?'Año completo':'Todos'}</option>${opts.map(([v,t])=>`<option value="${esc(v)}" ${S.f[k]===v?'selected':''}>${esc(trunc(t,40))}</option>`).join('')}</select></label>`;};
+  $('filters1').innerHTML=FDEF.map(([k,l])=>sel(k,l)).join('')+`<label><input type="checkbox" id="cmp26" ${S.cmp26?'checked':''}> Comparar con Ppto 2026</label><button class="btn" id="fReset">Limpiar filtros</button>`;
+  document.querySelectorAll('[data-f]').forEach(x=>x.onchange=()=>{S.f[x.dataset.f]=x.value; if(x.dataset.f==='area'){S.f.sistema='all';} S.matrixSel=null; S.tree=[]; buildFilters(); renderAll();});
   $('cmp26').onchange=e=>{S.cmp26=e.target.checked;renderAll();};
-  $('fReset').onclick=()=>{FDEF.forEach(([k])=>S.f[k]='all'); buildFilters(); renderAll();};
+  $('fReset').onclick=()=>{FDEF.forEach(([k])=>S.f[k]='all'); S.tree=[]; buildFilters(); renderAll();};
 }
-function renderAll(){ vResumen(); vArea(); vPlan(); vCrit(); vDetalle(); }
+function renderAll(){ vResumen(); vArbol(); vComp(); vPrio(); vDetalle(); if(S.tab==='arbol') requestAnimationFrame(drawTreeLinks); }
 function setTab(t){ S.tab=t; store.set('sum27-tab2',t);
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+t));
-  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t)); }
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t)); if(t==='arbol') requestAnimationFrame(drawTreeLinks); }
 function init(){
   $('legPrio').innerHTML='<b>Prioridad (criterio de la base):</b>'+PR.map(p=>`<span><i class="sw ${p}"></i>${PRL[p]}</span>`).join('');
   $('tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" data-t="${k}">${l}</button>`).join('');
