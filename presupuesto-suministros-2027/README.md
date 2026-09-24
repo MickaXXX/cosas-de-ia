@@ -1,22 +1,28 @@
 # Dashboard · Presupuesto Mantención Suministros 2027 (Planta Antofagasta)
 
-Dashboard HTML de un solo archivo para defender el presupuesto ante la gerencia.
-Abre `index.html` en cualquier navegador; funciona sin conexión (sólo "Exportar PNG" descarga html2canvas desde cdnjs).
+Dashboard ejecutivo para defender técnicamente el presupuesto ante el Gerente de Planta. Tiene 5 vistas: Resumen ejecutivo · Presupuesto por área y prioridad · Plan anual y carga · Criticidad y continuidad · Detalle + Asistente IA.
 
-| Archivo | Contenido |
-|---|---|
-| `index.html` | Dashboard (10 pestañas, filtros por área, prioridad y mes, modo claro/oscuro, exportación a PDF y PNG) |
-| `trazabilidad.csv` | Área, prioridad, actividad, monto y fila de origen de cada cifra (separador `;`) |
-| `datos_pendientes.md` | Insumos faltantes e inconsistencias detectadas en el Excel |
-| `template.html` / `build.py` | Plantilla y generador |
+## Fuente de datos
 
-## Regenerar con un Excel actualizado
+La base es `Presupuesto 2027-Afta.xlsm` en Google Drive. El dashboard lee tres hojas: `SUM 2027`, `Presupuesto 2026` y `Proyección de Gastos`.
+
+- **⟳ Actualizar desde Drive**: descarga la versión vigente del Excel mediante el conector Google Drive de claude.ai y recalcula todo en el navegador. Sólo funciona en la versión publicada en claude.ai.
+- **Cargar Excel**: lee un `.xlsm`/`.xlsx` desde tu equipo, con la misma lógica.
+- **Copia incluida**: `index.html` trae un snapshot generado con `build.py`, para abrir sin conexión.
+
+El navegador recuerda la última base cargada.
+
+### Columnas opcionales que el dashboard reconoce en `SUM 2027`
+
+Agregarlas al Excel activa automáticamente la criticidad, la redundancia, el mapa de riesgo y los KPI asociados:
+
+`Criticidad` (Crítica/Alta/Media/Baja) · `Redundancia` (N+1 disponible / N+1 parcial / Sin respaldo / Respaldo fuera de servicio / No aplica) · `Principal/Respaldo` · `Tipo de riesgo` · `Función` · `Justificación técnica` · `Consecuencia de falla` · `Probabilidad (1-5)` · `Consecuencia (1-5)` · `Tiempo de recuperación` · `Repuestos`.
+
+El botón “Descargar plantilla de criticidad” de la vista 4 entrega esas columnas con la fila de origen de cada actividad.
+
+## Regenerar la copia incluida
 
 ```bash
 pip install openpyxl
-python3 build.py ruta/Presupuesto_2027-Afta.xlsm
+python3 build.py "ruta/Presupuesto 2027-Afta.xlsm"
 ```
-
-Criterio de prioridad (tomado del encabezado de la hoja `SUM 2027`): 1 = Reglamentaria, 2 = Continuidad operacional o seguridad, 3 = Otros. Las filas sin prioridad quedan como "Sin clasificar".
-
-Asistentes: por defecto responde un motor local que arma cada respuesta con las filas del Excel y las fichas técnicas. Opcionalmente se puede ingresar una API key de Anthropic (se guarda sólo en la pestaña del navegador) para responder con Claude usando el mismo contexto.
