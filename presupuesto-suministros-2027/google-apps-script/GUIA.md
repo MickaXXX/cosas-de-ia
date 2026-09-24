@@ -1,67 +1,50 @@
-# Publicar el dashboard en Google (Apps Script + opcional Google Sites)
+# Publicar el dashboard en Google Apps Script: paso a paso
 
-El dashboard queda como una **aplicación web de Google Apps Script** dentro de Google Workspace de CCU:
+Son sólo 2 archivos que copias y pegas: `Code.gs` e `Index`. Hazlo desde un computador con tu cuenta **@ccu.cl**.
 
-- La URL es `script.google.com/a/macros/ccu.cl/...` y sólo pueden entrar cuentas @ccu.cl.
-- La página lee `Presupuesto 2027-Afta.xlsm` **directamente desde Google Drive, con la cuenta de quien la abre**: si alguien no tiene acceso al Excel, tampoco ve los datos.
-- No trae copia de datos, no llama a servicios externos y no usa IA externa. El asistente es un motor local que arma las respuestas con las filas del Excel.
-- Se puede insertar en un sitio de **Google Sites** como página oficial.
+Código para copiar:
+- Code.gs → https://raw.githubusercontent.com/MickaXXX/cosas-de-ia/claude/dashboard-presupuesto-suministros-2027-ujjx4i/presupuesto-suministros-2027/google-apps-script/Code.gs
+- Index → https://raw.githubusercontent.com/MickaXXX/cosas-de-ia/claude/dashboard-presupuesto-suministros-2027-ujjx4i/presupuesto-suministros-2027/google-apps-script/Index.html
 
-## 1. Crear el proyecto (10 minutos, una sola vez)
+## A. Crear el proyecto
+1. Abre https://script.google.com/home y haz clic en **＋ Nuevo proyecto** (arriba a la izquierda).
+2. Arriba, donde dice **Proyecto sin título**, haz clic y escribe `Dashboard Suministros 2027` → **Cambiar nombre**.
 
-Hazlo con tu cuenta **@ccu.cl**, desde el computador.
+## B. Pegar Code.gs
+3. A la izquierda ya existe **Código.gs** con `function myFunction() {…}`. Haz clic en el texto del editor, presiona **Ctrl + A** y luego **Supr** para dejarlo vacío.
+4. En otra pestaña abre el link **Code.gs** de arriba. Presiona **Ctrl + A** y **Ctrl + C**.
+5. Vuelve al editor y presiona **Ctrl + V**. Guarda con **Ctrl + S**.
 
-1. Entra a <https://script.google.com> → **Nuevo proyecto**. Renómbralo: `Dashboard Presupuesto Suministros 2027`.
-2. Mostrar el manifiesto: ⚙️ **Configuración del proyecto** → marca **“Mostrar el archivo de manifiesto appsscript.json en el editor”**.
-3. En el editor (**< >**), reemplaza el contenido de estos archivos con los de esta carpeta:
-   - `appsscript.json`
-   - `Código.gs` (o `Code.gs`) → contenido de `Code.gs`
-4. Crea dos archivos HTML con **＋ → HTML**, **con estos nombres exactos**:
-   - `Index` → pega el contenido de `Index.html`
-   - `Xlsx` → pega el contenido de `Xlsx.html`. Es la librería que lee Excel (SheetJS, ~880 KB): ábrelo en GitHub con el botón **Raw**, selecciona todo y copia.
-5. **Guardar** (💾).
+## C. Crear y pegar Index
+6. A la izquierda, junto a **Archivos**, haz clic en **＋** → **HTML**.
+7. Escribe el nombre **`Index`**, exactamente así: con I mayúscula y sin “.html”. Presiona **Enter**.
+8. En el nuevo archivo, presiona **Ctrl + A** y **Supr**.
+9. Abre el link **Index** de arriba, presiona **Ctrl + A** y **Ctrl + C**, vuelve al editor y presiona **Ctrl + V**. Guarda con **Ctrl + S**.
 
-## 2. Publicar como aplicación web
+## D. Autorizar (una vez)
+10. Arriba, en el selector de funciones, elige **probar** y haz clic en **▷ Ejecutar**.
+11. Aparece “Se necesita autorización” → **Revisar permisos** → elige tu cuenta @ccu.cl → **Permitir**.
+12. Abajo, en el registro, debe aparecer `OK: Presupuesto 2027-Afta.xlsm · … KB`.
 
-1. **Implementar → Nueva implementación** → tipo ⚙️ **Aplicación web**.
-2. Configura:
-   - **Ejecutar como:** *Usuario que accede a la aplicación web*. Cada persona usa sus propios permisos de Drive.
-   - **Quién tiene acceso:** *Cualquier usuario de CCU* (dominio ccu.cl).
-3. **Implementar** → **Autorizar acceso**. Google pide dos permisos:
-   - leer archivos de Drive;
-   - conectarse a una URL externa, sólo si la base se convierte a Hoja de cálculo de Google, para exportarla.
-4. Copia la **URL de la aplicación web** (termina en `/exec`). Ese es el link oficial para compartir.
+## E. Publicar y obtener el link
+13. Arriba a la derecha: **Implementar** → **Nueva implementación**.
+14. Junto a “Seleccionar tipo”, haz clic en el engranaje ⚙️ → **Aplicación web**.
+15. Completa:
+    - Descripción: `v1`
+    - **Ejecutar como:** *Usuario que accede a la aplicación web*
+    - **Quién tiene acceso:** *Cualquier usuario de CCU*. Si no aparece, *Cualquier usuario con una cuenta de Google*.
+16. **Implementar**. Si lo pide, **Autorizar acceso** → tu cuenta → **Permitir**.
+17. Copia la **URL de la aplicación web**, que termina en **/exec**. **Ese es el link del dashboard.**
 
-> Cada persona que abra el link autoriza una vez los mismos permisos y necesita **acceso de lectura** al Excel en Drive. Hoy el propietario del Excel es vmarinv@ccu.cl.
+## Si algo falla
+| Mensaje | Solución |
+|---|---|
+| “No se pudo leer la base en Google Drive” | La cuenta que abre el link no tiene acceso al Excel: pide acceso de lectura a su propietario. |
+| La página queda en blanco | En el paso 7 el archivo debe llamarse exactamente `Index`. |
+| “Script function not found: doGet” | Falta guardar Code.gs (Ctrl + S) y volver a implementar. |
 
-## 3. (Opcional) Insertarlo en Google Sites
+## Actualizar a una versión nueva del código
+Pega el código nuevo y guarda. Luego ve a **Implementar → Gestionar implementaciones → ✏️ (lápiz) → Versión: Nueva versión → Implementar**. El link /exec no cambia.
 
-1. <https://sites.google.com> → crea un sitio (o usa el del área) → **Insertar → Insertar → Por URL**.
-2. Pega la URL `/exec` → **Insertar**. Agranda el recuadro a todo el ancho y alto.
-3. **Publicar** el sitio con visibilidad **sólo CCU**.
-
-## 4. Uso diario
-
-- Al abrir, el dashboard lee la versión vigente del Excel.
-- Si editas el Excel mientras la página está abierta, pulsa **⟳ Actualizar desde Drive**.
-- Las columnas opcionales (`Criticidad`, `Redundancia`, `Sistema`, `Subsistema`, …) que agregues en `SUM 2027` se reconocen solas.
-
-## 5. Cambios de código
-
-1. Pega los archivos nuevos en el editor.
-2. **Implementar → Gestionar implementaciones → ✏️ → Versión: Nueva versión → Implementar**.
-
-La URL `/exec` no cambia.
-
-Alternativa por consola, con [clasp](https://github.com/google/clasp):
-
-```bash
-npm i -g @google/clasp && clasp login
-cd google-apps-script && clasp create --type webapp --title "Dashboard Presupuesto Suministros 2027"
-clasp push && clasp deploy
-```
-
-## Notas
-
-- **Si cambia el Excel:** si se reemplaza el archivo o se convierte a Hoja de cálculo de Google con un **ID nuevo**, actualiza `FILE_ID` en `Code.gs`. El link `docs.google.com/spreadsheets/d/1Lt-agN6d1NV099LCLnDFAdZ2fV5MpEwN/...` es el mismo archivo.
-- **Exportar:** PDF usa la impresión del navegador (“Guardar como PDF”). El CSV de trazabilidad se descarga desde la vista 5.
+## Opcional: insertarlo en Google Sites
+Abre https://sites.google.com → tu sitio → **Insertar → Insertar → Por URL** → pega el link /exec → **Insertar** → **Publicar**, con visibilidad sólo CCU.
