@@ -215,10 +215,10 @@ footer{color:var(--muted);font-size:12px;padding:16px 0 40px}
 <footer class="wrap">Toda cifra proviene de una fila o celda de la base (ver “Detalle + Asistente IA”). Lo que la base no trae se muestra como “Dato pendiente” o “Información no incorporada en la base”; no se estima.</footer>
 <div id="tip" role="tooltip"></div>
 
-<!--__GAS_INCLUDE__-->
+<?!= include('Xlsx'); ?>
 <script>
 const RAW0 = /*__RAW__*/null;
-const GAS = /*__GAS__*/false;   // true en la versión Google Apps Script
+const GAS = true;   // true en la versión Google Apps Script
 const DRIVE = {server:'Google Drive', tool:'download_file_content', fileId:'1Lt-agN6d1NV099LCLnDFAdZ2fV5MpEwN'};
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 const H2C_URL = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';

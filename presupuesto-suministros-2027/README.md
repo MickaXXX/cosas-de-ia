@@ -34,3 +34,7 @@ El botón “Descargar plantilla de criticidad” de la vista 4 entrega esas col
 pip install openpyxl
 python3 build.py "ruta/Presupuesto 2027-Afta.xlsm"
 ```
+
+## Versión Google (oficial)
+
+`google-apps-script/` contiene la versión para publicar como aplicación web de Google Apps Script, restringida al dominio CCU. Lee la base directamente desde Drive y no incluye copia de datos ni servicios externos. Los pasos están en [`google-apps-script/GUIA.md`](google-apps-script/GUIA.md).
