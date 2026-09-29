@@ -53,6 +53,18 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.9.3 — el total en pesos hace de juez
+
+Racional muestra arriba el total de la cartera en pesos: **CLP 4.540.590**. Ese número no depende de leer bien cada tarjeta, así que es la única referencia confiable de la captura — y ahora la cuadratura lo usa como ancla.
+
+- Se lee el mayor monto en CLP de la pantalla (los de abajo, con signo, son la ganancia) y se convierte con el USD/CLP que la app ya trae del mercado.
+- Si la suma de las posiciones leídas no se parece al ancla, hay una fila con la coma perdida. Se prueba dividir cada fila por 10, 100 y 1000, y se corrige **la única** que deja la suma calzando. Si ninguna lo explica, no se toca nada y se avisa: mejor mostrar un descuadre que arreglarlo a la fuerza.
+- El resultado se ve en el encabezado de la cuadratura: lo que dice la app, lo que suma lo leído, y el total de Racional con su tipo de cambio.
+
+Esto es más fuerte que el freno de v1.9.2, que solo funcionaba para acciones que la app ya tenía: el ancla también atrapa el error en una posición nueva.
+
+Con las capturas reales, incluida la de la cabecera: el ancla da **US$4.671,87** (CLP 4.540.590 a 972), el lector corrige FRVO solo —*"perdió la coma: US$3.712,00 → US$37,12"*— y la suma queda en US$4.664,91, un 0,15% del ancla. Tras aplicar la cuadratura, la cartera cierra en **US$4.670,06**: US$1,81 de diferencia contra lo que muestra Racional.
+
 ## v1.9.2 — la cuadratura no se puede creer cualquier número
 
 Primera cuadratura con capturas reales y el resultado fue **US$8.140 contra los US$4.275 guardados**: casi el doble. Tres fallas, reproducidas con las mismas capturas y arregladas:

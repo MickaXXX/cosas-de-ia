@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.9.3';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -35,7 +35,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, cuadra: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
+  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, cuadra: null, ocrTotalCLP: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
   unlocked: (() => { try { return localStorage.getItem('mia.pin.ok.v1') === '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1'; } catch { return false; } })(), refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
@@ -2148,6 +2148,22 @@ function parseRacionalReceipt(lines) {
  *  · "Ganancia Total": ticker / ganancia / "USD X inversión"           → valor actual y ganancia
  *  Ojo: en Racional "inversión" es el VALOR ACTUAL de la posición, no el costo.
  */
+/** El total en pesos que Racional muestra arriba ("CLP 4.540.590").
+ *  Es el único número de la captura que no depende de leer bien cada tarjeta, así
+ *  que sirve de ancla: si la suma de las posiciones no se le parece, algo se leyó
+ *  mal. Se toma el mayor monto en CLP de la pantalla; los de abajo son la ganancia. */
+function parseTotalCLP(lines) {
+  let mayor = null;
+  for (const l of lines) {
+    for (const m of l.text.matchAll(/(\+|-|−)?\s*CLP\s*([\d][\d.,]{4,})/gi)) {
+      if (m[1]) continue;                                  // "+CLP 659.256" es la ganancia
+      const v = parseAmount(m[2]);
+      if (v != null && v > 100000 && (mayor == null || v > mayor)) mayor = v;
+    }
+  }
+  return mayor;
+}
+
 function parseRacionalLines(lines) {
   const known = new Set(S.data.tickers.map((t) => t.sym));
   const out = [];
@@ -2192,6 +2208,7 @@ async function runOcr(files, modo = 'importar') {
     await worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáéíóúñ0123456789.,-+ ' });
   } catch (e) { st.textContent = 'Error iniciando OCR: ' + e.message; return; }
   const found = [], txs = [];
+  let totalCLP = null;
   for (let k = 0; k < files.length; k++) {
     st.textContent = `Leyendo captura ${k + 1} de ${files.length}…`;
     try {
@@ -2199,7 +2216,11 @@ async function runOcr(files, modo = 'importar') {
       const lines = (data.lines || []).map((l) => ({ text: l.text.trim(), y: l.bbox.y0 })).filter((l) => l.text).sort((a, b) => a.y - b.y);
       const rec = parseRacionalReceipt(lines);      // ¿comprobante de una orden?
       if (rec) txs.push(rec);
-      else found.push(...parseRacionalLines(lines));
+      else {
+        found.push(...parseRacionalLines(lines));
+        const t = parseTotalCLP(lines);
+        if (t && (totalCLP == null || t > totalCLP)) totalCLP = t;
+      }
     } catch (e) { console.warn('OCR', e); }
   }
   await worker.terminate();
@@ -2224,8 +2245,10 @@ async function runOcr(files, modo = 'importar') {
     const cur = bySym[f.sym] || (bySym[f.sym] = { sym: f.sym });
     for (const k of ['qty', 'value', 'gain', 'rprice']) if (f[k] != null) cur[k] = f[k];
   }
-  const rows = [...Object.values(bySym), ...noSym].map(ocrRow).sort((a, b) => (b.value || 0) - (a.value || 0));
+  let rows = [...Object.values(bySym), ...noSym].map(ocrRow).sort((a, b) => (b.value || 0) - (a.value || 0));
+  rows = anclarConTotal(rows, totalCLP);
   S.ocr = rows;
+  S.ocrTotalCLP = totalCLP;
   S.ocrTx = txs.map((t) => (yaRegistrado(t) ? { ...t, dup: true, on: false } : t));
 
   if (modo === 'cuadratura') {
@@ -2245,6 +2268,35 @@ async function runOcr(files, modo = 'importar') {
     ? `Leído: ${partes.join(' y ')}.` + (noSym.length ? ` <span style="color:var(--s)">${noSym.length} sin ticker legible: escríbelo.</span>` : '')
     : 'No reconocí nada. Sirven los comprobantes de una orden ("Mi compra de…") y la lista de acciones de la pantalla Inicio.';
   res.innerHTML = renderOcrTable();
+}
+
+/** Cuadra lo leído contra el total en pesos que muestra Racional.
+ *
+ *  Una fila mal leída puede pasar desapercibida, pero el total no miente: si la
+ *  suma no se parece al total de la pantalla, hay una fila con la coma perdida. Se
+ *  prueba dividir cada fila por 10, 100 y 1000 y se corrige la única que deja la
+ *  suma calzando. Si ninguna lo explica, no se toca nada y se avisa: es mejor
+ *  mostrar un descuadre que arreglarlo a la fuerza.
+ */
+function anclarConTotal(rows, totalCLP) {
+  const tc = usdclp();
+  if (!totalCLP || !tc) return rows;
+  const ancla = totalCLP / tc;
+  const suma = (rs) => rs.reduce((a, r) => a + (r.value || 0), 0);
+  const lejos = (v) => Math.abs(v / ancla - 1) > 0.03;
+  if (!lejos(suma(rows))) return rows;
+  const candidatas = [];
+  for (let i = 0; i < rows.length; i++) {
+    if (!(rows[i].value > 0)) continue;
+    for (const f of [1000, 100, 10]) {
+      const prueba = rows.map((r, j) => (j === i ? { ...r, value: r.value / f, qty: null } : r)).map(ocrRow);
+      if (!lejos(suma(prueba))) candidatas.push({ i, f, prueba });
+    }
+  }
+  if (candidatas.length !== 1) return rows;
+  const { i, f, prueba } = candidatas[0];
+  prueba[i].fix = `el lector perdió la coma: ${fmtUSD(rows[i].value)} → ${fmtUSD(rows[i].value / f)} (cuadra con el total de Racional)`;
+  return prueba;
 }
 
 /** El lector a veces corta el ticker ("ION" por IONQ) o no lo alcanza a leer.
@@ -2351,7 +2403,9 @@ function openCuadraturaSheet() {
   S.cuadra = null;
   openSheet(`<h2 style="margin-top:4px">⚖️ Cuadrar con Racional</h2>
     <p class="small">Compara acción por acción lo que tiene guardado la app con lo que Racional muestra hoy, y te deja corregir solo lo que no calza.</p>
-    <p class="small muted">Sube las capturas de la pantalla <b>Inicio</b> en la vista <b>Último Precio</b> (la que dice "0,12343232 acciones" bajo cada ticker). Si tienes varias pantallas, súbelas todas juntas.</p>
+    <p class="small muted">Sube las capturas de la pantalla <b>Inicio</b>. Si tienes varias pantallas, súbelas todas juntas.</p>
+    <p class="small muted"><b>Incluye la de más arriba</b>, donde sale el total en pesos (<i>CLP 4.540.590</i>): ese número no depende de leer bien cada tarjeta, así que sirve de juez. Si la suma de las posiciones no le llega, la app sabe que algo se leyó mal y lo corrige.</p>
+    <p class="tiny muted">Las dos vistas sirven: <b>Último Precio</b> entrega la cantidad exacta de acciones y <b>Ganancia Total</b>, el valor de cada posición.</p>
     <p class="tiny muted"><b>No borra nada.</b> No toca tu historial de movimientos, ni el rendimiento, ni los precios promedio: solo suma los ajustes que tú aceptes. Todo ocurre en tu teléfono.</p>
     <label class="btn" for="cuadraFiles">Elegir capturas</label><input id="cuadraFiles" type="file" accept="image/*" multiple hidden>
     <div id="ocrStatus" class="small muted" style="margin-top:10px"></div>
@@ -2445,10 +2499,17 @@ function renderCuadraturaTable() {
   const problemas = c.filas.filter((f) => f.tipo !== 'ok');
   const tabla = (fs) => `<table class="ocr"><thead><tr><th></th><th>Ticker</th><th>App</th><th>Racional</th><th>Dif.</th></tr></thead>
       <tbody>${fs.map((f) => fila(f, c.filas.indexOf(f))).join('')}</tbody></table>`;
+  // El total en pesos de la cabecera es la verdad contra la que se mide todo lo
+  // demás: si la suma de las tarjetas no le llega, es que alguna se leyó mal.
+  const tc = usdclp(), ancla = (S.ocrTotalCLP && tc) ? S.ocrTotalCLP / tc : null;
+  const descuadre = ancla ? c.valorRac - ancla : null;
   return `<div class="card" style="margin-top:10px"><div class="between"><span class="small">La app dice</span><b class="mono">${fmtUSD(c.valorApp)}</b></div>
-      <div class="between"><span class="small">Racional dice</span><b class="mono">${fmtUSD(c.valorRac)}</b></div>
+      <div class="between"><span class="small">Sumando lo leído</span><b class="mono">${fmtUSD(c.valorRac)}</b></div>
+      ${ancla ? `<div class="between"><span class="small">Total de Racional<br><span class="tiny muted">${fmtCLP(S.ocrTotalCLP)} · USD/CLP ${fmtN(tc, 0)}</span></span><b class="mono">${fmtUSD(ancla)}</b></div>` : ''}
       <div class="between" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
-        <span class="small">Diferencia</span><b class="mono ${cls(dif)}">${(dif > 0 ? '+' : '') + fmtUSD(dif)}</b></div></div>
+        <span class="small">Diferencia con la app</span><b class="mono ${cls(dif)}">${(dif > 0 ? '+' : '') + fmtUSD(dif)}</b></div></div>
+    ${ancla && Math.abs(descuadre) > ancla * 0.03 ? `<p class="small" style="color:var(--ss)">⚠️ Lo leído suma ${fmtUSD(c.valorRac)} pero Racional dice ${fmtUSD(ancla)} (${fmtCLP(S.ocrTotalCLP)}): faltan ${fmtN(Math.abs(descuadre) / ancla * 100, 0)}% por cuadrar. Puede que falte una pantalla o que una fila se haya leído mal; revisa antes de aceptar.</p>`
+      : ancla ? `<p class="tiny" style="color:var(--sb)">✅ Lo leído cuadra con el total de Racional (${fmtCLP(S.ocrTotalCLP)}).</p>` : ''}
     ${c.filas.some((f) => f.tipo === 'sobra') ? `<label class="between" style="padding:10px;border:1px solid var(--border);border-radius:10px;margin-top:10px">
         <span class="small grow"><b>Estas capturas son mi cartera completa</b><br>
           <span class="tiny muted">Actívalo solo si subiste todas las pantallas. Entonces lo que no aparece es porque lo vendiste, y se registra la venta.</span></span>
