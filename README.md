@@ -53,6 +53,16 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.9.2 — la cuadratura no se puede creer cualquier número
+
+Primera cuadratura con capturas reales y el resultado fue **US$8.140 contra los US$4.275 guardados**: casi el doble. Tres fallas, reproducidas con las mismas capturas y arregladas:
+
+1. **El lector perdió una coma.** "USD 37,12 inversión" de FRVO se leyó como **3.712**, y esa sola posición sumó US$3.675 de aire. Ahora, cuando la app ya tiene esa acción, el valor guardado hace de juez: si la razón entre lo leído y lo guardado es 10, 100 o 1000, la coma se repone y la fila lo dice. Para una acción que la app no tiene no hay con qué comparar, así que entra un segundo freno: una posición que de golpe valdría más de un tercio de la cartera se muestra marcada como **valor raro** y desmarcada.
+2. **Tickers a medias.** "ION" por IONQ y una fila que se quedó sin ticker legible aparecían como dos problemas inventados: "falta en la app" por un lado y "no apareció" por el otro. Ahora el ticker se resuelve **antes** de calcular nada —sin ticker no hay precio ni cantidad— en dos pasadas: primero los legibles, después los que no lo son contra las posiciones que quedaron sin pareja. Así la fila de US$89,48 sin ticker se reconoce como DY aunque AMD esté a US$89,07, porque AMD ya encontró la suya.
+3. **Las ventas quedaban afuera.** Las posiciones que ya no aparecen vienen desmarcadas a propósito: si faltó subir una pantalla, todo lo de esa pantalla se vería vendido. Pero cuando las capturas sí están completas, había que marcarlas una por una. Ahora hay un interruptor —**"estas capturas son mi cartera completa"**— que las marca todas de un toque.
+
+Con las capturas reales, tras los tres arreglos: **US$4.670** contra los US$4.754 que muestra Racional, 27 posiciones, cuatro ventas registradas (HUBS, LITE, PLTR, SQM), dos posiciones nuevas (IREN, AVGO) y **ningún movimiento borrado** (40 → 49).
+
 ## v1.9.1 — cuadratura con Racional
 
 Los botones de **＋ Compra** y **－ Venta** salen de la pantalla Cartera: los movimientos entran por captura, no a mano, así que solo ocupaban espacio. (Siguen disponibles dentro de cada acción, por si alguna vez hace falta anotar algo a mano.)
