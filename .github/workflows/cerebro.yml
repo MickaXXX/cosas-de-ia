@@ -1,0 +1,66 @@
+name: Cerebro · ciclo horario
+
+# Cada hora: escanea el código (gratis), corre los reflejos estáticos (gratis) y,
+# si existe el secret ANTHROPIC_API_KEY, manda a Claude las próximas neuronas de
+# la agenda. En modo "lote" lo enviado en un ciclo se recoge en el siguiente.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      cerebro:
+        description: "Solo este cerebro (vacío = todos)"
+        required: false
+        default: ""
+      modo:
+        description: "Forzar modo (vacío = el de cerebros.json)"
+        type: choice
+        options: ["", lote, directo]
+        default: ""
+      sin_ia:
+        description: "Solo escaneo + reflejos (no gasta tokens)"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths: ["codigo/**", "cerebro/cerebros.json"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cerebro
+  cancel-in-progress: false
+
+jobs:
+  ciclo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar SDK de Claude
+        run: pip install "anthropic>=1.9"
+
+      - name: Ciclo del cerebro
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CEREBRO: ${{ github.event.inputs.cerebro }}
+          MODO: ${{ github.event.inputs.modo }}
+          SIN_IA: ${{ github.event.inputs.sin_ia }}
+        run: |
+          ARGS=()
+          [ -n "$CEREBRO" ] && ARGS+=(--cerebro "$CEREBRO")
+          [ -n "$MODO" ] && ARGS+=(--modo "$MODO")
+          # Un push de código solo re-escanea: la revisión con Claude queda para el ciclo horario.
+          if [ "$SIN_IA" = "true" ] || [ "${{ github.event_name }}" = "push" ]; then ARGS+=(--sin-ia); fi
+          python -m cerebro ciclo "${ARGS[@]}"
+
+      - name: Publicar memoria y visor
+        run: |
+          scripts/publish.sh "cerebro: ciclo $(date -u +%Y-%m-%dT%H:%M) [skip ci]" \
+            cerebro/cerebros/*/memoria.json docs/cerebro/data/*.json

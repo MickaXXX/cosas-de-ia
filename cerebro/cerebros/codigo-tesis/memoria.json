@@ -1,0 +1,1713 @@
+{
+ "version": 1,
+ "id": "codigo-tesis",
+ "creado": "2026-09-29T19:33:27Z",
+ "neuronas": {
+  "codigo/tesis/clasificacion_repuestos.py::generate_data": {
+   "hash": "62a657220df6",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Genera datos, pero el rango de C3 nunca alcanza su máximo.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "62a657220df6",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::calcular_S_s": {
+   "hash": "55c784c77a5a",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Fórmula correcta de S, pero trunca el stock de seguridad.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "55c784c77a5a",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::total_cost_RS": {
+   "hash": "70cb9da31c3a",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "El costo total mezcla un nivel S con inventario promedio y costos por ciclo con costos por periodo.",
+   "revisada": "2026-09-29T19:35:23Z",
+   "revisada_hash": "70cb9da31c3a",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::simular_inventario": {
+   "hash": "1a750ed50623",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Simulación con tres métricas que se miden en el momento o la forma equivocada.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "1a750ed50623",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::listar_combinaciones_criterios_atributos": {
+   "hash": "19fec7f3d20f",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Correcta, pero el orden de salida depende del hash de strings.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "19fec7f3d20f",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::asignar_politica": {
+   "hash": "677bc0cec059",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 14,
+   "resumen": "Mapeo simple y correcto.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "677bc0cec059",
+   "sin_novedad": 1
+  },
+  "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation": {
+   "hash": "4be03ab857b0",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Clasifica y simula bien la idea, pero puede caerse con clusters pequeños.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "4be03ab857b0",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation.aplicar_politica_fila": {
+   "hash": "15978655b2bf",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Calcula S dos veces por fila.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "15978655b2bf",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation.simular_fila": {
+   "hash": "9b04826b969d",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Envoltorio simple; crear una Series por fila es caro.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "9b04826b969d",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::clasificar_combinaciones": {
+   "hash": "faa81df3e2d5",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Repite trabajo idéntico muchas veces: la mayor ganancia de tiempo está aquí.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "faa81df3e2d5",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos": {
+   "hash": "d2edc82a71a7",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Enumera un producto cartesiano gigante y promedia clusters sin ponderar.",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "d2edc82a71a7",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::obtener_mejor_k_por_criterios": {
+   "hash": "eba619d3e548",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Cuatro bloques casi idénticos; correcta.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "eba619d3e548",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::encontrar_puntos_pareto": {
+   "hash": "631d43c4bf16",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 14,
+   "resumen": "Frontera correcta; lo único es el iterrows (ya detectado).",
+   "revisada": "2026-09-29T19:35:21Z",
+   "revisada_hash": "631d43c4bf16",
+   "sin_novedad": 1
+  },
+  "codigo/tesis/clasificacion_repuestos.py::analizar_criticidad_independiente": {
+   "hash": "1b9ef923e0e9",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Reconstruye con parsing de strings un dato que ya se tenía estructurado.",
+   "revisada": "2026-09-29T19:35:20Z",
+   "revisada_hash": "1b9ef923e0e9",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final": {
+   "hash": "518bc753139a",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Mezcla cálculo, comparación y gráficos; frágil con cero semillas.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "518bc753139a",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final.formato_puntos_k": {
+   "hash": "1b5cf15b6eb2",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 14,
+   "resumen": "Formatea bien; nada que mejorar.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "1b5cf15b6eb2",
+   "sin_novedad": 1
+  },
+  "codigo/tesis/clasificacion_repuestos.py::procesar_semilla": {
+   "hash": "cd036729b25a",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Depende de una variable global para los rangos.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "cd036729b25a",
+   "sin_novedad": 0
+  },
+  "codigo/tesis/clasificacion_repuestos.py::<principal>": {
+   "hash": "797397ba13ca",
+   "nacio": "2026-09-29T19:33:27Z",
+   "revisiones": 1,
+   "intervalo": 7,
+   "resumen": "Script sin guardia __main__ y con configuración que no surte efecto.",
+   "revisada": "2026-09-29T19:35:22Z",
+   "revisada_hash": "797397ba13ca",
+   "sin_novedad": 0
+  }
+ },
+ "mejoras": [
+  {
+   "id": "m76f93b2a",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generate_data",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Semilla aleatoria global",
+   "categoria": "reproducibilidad",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 2,
+   "porque": "np.random.seed cambia el estado global: cualquier otra función que use np.random altera la secuencia y los resultados dejan de ser comparables entre corridas.",
+   "propuesta": "rng = np.random.default_rng(seed) y pasar rng a las funciones que generan aleatorios.",
+   "confianza": 0.9,
+   "hash_codigo": "62a657220df6",
+   "regla": "semilla_global",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m6b42bda4",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::calcular_S_s",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Parámetros sin uso: h, k",
+   "categoria": "diseno",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "calcular_S_s recibe h, k pero nunca los lee. Confunde al lector y obliga a cada llamador a calcular y pasar datos que no sirven.",
+   "propuesta": "Quitar h, k de la firma y de todas las llamadas a calcular_S_s.",
+   "confianza": 0.9,
+   "hash_codigo": "55c784c77a5a",
+   "regla": "param_sin_uso",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "ma55553ee",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::simular_inventario",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace simular_inventario, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "1a750ed50623",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m656d8c22",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::listar_combinaciones_criterios_atributos",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace listar_combinaciones_criterios_atributos, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "19fec7f3d20f",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m7b8b6960",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "apply(axis=1) fila por fila",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 4,
+   "esfuerzo": 3,
+   "porque": "apply con axis=1 llama a Python una vez por fila y arma una Series en cada una. Con fórmulas aritméticas se puede calcular la columna completa de una vez con numpy.",
+   "propuesta": "Mapear parámetros por clase con .map() y calcular columnas con operaciones vectorizadas (p. ej. np.sqrt(df['R'] + df['L']) * df['sigma']).",
+   "confianza": 0.9,
+   "hash_codigo": "4be03ab857b0",
+   "regla": "apply_axis1",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "ma0475546",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace apply_topsis_policy_simulation, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "4be03ab857b0",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "mca49d065",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::clasificar_combinaciones",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "gc.collect() dentro del bucle",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Forzar el recolector en cada vuelta cuesta tiempo (recorre todos los objetos vivos) y casi nunca libera algo que CPython no hubiera liberado ya por conteo de referencias.",
+   "propuesta": "Quitar gc.collect() del bucle; si hace falta, llamarlo una sola vez al final del proceso.",
+   "confianza": 0.9,
+   "hash_codigo": "faa81df3e2d5",
+   "regla": "gc_en_bucle",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m115bc96b",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::clasificar_combinaciones",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Copia de DataFrame en cada vuelta",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 2,
+   "porque": "Copiar un DataFrame completo en cada iteración multiplica memoria y tiempo.",
+   "propuesta": "Copiar solo las columnas necesarias, o trabajar sobre vistas/arrays y copiar una vez fuera del bucle.",
+   "confianza": 0.9,
+   "hash_codigo": "faa81df3e2d5",
+   "regla": "copia_en_bucle",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m59847c38",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::clasificar_combinaciones",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace clasificar_combinaciones, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "faa81df3e2d5",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "me1251038",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "del de variables locales al final de la función",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Las variables locales se liberan solas al retornar; el del explícito solo agrega ruido.",
+   "propuesta": "Eliminar las sentencias del al final de la función.",
+   "confianza": 0.9,
+   "hash_codigo": "d2edc82a71a7",
+   "regla": "del_local",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m8d005452",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Cálculo repetido: map(str, atributos_tuple)",
+   "categoria": "rendimiento",
+   "severidad": "baja",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "La misma expresión se evalúa más de una vez con los mismos argumentos.",
+   "propuesta": "Calcularla una vez y guardarla en una variable: map(str, atributos_tuple)",
+   "confianza": 0.9,
+   "hash_codigo": "d2edc82a71a7",
+   "regla": "calculo_repetido",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "mc70c3cc4",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Función grande (72 líneas, complejidad 22)",
+   "categoria": "diseno",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 3,
+   "porque": "Una función que hace muchas cosas es difícil de probar y de cambiar sin romper algo.",
+   "propuesta": "Separar en funciones con una sola responsabilidad (cálculo, agregación, presentación).",
+   "confianza": 0.9,
+   "hash_codigo": "d2edc82a71a7",
+   "regla": "neurona_grande",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "me115f88f",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace consolidar_familias_k_atributos, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "d2edc82a71a7",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "mcac5aee6",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::obtener_mejor_k_por_criterios",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Comparación explícita con == True/False",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "En pandas basta con usar la columna booleana como máscara: df[df['col']] o df[~df['col']].",
+   "propuesta": "df_consolidado['Factible'] == True  →  df_consolidado['Factible']",
+   "confianza": 0.9,
+   "hash_codigo": "eba619d3e548",
+   "regla": "igual_true",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m85e01402",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::obtener_mejor_k_por_criterios",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Cálculo repetido: df_factibles.groupby('K')",
+   "categoria": "rendimiento",
+   "severidad": "baja",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "La misma expresión se evalúa más de una vez con los mismos argumentos.",
+   "propuesta": "Calcularla una vez y guardarla en una variable: df_factibles.groupby('K')",
+   "confianza": 0.9,
+   "hash_codigo": "eba619d3e548",
+   "regla": "calculo_repetido",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m041227db",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::obtener_mejor_k_por_criterios",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace obtener_mejor_k_por_criterios, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "eba619d3e548",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m8a6575a2",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::encontrar_puntos_pareto",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Recorrer con iterrows() en vez de operar vectorizado",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 4,
+   "esfuerzo": 2,
+   "porque": "iterrows crea una Series por fila: es 100–1000× más lento que operar sobre columnas.",
+   "propuesta": "Usar operaciones de columna (np.where, cummax, máscaras) o, si hay que iterar, itertuples().",
+   "confianza": 0.9,
+   "hash_codigo": "631d43c4bf16",
+   "regla": "iterrows",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m37da5afa",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::encontrar_puntos_pareto",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "del de variables locales al final de la función",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Las variables locales se liberan solas al retornar; el del explícito solo agrega ruido.",
+   "propuesta": "Eliminar las sentencias del al final de la función.",
+   "confianza": 0.9,
+   "hash_codigo": "631d43c4bf16",
+   "regla": "del_local",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m3ae2f0b9",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::encontrar_puntos_pareto",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace encontrar_puntos_pareto, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "631d43c4bf16",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "md122f401",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::analizar_criticidad_independiente",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace analizar_criticidad_independiente, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "1b9ef923e0e9",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m879040f2",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "apply(axis=1) fila por fila",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 4,
+   "esfuerzo": 3,
+   "porque": "apply con axis=1 llama a Python una vez por fila y arma una Series en cada una. Con fórmulas aritméticas se puede calcular la columna completa de una vez con numpy.",
+   "propuesta": "Mapear parámetros por clase con .map() y calcular columnas con operaciones vectorizadas (p. ej. np.sqrt(df['R'] + df['L']) * df['sigma']).",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "apply_axis1",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "mc4ae257c",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "gc.collect() dentro del bucle",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Forzar el recolector en cada vuelta cuesta tiempo (recorre todos los objetos vivos) y casi nunca libera algo que CPython no hubiera liberado ya por conteo de referencias.",
+   "propuesta": "Quitar gc.collect() del bucle; si hace falta, llamarlo una sola vez al final del proceso.",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "gc_en_bucle",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "mf2ee45c9",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "del de variables locales al final de la función",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Las variables locales se liberan solas al retornar; el del explícito solo agrega ruido.",
+   "propuesta": "Eliminar las sentencias del al final de la función.",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "del_local",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m9e80a4e8",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Comparación explícita con == True/False",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "En pandas basta con usar la columna booleana como máscara: df[df['col']] o df[~df['col']].",
+   "propuesta": "df_consolidado['Factible'] == True  →  df_consolidado['Factible']",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "igual_true",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m6a8d40cd",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Copia de DataFrame en cada vuelta",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 2,
+   "porque": "Copiar un DataFrame completo en cada iteración multiplica memoria y tiempo.",
+   "propuesta": "Copiar solo las columnas necesarias, o trabajar sobre vistas/arrays y copiar una vez fuera del bucle.",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "copia_en_bucle",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "mf96633ef",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Función grande (123 líneas, complejidad 28)",
+   "categoria": "diseno",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 3,
+   "porque": "Una función que hace muchas cosas es difícil de probar y de cambiar sin romper algo.",
+   "propuesta": "Separar en funciones con una sola responsabilidad (cálculo, agregación, presentación).",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "neurona_grande",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m4577901b",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace generar_graficos_y_resumen_final, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m00f2e65d",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::procesar_semilla",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "gc.collect() repetido (2 veces)",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Forzar el recolector en cada vuelta cuesta tiempo (recorre todos los objetos vivos) y casi nunca libera algo que CPython no hubiera liberado ya por conteo de referencias.",
+   "propuesta": "Quitar gc.collect() del bucle; si hace falta, llamarlo una sola vez al final del proceso.",
+   "confianza": 0.9,
+   "hash_codigo": "cd036729b25a",
+   "regla": "gc_en_bucle",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m7c01ef14",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::procesar_semilla",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "del de variables locales al final de la función",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Las variables locales se liberan solas al retornar; el del explícito solo agrega ruido.",
+   "propuesta": "Eliminar las sentencias del al final de la función.",
+   "confianza": 0.9,
+   "hash_codigo": "cd036729b25a",
+   "regla": "del_local",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "md318a226",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::procesar_semilla",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "Falta docstring",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Sin una línea que diga qué entra y qué sale, hay que leer toda la función para usarla.",
+   "propuesta": "\"\"\"Qué hace procesar_semilla, qué recibe y qué devuelve.\"\"\"",
+   "confianza": 0.9,
+   "hash_codigo": "cd036729b25a",
+   "regla": "sin_doc",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m5abf24c1",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::<principal>",
+   "fecha": "2026-09-29T19:33:27Z",
+   "origen": "reflejo",
+   "estado": "pendiente",
+   "titulo": "gc.collect() dentro del bucle",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Forzar el recolector en cada vuelta cuesta tiempo (recorre todos los objetos vivos) y casi nunca libera algo que CPython no hubiera liberado ya por conteo de referencias.",
+   "propuesta": "Quitar gc.collect() del bucle; si hace falta, llamarlo una sola vez al final del proceso.",
+   "confianza": 0.9,
+   "hash_codigo": "797397ba13ca",
+   "regla": "gc_en_bucle",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:33:27Z",
+     "estado": "pendiente",
+     "por": "reflejo"
+    }
+   ]
+  },
+  {
+   "id": "m33024386",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::analizar_criticidad_independiente",
+   "fecha": "2026-09-29T19:35:20Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Guardar los criterios por familia en vez de re-parsear el texto",
+   "categoria": "diseno",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 2,
+   "porque": "Depende del formato exacto 'F1:[C1,C3]; F2:[...]'; un cambio de texto rompe el análisis en silencio. consolidar_familias_k_atributos ya tiene las listas.",
+   "propuesta": "# en consolidar_familias_k_atributos\n\"criterios_familias\": tuple(frozenset(f['criterios']) for f in fam_combo),\n# aquí\nreturn len(set(row['criterios_familias'])) > 1",
+   "confianza": 0.8,
+   "hash_codigo": "1b9ef923e0e9",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:20Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m4129f740",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation.aplicar_politica_fila",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Calcular S y costo en una sola pasada vectorizada",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 2,
+   "porque": "total_cost_RS vuelve a llamar a calcular_S_s y a norm.ppf. Con un dict clase→(nivel, R) y operaciones de columna se calcula todo junto sin llamar a Python por fila.",
+   "propuesta": "pol = {'A': (0.90, 1), 'B': (0.70, 4), 'C': (0.50, 5)}\nsl = sub_df['Tipo Clase'].map(lambda c: pol[c][0])\nR = sub_df['Tipo Clase'].map(lambda c: pol[c][1])\nz = norm.ppf(sl)\nss = z * sub_df['C8'] * np.sqrt(R + sub_df['C3'])",
+   "confianza": 0.8,
+   "hash_codigo": "15978655b2bf",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m6765a6b7",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "pd.cut falla si los percentiles 50 y 80 coinciden",
+   "categoria": "robustez",
+   "severidad": "alta",
+   "impacto": 4,
+   "esfuerzo": 1,
+   "porque": "En clusters chicos o con scores empatados, clase_b == clase_a y pd.cut lanza 'bins must increase monotonically', cortando todo el experimento.",
+   "propuesta": "sub_df['Tipo Clase'] = np.select(\n    [topsis_scores >= clase_a_threshold, topsis_scores >= clase_b_threshold],\n    ['A', 'B'], default='C')",
+   "confianza": 0.85,
+   "hash_codigo": "4be03ab857b0",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m65fd3857",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Simular todos los ítems a la vez con arrays numpy",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 4,
+   "porque": "Se llama a simular_inventario una vez por ítem (1000 × 76 meses en Python puro) por cada combinación y cluster: es el cuello de botella del experimento. Con arrays de forma (n_items,) se simulan todos juntos por mes.",
+   "propuesta": "inv = S.copy()                 # arrays por ítem\nfor mes in range(1, periods + 1):\n    dem = np.maximum(0, rng.normal(mu, sd)).astype(int)\n    inv -= dem\n    ...  # misma lógica, vectorizada por ítem",
+   "confianza": 0.75,
+   "hash_codigo": "4be03ab857b0",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "ma98f1ad0",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Modifica el DataFrame recibido",
+   "categoria": "diseno",
+   "severidad": "baja",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "Agrega columnas al sub_df del llamador; hoy funciona porque le pasan copias, pero es una trampa si alguien reutiliza el DataFrame.",
+   "propuesta": "sub_df = sub_df.copy()  # al inicio, o devolver solo las columnas nuevas",
+   "confianza": 0.7,
+   "hash_codigo": "4be03ab857b0",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mbe6b9150",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::apply_topsis_policy_simulation.simular_fila",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Devolver tupla en vez de pd.Series",
+   "categoria": "rendimiento",
+   "severidad": "baja",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "Construir una Series por fila cuesta más que la propia llamada; con result_type='expand' basta una tupla.",
+   "propuesta": "return simular_inventario(row['R'], row['S_s'], row['C1'], row['C8'], row['C3'], periods=76, warm_up=12)\n# y en el apply: result_type='expand'",
+   "confianza": 0.8,
+   "hash_codigo": "9b04826b969d",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mca59d900",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::calcular_S_s",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "int() trunca el stock de seguridad hacia abajo",
+   "categoria": "correccion",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "int(z*σx) corta los decimales: con z*σx = 199.9 el SS queda en 199. Sistemáticamente se queda bajo el nivel de servicio objetivo; con redondeo hacia arriba el nivel se cumple.",
+   "propuesta": "S_s = d * (R + L) + math.ceil(z * sigma_x)",
+   "confianza": 0.8,
+   "hash_codigo": "55c784c77a5a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m327ef0ea",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::clasificar_combinaciones",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "K=1 se recalcula idéntico para cada atributo",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 1,
+   "porque": "Con k=1 el atributo no participa: TOPSIS + simulación dan lo mismo para cada attr_comb del mismo crit_comb (2–3 veces el mismo cálculo por combinación).",
+   "propuesta": "cache_k1 = {}\nclave = tuple(crit_comb)\nif clave not in cache_k1:\n    cache_k1[clave] = apply_topsis_policy_simulation(df.copy(), crit_comb)[1]\nmetrica = cache_k1[clave]",
+   "confianza": 0.85,
+   "hash_codigo": "faa81df3e2d5",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m1a7785d7",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::clasificar_combinaciones",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "KMeans se entrena de nuevo para cada combinación de criterios",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 4,
+   "esfuerzo": 1,
+   "porque": "Los clusters dependen solo de (atributo, k), no de los criterios; hoy se ajusta KMeans(n_init=20) 15 veces con los mismos datos.",
+   "propuesta": "from functools import lru_cache\n@lru_cache(None)\ndef clusters(attr, k):\n    return KMeans(n_clusters=k, n_init=20, random_state=42).fit_predict(df[list(attr)])",
+   "confianza": 0.85,
+   "hash_codigo": "faa81df3e2d5",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mee423fff",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "FR/CSL/Av promedian clusters sin ponderar por tamaño",
+   "categoria": "correccion",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 2,
+   "porque": "Un cluster de 20 ítems pesa igual que uno de 600 en el FR de la cartera. El indicador de la política combinada queda sesgado y cambia qué K parece mejor.",
+   "propuesta": "n = [len(f['assigned_ids']) for f in fam_combo]\nfill_rate_prom = np.average([f['Fill_rate_promedio'] for f in fam_combo], weights=n)",
+   "confianza": 0.85,
+   "hash_codigo": "d2edc82a71a7",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "maabc386f",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Podar familias dominadas antes del producto cartesiano",
+   "categoria": "rendimiento",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 3,
+   "porque": "Con 15 familias por cluster, K=5 genera 15⁵ ≈ 760 mil combinaciones por atributo, cada una con uniones de sets de 1000 IDs. Una familia dominada (más costo y menos FR) en su cluster nunca forma parte de una combinación eficiente.",
+   "propuesta": "def no_dominadas(fams):\n    return [f for f in fams if not any(\n        g['total_cost'] <= f['total_cost'] and g['Fill_rate_promedio'] >= f['Fill_rate_promedio'] and g is not f\n        for g in fams)]",
+   "confianza": 0.7,
+   "hash_codigo": "d2edc82a71a7",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m5234ccab",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::consolidar_familias_k_atributos",
+   "fecha": "2026-09-29T19:35:21Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "El chequeo de solapamiento es innecesario",
+   "categoria": "rendimiento",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Los clusters salen de una misma partición de KMeans: son disjuntos por construcción y cubren todos los IDs. Las uniones de sets en cada combinación solo gastan tiempo y memoria.",
+   "propuesta": "Eliminar el bucle de all_ids/solapado y usar\nn_ids = sum(len(f['assigned_ids']) for f in fam_combo)",
+   "confianza": 0.75,
+   "hash_codigo": "d2edc82a71a7",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:21Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "ma285c0db",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "División por cero si no hay semillas",
+   "categoria": "robustez",
+   "severidad": "media",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "Los print finales dividen por total_semillas; con el dict vacío (o todas las semillas infactibles) el proceso termina en ZeroDivisionError después de todo el cómputo.",
+   "propuesta": "if not dict_semillas_consolidadas:\n    return pd.DataFrame(), {}",
+   "confianza": 0.9,
+   "hash_codigo": "518bc753139a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mc39352ed",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generar_graficos_y_resumen_final",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Separar el cálculo de la comparación K=1 vs K>1",
+   "categoria": "diseno",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 3,
+   "porque": "Los cuatro bloques min/max por métrica se repiten a mano. Una función comparar_k1(df_factibles) → dict hace testeable el resultado central de la tesis y elimina 16 líneas casi iguales.",
+   "propuesta": "METRICAS = {'CT (suma de los CT de cada familia)': 'min', 'FR (promedio)': 'max',\n            'CSL (promedio)': 'max', 'Av (promedio)': 'max'}\nk1 = df_factibles[df_factibles.K == 1].agg(METRICAS)\nkm = df_factibles[df_factibles.K > 1].agg(METRICAS)",
+   "confianza": 0.8,
+   "hash_codigo": "518bc753139a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m3ec377f6",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generate_data",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "randint excluye el máximo: C3 (lead time) nunca vale 3",
+   "categoria": "correccion",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 1,
+   "porque": "np.random.randint(min, max) es [min, max). Con (\"C3\", 1, 3) el lead time solo toma 1 o 2, y lo mismo recorta todos los rangos declarados. El experimento no cubre el escenario que describe la tabla de características.",
+   "propuesta": "rng = np.random.default_rng(seed)\ndf = pd.DataFrame({\n    c: rng.integers(lo, hi, num_samples, endpoint=True)\n    for c, lo, hi in caracteristicas\n})",
+   "confianza": 0.95,
+   "hash_codigo": "62a657220df6",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m7dbb89e0",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::generate_data",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "random.seed(seed) sobra: el módulo random no se usa",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 1,
+   "esfuerzo": 1,
+   "porque": "Solo numpy genera aleatorios; sembrar random da la falsa impresión de que otra parte depende de él.",
+   "propuesta": "Eliminar random.seed(seed) (y el import random).",
+   "confianza": 0.9,
+   "hash_codigo": "62a657220df6",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mb87b42c5",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::listar_combinaciones_criterios_atributos",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Orden no determinista al convertir a set",
+   "categoria": "reproducibilidad",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "list(set(...)) depende de PYTHONHASHSEED: entre corridas cambian el orden de criterios y de atributos, y con ello las etiquetas y el orden de las filas de los Excel.",
+   "propuesta": "for crit in combinations(todas, r):\n    leftover = [c for c in todas if c not in crit]\n    for attr in combinations(leftover, s):\n        combos.append((list(crit), list(attr)))",
+   "confianza": 0.9,
+   "hash_codigo": "19fec7f3d20f",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mabe3b07a",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::obtener_mejor_k_por_criterios",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Generalizar con un dict métrica→sentido",
+   "categoria": "legibilidad",
+   "severidad": "baja",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "Los cuatro groupby/idxmin/idxmax y los cuatro print repiten la misma operación; agregar una métrica hoy exige tocar 5 lugares.",
+   "propuesta": "METRICAS = {'CT (suma de los CT de cada familia)': 'idxmin', 'FR (promedio)': 'idxmax',\n            'CSL (promedio)': 'idxmax', 'Av (promedio)': 'idxmax'}\ng = df_factibles.groupby('K')\npor_k = {m: df_factibles.loc[getattr(g[m], f)()] for m, f in METRICAS.items()}",
+   "confianza": 0.75,
+   "hash_codigo": "eba619d3e548",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mdb1ef259",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::<principal>",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "OMP_NUM_THREADS se fija después de importar numpy/sklearn",
+   "categoria": "correccion",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "La variable se lee al cargar las librerías BLAS/OpenMP; asignarla después del import no limita los hilos, así que la advertencia de KMeans sigue igual.",
+   "propuesta": "import os\nos.environ[\"OMP_NUM_THREADS\"] = \"1\"   # primera línea del archivo\nimport numpy as np",
+   "confianza": 0.85,
+   "hash_codigo": "797397ba13ca",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m2fa93dff",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::<principal>",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Backend TkAgg rompe la ejecución sin pantalla",
+   "categoria": "robustez",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Los gráficos solo se guardan en PNG. TkAgg exige un display: en un servidor, Colab o GitHub Actions el script falla al importar pyplot.",
+   "propuesta": "matplotlib.use(\"Agg\")",
+   "confianza": 0.9,
+   "hash_codigo": "797397ba13ca",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mac1bb542",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::<principal>",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Envolver el experimento en if __name__ == \"__main__\"",
+   "categoria": "diseno",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Importar el archivo (para reutilizar una función o probarla) ejecuta el experimento completo y escribe los Excel.",
+   "propuesta": "def main():\n    ...\n\nif __name__ == \"__main__\":\n    main()",
+   "confianza": 0.9,
+   "hash_codigo": "797397ba13ca",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "mdb650e7e",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::procesar_semilla",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Pasar caracteristicas_rangos como parámetro",
+   "categoria": "diseno",
+   "severidad": "baja",
+   "impacto": 2,
+   "esfuerzo": 1,
+   "porque": "Lee caracteristicas_rangos del módulo: no se puede reutilizar ni probar con otros rangos sin tocar el global.",
+   "propuesta": "def procesar_semilla(seed, combos_crit_attr, caracteristicas_rangos, num_samples=1000):",
+   "confianza": 0.8,
+   "hash_codigo": "cd036729b25a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "me3e2159f",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::simular_inventario",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "CSL se mide después de recibir el pedido, no antes",
+   "categoria": "correccion",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 2,
+   "porque": "Un ciclo falla si hubo quiebre antes de que llegue la reposición. Aquí se revisa inventory<=0 después de sumar lo recibido, lo que casi nunca ocurre: el CSL simulado sale inflado.",
+   "propuesta": "for lt, amount in transit_orders:\n    if lt == 1:\n        ciclos_completos += 1\n        if inventory < 0:          # antes de recibir\n            ciclos_negativos += 1\n        inventory += amount",
+   "confianza": 0.85,
+   "hash_codigo": "1a750ed50623",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "md0eb364b",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::simular_inventario",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Fill rate suma el backlog acumulado, no el faltante nuevo",
+   "categoria": "correccion",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 2,
+   "porque": "inventario_total_negativo_medido suma el nivel negativo de cada mes; un quiebre que dura 3 meses se cuenta 3 veces. La demanda no atendida del mes es el aumento del backlog.",
+   "propuesta": "antes = max(0, -inventory)\ninventory -= demand\nfaltante = max(0, -inventory) - antes\nif mes > warm_up:\n    faltante_total += min(demand, max(0, faltante))",
+   "confianza": 0.85,
+   "hash_codigo": "1a750ed50623",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m04ef29a2",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::simular_inventario",
+   "fecha": "2026-09-29T19:35:22Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Demanda normal puede ser negativa",
+   "categoria": "correccion",
+   "severidad": "media",
+   "impacto": 3,
+   "esfuerzo": 1,
+   "porque": "Con media 600 y σ 300, ~2 % de los meses la demanda sale negativa y 'devuelve' stock, mejorando artificialmente las métricas.",
+   "propuesta": "demand = max(0, int(round(rng.normal(demand_mean, demand_std))))",
+   "confianza": 0.9,
+   "hash_codigo": "1a750ed50623",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:22Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m08fccf89",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::total_cost_RS",
+   "fecha": "2026-09-29T19:35:23Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Costo de mantener usa S (nivel máximo) en vez del stock de seguridad",
+   "categoria": "correccion",
+   "severidad": "alta",
+   "impacto": 5,
+   "esfuerzo": 1,
+   "porque": "En (R,S) el inventario promedio ≈ d·R/2 + SS. Sumar S_s = d(R+L)+SS agrega h·d·(R+L) de más, y como R cambia por clase (1, 4, 5), distorsiona la comparación de costos entre familias.",
+   "propuesta": "ss = z * sigma_d * np.sqrt(R + L)\nholding_cost = h * (d * R / 2 + ss)",
+   "confianza": 0.9,
+   "hash_codigo": "70cb9da31c3a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:23Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "m262ca25a",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::total_cost_RS",
+   "fecha": "2026-09-29T19:35:23Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Quiebre esperado: usar la función de pérdida G(z), no φ(z)",
+   "categoria": "correccion",
+   "severidad": "alta",
+   "impacto": 4,
+   "esfuerzo": 1,
+   "porque": "E[faltante por ciclo] = σx·G(z) con G(z)=φ(z)−z(1−Φ(z)). Usar solo φ(z) sobrestima el quiebre, más aún con niveles de servicio altos (clase A, z=1.28).",
+   "propuesta": "sigma_x = sigma_d * np.sqrt(R + L)\nG = norm.pdf(z) - z * norm.sf(z)\nexpected_backorders = sigma_x * G",
+   "confianza": 0.85,
+   "hash_codigo": "70cb9da31c3a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:23Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  },
+  {
+   "id": "madbaf05d",
+   "neurona": "codigo/tesis/clasificacion_repuestos.py::total_cost_RS",
+   "fecha": "2026-09-29T19:35:23Z",
+   "origen": "claude",
+   "estado": "pendiente",
+   "titulo": "Costo de quiebre por ciclo sumado a costos por periodo",
+   "categoria": "correccion",
+   "severidad": "media",
+   "impacto": 4,
+   "esfuerzo": 1,
+   "porque": "k/R es costo por periodo, pero b·E[faltante] es por ciclo de revisión. Para que las tres partes estén en la misma unidad hay que dividir el quiebre por R.",
+   "propuesta": "backorder_cost = b * expected_backorders / R",
+   "confianza": 0.75,
+   "hash_codigo": "70cb9da31c3a",
+   "modelo": "claude-code",
+   "historial": [
+    {
+     "fecha": "2026-09-29T19:35:23Z",
+     "estado": "pendiente",
+     "por": "claude"
+    }
+   ]
+  }
+ ],
+ "lote": null,
+ "uso": {
+  "total": {},
+  "dias": {}
+ },
+ "bitacora": [
+  {
+   "fecha": "2026-09-29T19:33:27Z",
+   "evento": "escaneo",
+   "detalle": "18 nuevas, 0 cambiadas, 0 desaparecidas"
+  },
+  {
+   "fecha": "2026-09-29T19:33:27Z",
+   "evento": "reflejos",
+   "detalle": "31 hallazgos estáticos nuevos"
+  },
+  {
+   "fecha": "2026-09-29T19:35:20Z",
+   "evento": "revisión",
+   "detalle": "analizar_criticidad_independiente: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "apply_topsis_policy_simulation.aplicar_politica_fila: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "apply_topsis_policy_simulation: 3 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "apply_topsis_policy_simulation.simular_fila: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "asignar_politica: 0 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "calcular_S_s: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "clasificar_combinaciones: 2 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "consolidar_familias_k_atributos: 3 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:21Z",
+   "evento": "revisión",
+   "detalle": "encontrar_puntos_pareto: 0 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "generar_graficos_y_resumen_final.formato_puntos_k: 0 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "generar_graficos_y_resumen_final: 2 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "generate_data: 2 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "listar_combinaciones_criterios_atributos: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "obtener_mejor_k_por_criterios: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "<principal>: 3 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "procesar_semilla: 1 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:22Z",
+   "evento": "revisión",
+   "detalle": "simular_inventario: 3 mejoras nuevas"
+  },
+  {
+   "fecha": "2026-09-29T19:35:23Z",
+   "evento": "revisión",
+   "detalle": "total_cost_RS: 3 mejoras nuevas"
+  }
+ ],
+ "actualizado": "2026-09-29T19:39:15Z"
+}

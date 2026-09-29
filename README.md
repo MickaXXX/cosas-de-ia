@@ -24,6 +24,7 @@ scripts/discover.py      ← agrega al radar lo que aparece en screeners y notic
 scripts/update_quotes.py          ← descarga de cotizaciones en lote
 scripts/news_ai.py                ← clasificación de noticias (heurística + Claude opcional)
 docs/vendor/tess/                 ← motor OCR (tesseract.js) para leer capturas de Racional
+cerebro/ + docs/cerebro/          ← 🧠 Cerebros: revisión horaria del código neurona por neurona (ver cerebro/README.md)
 ```
 
 ## Puesta en marcha (una sola vez, 5 minutos)

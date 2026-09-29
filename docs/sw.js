@@ -59,6 +59,8 @@ async function revalidar(req, cache, esShell) {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  // /cerebro/ es otra app (el visor de cerebros): siempre va a la red, sin esta caché.
+  if (url.pathname.includes('/cerebro/')) return;
   const esDatos = url.pathname.includes('/data/');
   const req = esDatos ? new Request(url.origin + url.pathname) : e.request;   // ignora ?fresh=1
   const exigeRed = url.searchParams.has('fresh');                            // botón "Actualizar"

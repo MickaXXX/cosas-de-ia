@@ -1,0 +1,18 @@
+{
+ "repo": "MickaXXX/cosas-de-ia",
+ "generado": "2026-09-29T19:39:15Z",
+ "cerebros": [
+  {
+   "id": "codigo-tesis",
+   "nombre": "Código de la tesis",
+   "tipo": "codigo",
+   "objetivo": "Experimento de clasificación de repuestos por familias (k-means + TOPSIS con pesos de entropía + política (R,S) simulada, frontera de Pareto). Importa: que los resultados sean correctos y reproducibles por semilla, y que el experimento de 30 semillas corra rápido.",
+   "neuronas": 18,
+   "revisadas": 18,
+   "pendientes": 59,
+   "aceptadas": 0,
+   "costo_usd": 0,
+   "generado": "2026-09-29T19:39:15Z"
+  }
+ ]
+}

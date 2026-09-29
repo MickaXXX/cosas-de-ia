@@ -1,0 +1,19 @@
+{
+  "cerebros": [
+    {
+      "id": "codigo-tesis",
+      "nombre": "Código de la tesis",
+      "tipo": "codigo",
+      "rutas": ["codigo/tesis"],
+      "excluir": [],
+      "objetivo": "Experimento de clasificación de repuestos por familias (k-means + TOPSIS con pesos de entropía + política (R,S) simulada, frontera de Pareto). Importa: que los resultados sean correctos y reproducibles por semilla, y que el experimento de 30 semillas corra rápido.",
+      "modelo": "claude-opus-5-5",
+      "esfuerzo": "medium",
+      "modo": "lote",
+      "neuronas_por_ciclo": 2,
+      "max_mejoras_por_neurona": 3,
+      "tokens_por_dia": 120000,
+      "revisar_cada_dias": 7
+    }
+  ]
+}

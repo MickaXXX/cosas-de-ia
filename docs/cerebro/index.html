@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cerebros</title>
+  <meta name="theme-color" content="#070b10">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='6' fill='%2335d0a5'/><circle cx='16' cy='16' r='12' fill='none' stroke='%2335d0a5' stroke-opacity='.4' stroke-width='2'/></svg>">
+  <link rel="stylesheet" href="cerebro.css">
+</head>
+<body>
+  <header class="top">
+    <button class="btn only-mobile" id="bt-side" aria-label="Filtros">☰</button>
+    <div class="brand"><span class="dot"></span><span class="txt">Cerebros</span></div>
+    <nav class="tabs">
+      <button class="tab on" data-v="grafo">Grafo</button>
+      <button class="tab" data-v="mejoras">Mejoras<span class="n" id="n-pend" hidden></span></button>
+      <button class="tab" data-v="cerebro">Cerebro</button>
+    </nav>
+    <span class="sp"></span>
+    <span class="chip-info" id="info"></span>
+    <select id="sel-cerebro" aria-label="Cerebro"></select>
+  </header>
+
+  <div class="app">
+    <aside class="side" id="side">
+      <h4>Buscar</h4>
+      <input class="search" id="q" placeholder="Función, archivo…" autocomplete="off">
+      <ul class="results" id="resultados"></ul>
+
+      <h4>Tipos de nodo <span class="acts"><button data-all="tipos">Todos</button>|<button data-none="tipos">Ninguno</button></span></h4>
+      <div class="chips" id="f-tipos"></div>
+
+      <h4>Relaciones</h4>
+      <div class="chips" id="f-rel"></div>
+
+      <h4>Sub-neuronas (mejoras)</h4>
+      <div class="chips" id="f-est"></div>
+
+      <h4>Vista</h4>
+      <label class="chk"><input type="checkbox" id="o-salud" checked> Colorear por salud</label>
+      <label class="chk"><input type="checkbox" id="o-pend"> Solo neuronas con pendientes</label>
+      <label class="chk"><input type="checkbox" id="o-std" checked> Ocultar librerías estándar</label>
+      <label class="chk"><input type="checkbox" id="o-lbl" checked> Mostrar etiquetas</label>
+      <label class="chk"><input type="checkbox" id="o-anim" checked> Pulso de actividad</label>
+
+      <h4>Archivos</h4>
+      <ul class="files" id="archivos"></ul>
+    </aside>
+
+    <main class="main">
+      <section class="view on" id="v-grafo">
+        <div id="grafo"></div>
+        <div class="hud" id="hud"></div>
+        <div class="zoom"><button id="z-fit" title="Encuadrar">⤢</button><button id="z-reheat" title="Reordenar">↻</button></div>
+        <div class="legend" id="leyenda"></div>
+        <div class="tip" id="tip"></div>
+      </section>
+
+      <section class="view" id="v-mejoras">
+        <h1 class="v">Mejoras propuestas</h1>
+        <p class="lead">Cada mejora es una sub-neurona de la función que mejora. Acepta, rechaza o marca como aplicada: el cerebro aprende de tus decisiones y ajusta lo que propone después.</p>
+        <div class="bar">
+          <select id="m-est"><option value="pendiente">Pendientes</option><option value="aceptada">Aceptadas</option><option value="aplicada">Aplicadas</option><option value="rechazada">Rechazadas</option><option value="obsoleta">Obsoletas</option><option value="">Todas</option></select>
+          <select id="m-cat"><option value="">Toda categoría</option></select>
+          <select id="m-ori"><option value="">Todo origen</option><option value="claude">Claude</option><option value="reflejo">Reflejo (estático)</option></select>
+          <select id="m-ord"><option value="valor">Más valor primero</option><option value="fecha">Más recientes</option><option value="neurona">Por neurona</option></select>
+          <input id="m-q" placeholder="Filtrar texto…">
+          <span class="count" id="m-count"></span>
+        </div>
+        <div class="list" id="m-lista"></div>
+      </section>
+
+      <section class="view" id="v-cerebro"></section>
+
+      <aside class="detail" id="detalle"></aside>
+    </main>
+  </div>
+
+  <div class="tray" id="bandeja">
+    <span id="b-txt"></span>
+    <button class="btn primary" id="b-enviar">Enviar a GitHub</button>
+    <button class="btn" id="b-cli">Copiar comandos</button>
+    <button class="btn" id="b-borrar">Descartar</button>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="vendor/force-graph.min.js"></script>
+  <script src="cerebro.js"></script>
+</body>
+</html>
