@@ -53,6 +53,26 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v1.9.1 — cuadratura con Racional
+
+Los botones de **＋ Compra** y **－ Venta** salen de la pantalla Cartera: los movimientos entran por captura, no a mano, así que solo ocupaban espacio. (Siguen disponibles dentro de cada acción, por si alguna vez hace falta anotar algo a mano.)
+
+En su lugar, **⚖️ Cuadrar con Racional**: compara acción por acción lo que tiene guardado la app con lo que Racional muestra hoy, y corrige solo lo que no calza. **No borra nada**: no toca el historial de movimientos, ni el rendimiento, ni los precios promedio.
+
+Cada diferencia se clasifica según cuánta plata representa, y cada una se arregla distinto:
+
+| | Cuándo | Qué hace |
+|---|---|---|
+| **Cuadra** | menos de US$1 | nada, va plegada |
+| **Fracciones** | menos de US$5 | afina la cantidad de la compra guardada, sin inventar una operación que no hiciste |
+| **Movimiento** | US$5 o más | anota una compra o venta al precio de hoy |
+| **Falta en la app** | está en Racional y no en la app | la agrega como posición nueva |
+| **No apareció** | está en la app y no en las capturas | ofrece cerrarla, **desmarcada por defecto**: lo más probable es que falte subir una pantalla |
+
+Arriba, el total de las dos partes y la diferencia. Si en la misma tanda se leyó el comprobante de la operación que explica una diferencia, la fila lo indica: ese comprobante trae el precio real y vale más que cualquier ajuste.
+
+Verificado en el navegador con las cuatro situaciones a la vez: una venta de NVDA por US$115, una posición nueva, un símbolo ausente de las capturas y una diferencia de fracciones de US$2,59 en SNDK. Tras aplicar, la cartera pasa de 40 a 42 movimientos —**ninguno borrado**—, el precio promedio de SNDK queda intacto en US$1.752,696 y la posición ausente sigue ahí porque venía desmarcada.
+
 ## v1.9.0 — Portfolio Decision Engine
 
 La hoja de IA deja de responder "cómo repartir mejor el riesgo" y pasa a responder la pregunta completa, todos los días:

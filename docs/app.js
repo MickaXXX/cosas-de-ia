@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -35,7 +35,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
+  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, cuadra: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
   unlocked: (() => { try { return localStorage.getItem('mia.pin.ok.v1') === '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1'; } catch { return false; } })(), refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
@@ -210,6 +210,7 @@ const locked = () => !S.unlocked;
 /** Acciones que cambian datos: todas pasan por el candado. */
 const ACCIONES_PROTEGIDAS = new Set([
   'addTx', 'saveTx', 'deleteTx', 'editTx', 'ocr', 'ocrImport', 'ocrTxImport', 'syncRadar',
+  'cuadrar', 'cuadraAplicar',
   'pfNew', 'pfRename', 'pfDelete', 'pfDuplicate', 'pfAcceptShare',
   'import', 'doImport', 'reset', 'addLog', 'saveKeys', 'clearAiKey', 'fav', 'pubPull', 'txFix', 'txAlias', 'txDrop',
   'clearPending',
@@ -592,8 +593,11 @@ function viewCartera() {
           <div class="tiny muted mono" style="text-align:right">${d ? fmtUSD(d.price) + ' ' + pct(d.chg1d) : ''}</div></div>
       </div>`;
     }
-    html += `</div><div class="btn-row"><button class="btn green" data-action="addTx" data-type="buy">＋ Compra</button><button class="btn danger" data-action="addTx" data-type="sell">－ Venta</button></div>
-      <button class="btn secondary" data-action="ocr">📷 Actualizar desde capturas de Racional</button>`;
+    // Los movimientos entran por captura, no a mano: los botones de compra y venta
+    // solo estorbaban. En su lugar, lo que de verdad hacía falta: comprobar que lo
+    // guardado coincide con lo que Racional muestra hoy.
+    html += `</div><button class="btn secondary" data-action="ocr">📷 Actualizar desde capturas de Racional</button>
+      <button class="btn secondary" style="margin-top:8px" data-action="cuadrar">⚖️ Cuadrar con Racional</button>`;
 
     const bySym = open.map((p) => ({ label: p.sym, value: p.value || 0 }));
     const parts = foldOthers(bySym);
@@ -2172,7 +2176,7 @@ function parseRacionalLines(lines) {
   return out;
 }
 
-async function runOcr(files) {
+async function runOcr(files, modo = 'importar') {
   if (!files.length) return;
   const st = $('#ocrStatus'), res = $('#ocrResult');
   if (!window.Tesseract) {
@@ -2212,6 +2216,15 @@ async function runOcr(files) {
   S.ocr = rows;
   S.ocrTx = txs.map((t) => (yaRegistrado(t) ? { ...t, dup: true, on: false } : t));
 
+  if (modo === 'cuadratura') {
+    S.cuadra = cuadrar(rows, txs);
+    const n = S.cuadra.filas.filter((f) => f.tipo !== 'ok').length;
+    st.innerHTML = rows.length
+      ? `Leídas <b>${rows.length}</b> posiciones en Racional. ${n ? `<b>${n}</b> no cuadran.` : 'Todo cuadra.'}`
+      : 'No reconocí ninguna posición. Necesito la lista de la pantalla <b>Inicio</b> en la vista <b>Último Precio</b>.';
+    res.innerHTML = renderCuadraturaTable();
+    return;
+  }
   const conQty = rows.filter((r) => r.qty != null).length, conGain = rows.filter((r) => r.gain != null).length;
   const partes = [];
   if (S.ocrTx.length) partes.push(`<b>${S.ocrTx.length}</b> ${S.ocrTx.length === 1 ? 'movimiento' : 'movimientos'} de compra/venta`);
@@ -2277,6 +2290,161 @@ function renderOcrTable() {
     ${faltaCosto ? `<p class="tiny" style="color:var(--s)">A algunas posiciones les falta la ganancia, así que su precio promedio se asume igual al de mercado. Sube también la vista <b>Ganancia Total</b> para que quede exacto.</p>` : ''}
     <p class="tiny muted">Importar <b>reemplaza</b> la posición de cada ticker detectado; los demás no se tocan.</p>
     <button class="btn" data-action="ocrImport">Importar ${sel.length} posiciones</button>`;
+}
+
+// ----------------------------------------------------------------------------
+// Cuadratura: lo guardado contra lo que Racional muestra hoy
+// ----------------------------------------------------------------------------
+/** Umbrales de la cuadratura, en dólares de diferencia.
+ *  Bajo el primero es redondeo; bajo el segundo son fracciones de acción que
+ *  Racional ajusta solo; sobre él, alguien compró o vendió. */
+const CUADRA_OK = 1.0;
+const CUADRA_FRACCION = 5.0;
+
+function openCuadraturaSheet() {
+  S.cuadra = null;
+  openSheet(`<h2 style="margin-top:4px">⚖️ Cuadrar con Racional</h2>
+    <p class="small">Compara acción por acción lo que tiene guardado la app con lo que Racional muestra hoy, y te deja corregir solo lo que no calza.</p>
+    <p class="small muted">Sube las capturas de la pantalla <b>Inicio</b> en la vista <b>Último Precio</b> (la que dice "0,12343232 acciones" bajo cada ticker). Si tienes varias pantallas, súbelas todas juntas.</p>
+    <p class="tiny muted"><b>No borra nada.</b> No toca tu historial de movimientos, ni el rendimiento, ni los precios promedio: solo suma los ajustes que tú aceptes. Todo ocurre en tu teléfono.</p>
+    <label class="btn" for="cuadraFiles">Elegir capturas</label><input id="cuadraFiles" type="file" accept="image/*" multiple hidden>
+    <div id="ocrStatus" class="small muted" style="margin-top:10px"></div>
+    <div id="ocrResult"></div>`);
+  $('#cuadraFiles').addEventListener('change', (e) => runOcr([...e.target.files], 'cuadratura'));
+}
+
+/** Compara las posiciones guardadas con las leídas y clasifica cada diferencia. */
+function cuadrar(rows, txs) {
+  const { open } = positions();
+  const mios = {};
+  for (const p of open) if (p.qty > 0) mios[p.sym] = p;
+  const suyos = {};
+  for (const r of rows) {
+    if (!r.sym || r.qty == null || !(r.qty > 0)) continue;
+    suyos[r.sym.toUpperCase()] = r;
+  }
+  // Un comprobante leído en la misma tanda explica la diferencia mejor que
+  // cualquier ajuste: si está, se prefiere registrarlo con su precio real.
+  const conComprobante = new Set((txs || []).filter((t) => t.sym && !yaRegistrado(t)).map((t) => t.sym));
+
+  const filas = [];
+  for (const sym of new Set([...Object.keys(mios), ...Object.keys(suyos)])) {
+    const mio = mios[sym], suyo = suyos[sym];
+    const precio = tk(sym)?.price ?? suyo?.rprice ?? mio?.data?.price ?? null;
+    const qApp = mio ? mio.qty : 0;
+    const qRac = suyo ? suyo.qty : null;
+    if (qRac == null) {                                   // está guardada y no apareció
+      filas.push({ sym, tipo: 'sobra', qApp, qRac: null, precio, diff: -qApp,
+                   usd: precio ? -qApp * precio : null, on: false });
+      continue;
+    }
+    const diff = qRac - qApp;
+    const usd = precio ? diff * precio : null;
+    let tipo;
+    if (!mio) tipo = 'falta';
+    else if (usd != null && Math.abs(usd) < CUADRA_OK) tipo = 'ok';
+    else if (usd != null && Math.abs(usd) < CUADRA_FRACCION) tipo = 'fraccion';
+    else tipo = 'movimiento';
+    filas.push({ sym, tipo, qApp, qRac, precio, diff, usd,
+                 comprobante: conComprobante.has(sym), on: tipo !== 'ok' });
+  }
+  const orden = { movimiento: 0, falta: 1, sobra: 2, fraccion: 3, ok: 4 };
+  filas.sort((a, b) => (orden[a.tipo] - orden[b.tipo]) || Math.abs(b.usd || 0) - Math.abs(a.usd || 0));
+  const valorApp = open.reduce((a, p) => a + (p.value || 0), 0);
+  const valorRac = filas.reduce((a, f) => a + ((f.qRac != null && f.precio) ? f.qRac * f.precio : 0), 0);
+  return { filas, valorApp, valorRac, leidas: Object.keys(suyos).length };
+}
+
+const CUADRA_ETIQUETA = {
+  ok: ['Cuadra', 'b'], fraccion: ['Fracciones', 'h'], movimiento: ['Movimiento', 's'],
+  falta: ['Falta en la app', 'sb'], sobra: ['No apareció', 'ss'],
+};
+
+function renderCuadraturaTable() {
+  const c = S.cuadra;
+  if (!c?.filas?.length) return '';
+  const desc = {
+    ok: 'Coincide con Racional.',
+    fraccion: 'Diferencia de fracciones de acción: se afina la cantidad guardada, sin registrar una operación que no hiciste.',
+    movimiento: 'Diferencia grande: se registra como compra o venta al precio de hoy.',
+    falta: 'Racional la tiene y la app no: se agrega como posición nueva.',
+    sobra: 'La app la tiene y no apareció en las capturas. Solo márcala si subiste todas las pantallas; si no, es que faltó una.',
+  };
+  const tipos = [...new Set(c.filas.map((f) => f.tipo))];
+  const sel = c.filas.filter((f) => f.on);
+  const fila = (f, i) => {
+    const [txt, cls_] = CUADRA_ETIQUETA[f.tipo];
+    return `<tr class="${f.on ? '' : 'off'}">
+      <td>${f.tipo === 'ok' ? '' : `<input type="checkbox" data-cuadra="on" data-i="${i}" ${f.on ? 'checked' : ''}>`}</td>
+      <td><b>${esc(f.sym)}</b><div class="tiny"><span class="chip sm ${cls_}">${txt}</span></div></td>
+      <td class="mono tiny">${f.qApp ? fmtQ(f.qApp) : '—'}</td>
+      <td class="mono tiny">${f.qRac != null ? fmtQ(f.qRac) : '—'}</td>
+      <td class="mono tiny ${cls(f.usd)}">${f.usd == null ? '—' : (f.usd > 0 ? '+' : '') + fmtUSD(f.usd)}
+        ${f.comprobante ? '<div class="tiny" style="color:var(--sb)">hay comprobante</div>' : ''}</td></tr>`;
+  };
+  const dif = c.valorRac - c.valorApp;
+  // Las que cuadran van plegadas: la tabla es para ver lo que NO calza, y
+  // veinticinco filas verdes tapaban las tres que importaban.
+  const cuadran = c.filas.filter((f) => f.tipo === 'ok');
+  const problemas = c.filas.filter((f) => f.tipo !== 'ok');
+  const tabla = (fs) => `<table class="ocr"><thead><tr><th></th><th>Ticker</th><th>App</th><th>Racional</th><th>Dif.</th></tr></thead>
+      <tbody>${fs.map((f) => fila(f, c.filas.indexOf(f))).join('')}</tbody></table>`;
+  return `<div class="card" style="margin-top:10px"><div class="between"><span class="small">La app dice</span><b class="mono">${fmtUSD(c.valorApp)}</b></div>
+      <div class="between"><span class="small">Racional dice</span><b class="mono">${fmtUSD(c.valorRac)}</b></div>
+      <div class="between" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
+        <span class="small">Diferencia</span><b class="mono ${cls(dif)}">${(dif > 0 ? '+' : '') + fmtUSD(dif)}</b></div></div>
+    ${problemas.length ? tabla(problemas) : '<p class="small" style="color:var(--sb)">✅ Todo cuadra: no hay nada que corregir.</p>'}
+    ${cuadran.length ? `<details style="margin-top:8px"><summary class="small">${cuadran.length} ${cuadran.length === 1 ? 'posición cuadra' : 'posiciones cuadran'} ✅</summary>${tabla(cuadran)}</details>` : ''}
+    <ul class="reasons small" style="margin-top:8px">${tipos.filter((t) => t !== 'ok').map((t) => `<li><b>${CUADRA_ETIQUETA[t][0]}:</b> ${desc[t]}</li>`).join('')}</ul>
+    <p class="tiny muted">Los precios promedio, las fechas y el historial de rendimiento no se tocan.</p>
+    <button class="btn" data-action="cuadraAplicar" ${sel.length ? '' : 'disabled'}>Cuadrar ${sel.length} ${sel.length === 1 ? 'posición' : 'posiciones'}</button>`;
+}
+
+/** Aplica lo marcado. Nunca borra un movimiento: afina una cantidad o suma uno nuevo. */
+function cuadraAplicar() {
+  const sel = (S.cuadra?.filas || []).filter((f) => f.on && f.tipo !== 'ok');
+  if (!sel.length) return toast('Nada marcado');
+  const d0 = today();
+  let afinadas = 0, movimientos = 0;
+  for (const f of sel) {
+    const sym = f.sym;
+    if (f.tipo === 'fraccion') {
+      // Fracciones: se corrige la medición anterior en vez de inventar una
+      // operación. Se elige la compra más reciente de ese ticker; si no hay
+      // ninguna que ajustar, se anota un ajuste mínimo.
+      const compras = PF().tx.filter((t) => t.sym === sym && (t.type || 'buy') === 'buy' && t.qty > 0);
+      const destino = compras[compras.length - 1];
+      if (destino && destino.qty + f.diff > 0) {
+        destino.qty = +(destino.qty + f.diff).toFixed(8);
+        destino.note = `${destino.note ? destino.note + ' · ' : ''}cantidad afinada en la cuadratura del ${d0}`;
+        afinadas++;
+      } else {
+        PF().tx.push({ id: uid(), sym, type: f.diff > 0 ? 'buy' : 'sell', qty: +Math.abs(f.diff).toFixed(8),
+                       price: f.precio ? +f.precio.toFixed(4) : 0, date: d0,
+                       note: 'Ajuste de fracciones (cuadratura con Racional)', src: 'cuadratura' });
+        movimientos++;
+      }
+      continue;
+    }
+    const cantidad = f.tipo === 'sobra' ? f.qApp : Math.abs(f.diff);
+    if (!(cantidad > 0)) continue;
+    PF().tx.push({
+      id: uid(), sym, type: (f.tipo === 'sobra' || f.diff < 0) ? 'sell' : 'buy',
+      qty: +cantidad.toFixed(8), price: f.precio ? +f.precio.toFixed(4) : 0,
+      amount: f.precio ? +(cantidad * f.precio).toFixed(2) : null, date: d0,
+      note: f.tipo === 'sobra' ? 'Cierre: ya no aparece en Racional (cuadratura)'
+            : f.tipo === 'falta' ? 'Posición nueva detectada en la cuadratura'
+            : 'Diferencia detectada en la cuadratura con Racional',
+      src: 'cuadratura',
+    });
+    if (!tk(sym)) addPending(sym);
+    movimientos++;
+  }
+  savePf(); closeSheet(); S.cuadra = null; S.ocr = null; S.ocrTx = null; render();
+  const partes = [];
+  if (movimientos) partes.push(`${movimientos} ${movimientos === 1 ? 'movimiento anotado' : 'movimientos anotados'}`);
+  if (afinadas) partes.push(`${afinadas} ${afinadas === 1 ? 'cantidad afinada' : 'cantidades afinadas'}`);
+  toast(`Cuadrado: ${partes.join(' · ')}`);
 }
 
 /** ¿Este movimiento ya está en la cartera? Vale el número de orden y, si el OCR
@@ -2601,6 +2769,8 @@ async function runAction(a, el) {
     case 'ocr': if (roGuard()) break; openOcrSheet(); break;
     case 'ocrImport': ocrImport(); break;
     case 'ocrTxImport': ocrTxImport(); break;
+    case 'cuadrar': if (roGuard()) break; openCuadraturaSheet(); break;
+    case 'cuadraAplicar': cuadraAplicar(); break;
     case 'moreRadar': S.radar.limit += RADAR_PAGE; render({ keepScroll: true }); break;
     case 'syncRadar': syncToRadar(); break;
     case 'requestTicker': if (sym) { addPending(sym); toast(`${sym} anotado. Agrégalo al radar desde Ajustes`); } break;
@@ -2634,6 +2804,11 @@ async function runAction(a, el) {
 
 document.addEventListener('input', (e) => {
   if (e.target.id === 'radarQ') { S.radar.q = e.target.value; S.radar.limit = RADAR_PAGE; const pos = e.target.selectionStart; render(); const q = $('#radarQ'); q.focus(); q.setSelectionRange(pos, pos); }
+  if (e.target.dataset.cuadra && S.cuadra) {
+    const f = S.cuadra.filas[+e.target.dataset.i];
+    if (f) { f.on = e.target.checked; $('#ocrResult').innerHTML = renderCuadraturaTable(); }
+    return;
+  }
   if (e.target.dataset.otx && S.ocrTx) {
     const i = +e.target.dataset.i, k = e.target.dataset.otx, t = S.ocrTx[i]; if (!t) return;
     if (k === 'on') t.on = e.target.checked;
