@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -2206,8 +2206,20 @@ async function runOcr(files, modo = 'importar') {
 
   // Fusiona lo leído en todas las capturas: la vista de acciones aporta la cantidad
   // exacta y la de ganancia aporta el valor y el resultado.
+  // Dos pasadas: primero las filas con ticker legible, y recién después las que no
+  // lo traen, contra las posiciones que quedaron sin pareja. Al revés, una fila sin
+  // ticker de US$89,48 tenía dos candidatas (DY en US$90,99 y AMD en US$89,07) y se
+  // descartaba, aunque AMD ya estaba resuelta por su propia fila.
   const bySym = {}, noSym = [];
-  for (const f of found) {
+  const conTicker = found.filter((f) => f.sym), sinTicker = found.filter((f) => !f.sym);
+  for (const f0 of conTicker) {
+    const f = { ...f0, sym: resolverTicker(f0) };
+    if (!f.sym) { noSym.push(f); continue; }
+    const cur = bySym[f.sym] || (bySym[f.sym] = { sym: f.sym });
+    for (const k of ['qty', 'value', 'gain', 'rprice']) if (f[k] != null) cur[k] = f[k];
+  }
+  for (const f0 of sinTicker) {
+    const f = { ...f0, sym: resolverTicker(f0, new Set(Object.keys(bySym))) };
     if (!f.sym) { noSym.push(f); continue; }
     const cur = bySym[f.sym] || (bySym[f.sym] = { sym: f.sym });
     for (const k of ['qty', 'value', 'gain', 'rprice']) if (f[k] != null) cur[k] = f[k];
@@ -2235,11 +2247,45 @@ async function runOcr(files, modo = 'importar') {
   res.innerHTML = renderOcrTable();
 }
 
+/** El lector a veces corta el ticker ("ION" por IONQ) o no lo alcanza a leer.
+ *  Si hay una sola posición propia que empiece igual, es esa; si la fila viene sin
+ *  ticker, se busca la posición cuyo valor calce. Sin esto, la misma acción salía
+ *  dos veces en la cuadratura: una como "falta en la app" y otra como "no apareció".
+ *  Se resuelve antes de calcular nada, porque sin ticker no hay precio ni cantidad. */
+function resolverTicker(r, yaUsados) {
+  const sym = (r.sym || '').toUpperCase();
+  if (sym && tk(sym)) return sym;
+  const mias = positions().open.filter((p) => p.qty > 0 && !(yaUsados && yaUsados.has(p.sym)));
+  if (sym) {
+    const cand = mias.filter((p) => p.sym.startsWith(sym) || sym.startsWith(p.sym));
+    if (cand.length === 1) return cand[0].sym;
+    return sym;
+  }
+  if (r.value > 0) {
+    const cerca = mias.filter((p) => p.value && Math.abs(p.value / r.value - 1) < 0.08);
+    if (cerca.length === 1) return cerca[0].sym;
+  }
+  return sym;
+}
+
 /** Recalcula una fila: la cantidad manda y el valor sale del precio de mercado actual. */
 function ocrRow(r) {
   const d = tk(r.sym);
   const price = d?.price ?? r.rprice ?? null;
   let qty = r.qty;
+  // El lector pierde la coma de los valores chicos: "USD 37,12 inversión" se leyó
+  // como 3.712 y esa posición pasó a valer cien veces más. Cuando la app ya tiene
+  // esa acción, el valor guardado es el juez: si la razón es 10, 100 o 1000, la
+  // coma se perdió y se repone. Sin referencia no se adivina: se avisa.
+  if (r.value != null && qty == null) {
+    const mia = positions().open.find((x) => x.sym === r.sym);
+    const ref = mia?.value;
+    if (ref > 0) {
+      const razon = r.value / ref;
+      const f = [1000, 100, 10].find((x) => Math.abs(razon / x - 1) < 0.25);
+      if (f) { r = { ...r, value: r.value / f, fix: `el lector perdió la coma: ${fmtUSD(r.value)} → ${fmtUSD(r.value / f)}` }; }
+    }
+  }
   if (qty == null && r.value != null && price) qty = r.value / price;      // sin cantidad: se deduce
   const value = (qty != null && price) ? qty * price : (r.value ?? null);  // valor a precio de mercado
   // El costo sale del valor calculado, no del número leído: si el OCR pierde la coma
@@ -2320,13 +2366,15 @@ function cuadrar(rows, txs) {
   for (const p of open) if (p.qty > 0) mios[p.sym] = p;
   const suyos = {};
   for (const r of rows) {
-    if (!r.sym || r.qty == null || !(r.qty > 0)) continue;
-    suyos[r.sym.toUpperCase()] = r;
+    const sym = (r.sym || '').toUpperCase();              // ya viene resuelto del lector
+    if (!sym || r.qty == null || !(r.qty > 0)) continue;
+    suyos[sym] = { ...r, sym };
   }
   // Un comprobante leído en la misma tanda explica la diferencia mejor que
   // cualquier ajuste: si está, se prefiere registrarlo con su precio real.
   const conComprobante = new Set((txs || []).filter((t) => t.sym && !yaRegistrado(t)).map((t) => t.sym));
 
+  const valorApp0 = open.reduce((a, p) => a + (p.value || 0), 0);
   const filas = [];
   for (const sym of new Set([...Object.keys(mios), ...Object.keys(suyos)])) {
     const mio = mios[sym], suyo = suyos[sym];
@@ -2345,8 +2393,14 @@ function cuadrar(rows, txs) {
     else if (usd != null && Math.abs(usd) < CUADRA_OK) tipo = 'ok';
     else if (usd != null && Math.abs(usd) < CUADRA_FRACCION) tipo = 'fraccion';
     else tipo = 'movimiento';
-    filas.push({ sym, tipo, qApp, qRac, precio, diff, usd,
-                 comprobante: conComprobante.has(sym), on: tipo !== 'ok' });
+    // Freno de cordura: una sola posición que de golpe pasaría a valer más de un
+    // tercio de la cartera, y que la app no tiene de dónde confirmar, casi siempre
+    // es un valor mal leído. Se muestra, se explica y se deja desmarcada.
+    const valorFila = precio ? qRac * precio : 0;
+    const dudosa = !mio && valorFila > 0.35 * (valorApp0 || 1);
+    filas.push({ sym, tipo, qApp, qRac, precio, diff, usd, dudosa,
+                 fix: suyo.fix || null,
+                 comprobante: conComprobante.has(sym), on: tipo !== 'ok' && !dudosa });
   }
   const orden = { movimiento: 0, falta: 1, sobra: 2, fraccion: 3, ok: 4 };
   filas.sort((a, b) => (orden[a.tipo] - orden[b.tipo]) || Math.abs(b.usd || 0) - Math.abs(a.usd || 0));
@@ -2380,7 +2434,9 @@ function renderCuadraturaTable() {
       <td class="mono tiny">${f.qApp ? fmtQ(f.qApp) : '—'}</td>
       <td class="mono tiny">${f.qRac != null ? fmtQ(f.qRac) : '—'}</td>
       <td class="mono tiny ${cls(f.usd)}">${f.usd == null ? '—' : (f.usd > 0 ? '+' : '') + fmtUSD(f.usd)}
-        ${f.comprobante ? '<div class="tiny" style="color:var(--sb)">hay comprobante</div>' : ''}</td></tr>`;
+        ${f.comprobante ? '<div class="tiny" style="color:var(--sb)">hay comprobante</div>' : ''}
+        ${f.fix ? `<div class="tiny" style="color:var(--s)">${esc(f.fix)}</div>` : ''}
+        ${f.dudosa ? '<div class="tiny" style="color:var(--ss)">valor raro: revísalo antes de aceptar</div>' : ''}</td></tr>`;
   };
   const dif = c.valorRac - c.valorApp;
   // Las que cuadran van plegadas: la tabla es para ver lo que NO calza, y
@@ -2393,6 +2449,10 @@ function renderCuadraturaTable() {
       <div class="between"><span class="small">Racional dice</span><b class="mono">${fmtUSD(c.valorRac)}</b></div>
       <div class="between" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
         <span class="small">Diferencia</span><b class="mono ${cls(dif)}">${(dif > 0 ? '+' : '') + fmtUSD(dif)}</b></div></div>
+    ${c.filas.some((f) => f.tipo === 'sobra') ? `<label class="between" style="padding:10px;border:1px solid var(--border);border-radius:10px;margin-top:10px">
+        <span class="small grow"><b>Estas capturas son mi cartera completa</b><br>
+          <span class="tiny muted">Actívalo solo si subiste todas las pantallas. Entonces lo que no aparece es porque lo vendiste, y se registra la venta.</span></span>
+        <input type="checkbox" data-cuadra="todas" ${c.todas ? 'checked' : ''}></label>` : ''}
     ${problemas.length ? tabla(problemas) : '<p class="small" style="color:var(--sb)">✅ Todo cuadra: no hay nada que corregir.</p>'}
     ${cuadran.length ? `<details style="margin-top:8px"><summary class="small">${cuadran.length} ${cuadran.length === 1 ? 'posición cuadra' : 'posiciones cuadran'} ✅</summary>${tabla(cuadran)}</details>` : ''}
     <ul class="reasons small" style="margin-top:8px">${tipos.filter((t) => t !== 'ok').map((t) => `<li><b>${CUADRA_ETIQUETA[t][0]}:</b> ${desc[t]}</li>`).join('')}</ul>
@@ -2805,8 +2865,14 @@ async function runAction(a, el) {
 document.addEventListener('input', (e) => {
   if (e.target.id === 'radarQ') { S.radar.q = e.target.value; S.radar.limit = RADAR_PAGE; const pos = e.target.selectionStart; render(); const q = $('#radarQ'); q.focus(); q.setSelectionRange(pos, pos); }
   if (e.target.dataset.cuadra && S.cuadra) {
-    const f = S.cuadra.filas[+e.target.dataset.i];
-    if (f) { f.on = e.target.checked; $('#ocrResult').innerHTML = renderCuadraturaTable(); }
+    if (e.target.dataset.cuadra === 'todas') {
+      S.cuadra.todas = e.target.checked;
+      for (const f of S.cuadra.filas) if (f.tipo === 'sobra') f.on = e.target.checked;
+    } else {
+      const f = S.cuadra.filas[+e.target.dataset.i];
+      if (f) f.on = e.target.checked;
+    }
+    $('#ocrResult').innerHTML = renderCuadraturaTable();
     return;
   }
   if (e.target.dataset.otx && S.ocrTx) {
