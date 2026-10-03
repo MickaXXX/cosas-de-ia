@@ -1,0 +1,101 @@
+{
+  "_ayuda": "Tu filtro personal para el Radar Upwork. Edita y haz commit: el próximo run lo usa. Pesos de palabras: 1 = señal débil, 3 = encaje fuerte. En el título cuentan el doble.",
+
+  "perfil": {
+    "nombre": "Mickael Inostroza",
+    "titular": "Ingeniero industrial (UCN): análisis de datos, supply chain, confiabilidad y docencia",
+    "resumen_para_propuestas": "Industrial engineer from Chile (UCN). Thesis on spare-parts criticality using k-means clustering, TOPSIS and entropy weights to set (R,S) inventory policies. Hands-on operations experience at a beverage plant (water treatment, wastewater/RILES, KPIs, root-cause analysis). Strong in Excel modelling, Python data analysis, inventory and supply chain optimisation, reliability engineering (Weibull, RCM, FMEA, MTBF) and teaching technical content in Spanish and English.",
+    "idiomas": ["español nativo", "inglés"]
+  },
+
+  "preferencias": {
+    "tarifa_hora_minima_usd": 15,
+    "tarifa_hora_objetivo_usd": 30,
+    "precio_fijo_minimo_usd": 40,
+    "prefiero_trabajos_cortos": true,
+    "max_postulantes_comodo": 15,
+    "horas_maximas_antiguedad": 72,
+    "afinidad_minima": 18,
+    "mostrar_maximo": 60
+  },
+
+  "pesos_puntaje": {
+    "afinidad": 0.35,
+    "cliente": 0.20,
+    "competencia": 0.15,
+    "pago": 0.15,
+    "esfuerzo": 0.15
+  },
+
+  "areas": {
+    "datos": {
+      "etiqueta": "Datos y Excel",
+      "busqueda": "excel OR \"power bi\" OR dashboard OR \"data analysis\" OR \"data analyst\" OR pandas OR \"google sheets\" OR vba",
+      "palabras": {
+        "excel": 3, "power bi": 3, "dashboard": 2, "data analysis": 3, "data analyst": 3,
+        "pandas": 2, "python": 2, "google sheets": 2, "vba": 2, "pivot": 2, "spreadsheet": 2,
+        "data cleaning": 2, "kpi": 2, "forecast": 2, "statistic": 2, "regression": 1,
+        "visualization": 1, "report": 1, "sql": 1, "tableau": 1, "financial model": 1
+      }
+    },
+    "supply": {
+      "etiqueta": "Supply chain",
+      "busqueda": "\"supply chain\" OR inventory OR logistics OR \"demand forecasting\" OR procurement OR \"operations research\" OR \"route optimization\"",
+      "palabras": {
+        "supply chain": 3, "inventory": 3, "logistics": 3, "demand forecast": 3, "procurement": 2,
+        "warehouse": 2, "s&op": 3, "eoq": 3, "safety stock": 3, "reorder point": 3, "abc analysis": 3,
+        "operations research": 3, "linear programming": 2, "optimization": 2, "optimisation": 2,
+        "route": 1, "vehicle routing": 2, "simulation": 2, "lean": 1, "six sigma": 2, "process improvement": 2,
+        "industrial engineer": 3, "operations": 1,
+        "criticality": 3, "multi-criteria": 3, "mcdm": 3, "topsis": 3, "k-means": 3, "clustering": 2, "stocking polic": 3
+      }
+    },
+    "confiabilidad": {
+      "etiqueta": "Confiabilidad",
+      "busqueda": "reliability OR maintenance OR RCM OR FMEA OR weibull OR \"spare parts\" OR \"asset management\" OR CMMS",
+      "palabras": {
+        "reliability": 3, "maintenance": 2, "rcm": 3, "fmea": 3, "fmeca": 3, "weibull": 3,
+        "mtbf": 3, "mttr": 3, "spare parts": 3, "asset management": 2, "cmms": 2, "root cause": 2,
+        "rca": 2, "preventive maintenance": 3, "predictive maintenance": 2, "condition monitoring": 1,
+        "availability": 1, "water treatment": 2, "wastewater": 2, "iso 55000": 2, "iso 14224": 3
+      }
+    },
+    "docencia": {
+      "etiqueta": "Docencia y redacción",
+      "busqueda": "tutor OR \"course material\" OR \"technical writing\" OR \"spanish\" OR \"research assistant\" OR \"lesson plan\" OR \"curriculum\"",
+      "palabras": {
+        "tutor": 2, "tutoring": 2, "course": 2, "curriculum": 2, "lesson": 2, "training material": 2,
+        "technical writ": 3, "research": 1, "literature review": 2, "thesis": 2, "academic": 1,
+        "spanish": 2, "español": 3, "translation": 1, "engineering": 2, "industrial engineering": 3,
+        "statistics": 2, "operations management": 3, "case study": 2
+      }
+    }
+  },
+
+  "bonos": {
+    "_ayuda": "Suman puntos de afinidad aunque no definan el área.",
+    "spanish": 6, "español": 8, "latam": 4, "latin america": 4, "chile": 6, "mining": 4, "minería": 6
+  },
+
+  "descartar_si_contiene": [
+    "unpaid", "free trial task", "for free", "no budget", "equity only", "commission only",
+    "onlyfans", "adult content", "casino", "gambling", "write my essay", "take my exam",
+    "do my homework", "take my online class"
+  ],
+
+  "alertas": {
+    "telegram": "Pide salir de Upwork (Telegram)",
+    "whatsapp": "Pide salir de Upwork (WhatsApp)",
+    "skype": "Pide salir de Upwork (Skype)",
+    "outside upwork": "Pide trabajar fuera de Upwork",
+    "pay outside": "Pide pagar fuera de Upwork",
+    "crypto": "Mencionan cripto: revisa bien",
+    "bitcoin": "Mencionan cripto: revisa bien",
+    "test task": "Pide una prueba previa: confirma que se paga",
+    "sample work": "Pide trabajo de muestra: confirma que se paga",
+    "upfront": "Mencionan pagos por adelantado",
+    "urgent": "Urgente: suele traer plazos apretados",
+    "asap": "Urgente: suele traer plazos apretados",
+    "long term": "Largo plazo: más horas comprometidas"
+  }
+}

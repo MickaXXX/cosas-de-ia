@@ -1,0 +1,103 @@
+name: Radar Upwork
+
+# Busca ofertas con la API oficial de Upwork cada 6 horas, las puntúa contra
+# config/upwork_profile.json y publica docs/upwork/data/jobs.json.
+# El panel (docs/upwork/) abre issues titulados "upwork: actualizar" (botón
+# Actualizar) o "upwork: conectar" (primer enlace con tu cuenta).
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: upwork-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    if: github.event_name != 'issues' || (startsWith(github.event.issue.title, 'upwork:') && github.event.issue.user.login == github.repository_owner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install "requests>=2.31" "anthropic>=1.11"
+
+      - name: Buscar y puntuar ofertas
+        env:
+          UPWORK_CLIENT_ID: ${{ secrets.UPWORK_CLIENT_ID }}
+          UPWORK_CLIENT_SECRET: ${{ secrets.UPWORK_CLIENT_SECRET }}
+          UPWORK_REFRESH_TOKEN: ${{ secrets.UPWORK_REFRESH_TOKEN }}
+          UPWORK_REDIRECT_URI: ${{ vars.UPWORK_REDIRECT_URI }}
+          UPWORK_TOKEN_OUT: ${{ runner.temp }}/upwork_rt
+          UPWORK_MODEL: ${{ vars.UPWORK_MODEL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          TITLE: ${{ github.event.issue.title }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          # Debe coincidir con la "Callback URL" registrada en tu API key de Upwork.
+          export UPWORK_REDIRECT_URI="${UPWORK_REDIRECT_URI:-https://${OWNER,,}.github.io/${REPO}/upwork/}"
+          if [[ "$TITLE" == "upwork: conectar"* ]]; then
+            python scripts/upwork_radar.py --code-from-issue
+          else
+            python scripts/upwork_radar.py
+          fi
+
+      # Upwork puede entregar un refresh token nuevo en cada renovación. Un
+      # GITHUB_TOKEN no puede escribir secretos, por eso hace falta GH_PAT
+      # (token fino, solo este repo, permiso "Secrets: read and write").
+      - name: Guardar el token renovado
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          RT_FILE: ${{ runner.temp }}/upwork_rt
+        run: |
+          [ -s "$RT_FILE" ] || { echo "Upwork no entregó token nuevo."; exit 0; }
+          echo "::add-mask::$(cat "$RT_FILE")"
+          ok=false
+          if [ -n "$GH_TOKEN" ] && gh secret set UPWORK_REFRESH_TOKEN --repo "$GITHUB_REPOSITORY" < "$RT_FILE"; then
+            ok=true
+          else
+            echo "::warning::No pude guardar el refresh token nuevo: falta el secreto GH_PAT o no tiene permiso de escribir secretos."
+          fi
+          rm -f "$RT_FILE"
+          jq --argjson ok "$ok" '.token.persisted = $ok' docs/upwork/data/jobs.json > "$RUNNER_TEMP/j.json"
+          mv "$RUNNER_TEMP/j.json" docs/upwork/data/jobs.json
+
+      - name: Publicar
+        run: |
+          scripts/publish.sh "data: radar upwork $(date -u +%Y-%m-%dT%H:%M) [skip ci]" \
+            docs/upwork/data/jobs.json
+
+      - name: Cerrar el issue
+        if: always() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number }}
+          TITLE: ${{ github.event.issue.title }}
+        run: |
+          F=docs/upwork/data/jobs.json
+          ESTADO=$(jq -r '.status // "?"' "$F" 2>/dev/null || echo "?")
+          if [ "$ESTADO" = "ok" ]; then
+            MSG=$(jq -r '"Listo: \(.stats.analizadas) ofertas analizadas, \(.stats.postula) para postular, \(.stats.descartadas) descartadas. Recarga el panel."' "$F")
+          else
+            MSG="El radar terminó con estado **$ESTADO**: $(jq -r '.message // "revisa el log del workflow"' "$F" 2>/dev/null)"
+          fi
+          if [[ "$TITLE" == "upwork: conectar"* ]]; then
+            # El código ya se canjeó y sin el client secret no sirve, pero no se deja a la vista.
+            gh issue edit "$N" --body "Código de autorización usado y borrado."
+          fi
+          gh issue comment "$N" --body "$MSG"
+          gh issue close "$N" --reason completed

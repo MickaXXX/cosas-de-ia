@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar Upwork</title>
+<meta name="description" content="Ofertas de Upwork filtradas y puntuadas para tu perfil cada 6 horas.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230f766e'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='white' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='white'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #14181f; --muted: #5d6675; --line: #e3e6eb;
+  --accent: #0f766e; --accent-ink: #ffffff; --accent-soft: #e0f2ef;
+  --good: #15803d; --good-soft: #dcfce7; --mid: #a16207; --mid-soft: #fef3c7;
+  --bad: #b91c1c; --bad-soft: #fee2e2; --chip: #eef1f5;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --card: #161b22; --ink: #e6edf3; --muted: #8d96a3; --line: #262d36;
+    --accent: #2dd4bf; --accent-ink: #04201c; --accent-soft: #0f2e2a;
+    --good: #4ade80; --good-soft: #10291a; --mid: #fbbf24; --mid-soft: #2e2410;
+    --bad: #f87171; --bad-soft: #301414; --chip: #1f2630; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --card: #161b22; --ink: #e6edf3; --muted: #8d96a3; --line: #262d36;
+  --accent: #2dd4bf; --accent-ink: #04201c; --accent-soft: #0f2e2a;
+  --good: #4ade80; --good-soft: #10291a; --mid: #fbbf24; --mid-soft: #2e2410;
+  --bad: #f87171; --bad-soft: #301414; --chip: #1f2630; --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+.wrap { max-width: 860px; margin: 0 auto; padding: 16px 16px 64px; }
+header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+button, .btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 10px; padding: 8px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; }
+button.primary, .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .6; cursor: default; }
+.banner { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; font-size: 14px; border: 1px solid var(--line); background: var(--card); }
+.banner.info { background: var(--accent-soft); border-color: transparent; }
+.banner.warn { background: var(--mid-soft); border-color: transparent; }
+.banner.err { background: var(--bad-soft); border-color: transparent; }
+.banner b { display: block; margin-bottom: 2px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; box-shadow: var(--shadow); }
+.kpi .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: 12px; color: var(--muted); }
+@media (max-width: 560px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { border-radius: 999px; padding: 6px 12px; min-height: 34px; white-space: nowrap; font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+select { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); min-height: 34px; }
+label.tog { font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.list { display: grid; gap: 12px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+.card.dim { opacity: .55; }
+.top { display: flex; gap: 12px; align-items: flex-start; }
+.ring { flex: 0 0 auto; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; }
+.ring.postula { background: var(--good-soft); color: var(--good); }
+.ring.revisa { background: var(--mid-soft); color: var(--mid); }
+.ring.baja { background: var(--chip); color: var(--muted); }
+.title { font-weight: 650; font-size: 16px; line-height: 1.3; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.title:hover { text-decoration: underline; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 6px; }
+.tag { font-size: 12px; background: var(--chip); color: var(--muted); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.tag.v-postula { background: var(--good-soft); color: var(--good); font-weight: 600; }
+.tag.v-revisa { background: var(--mid-soft); color: var(--mid); font-weight: 600; }
+.tag.new { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.tag.warn { background: var(--mid-soft); color: var(--mid); }
+.tag.kw { background: var(--accent-soft); color: var(--ink); }
+.client { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.client .ok { color: var(--good); font-weight: 600; }
+.client .no { color: var(--bad); font-weight: 600; }
+.ai { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 10px; font-size: 14px; }
+.ai p { margin: 4px 0; }
+.ai .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.opener { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-top: 6px; white-space: pre-wrap; font-size: 14px; }
+.desc { font-size: 14px; color: var(--muted); margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+details.why { margin-top: 8px; font-size: 13px; }
+details.why summary { cursor: pointer; color: var(--muted); }
+.bars { display: grid; grid-template-columns: 92px 1fr 32px; gap: 4px 8px; align-items: center; margin-top: 6px; }
+.bar { height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.actions button, .actions .btn { font-size: 13px; padding: 6px 10px; min-height: 34px; }
+.actions button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.empty { text-align: center; color: var(--muted); padding: 32px 12px; }
+section.box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; margin-top: 16px; }
+section.box > details > summary { cursor: pointer; font-weight: 650; padding: 10px 0; }
+ol.steps { padding-left: 20px; margin: 4px 0 12px; }
+ol.steps li { margin-bottom: 12px; }
+code { background: var(--chip); padding: 1px 5px; border-radius: 5px; font-size: 13px; overflow-wrap: anywhere; }
+input[type=text] { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; max-width: 360px; min-height: 38px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+.disc li { margin-bottom: 4px; font-size: 13px; }
+.disc .r { color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 14px; max-width: calc(100% - 32px); opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 9; }
+.toast.on { opacity: 1; }
+.small { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Radar Upwork</h1>
+      <div class="sub" id="sub">Cargando…</div>
+    </div>
+    <button class="primary" id="refresh" type="button">↻ Actualizar ahora</button>
+  </header>
+
+  <div id="banners"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="toolbar">
+    <div class="chips" id="areas" role="group" aria-label="Área"></div>
+  </div>
+  <div class="toolbar">
+    <div class="chips" id="verdicts" role="group" aria-label="Veredicto"></div>
+    <select id="sort" aria-label="Orden">
+      <option value="score">Mejor puntaje</option>
+      <option value="recent">Más recientes</option>
+      <option value="comp">Menos postulantes</option>
+      <option value="pay">Mejor pago</option>
+    </select>
+    <label class="tog"><input type="checkbox" id="hideDone" checked> Ocultar descartadas por mí</label>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <section class="box" id="discBox" hidden>
+    <details>
+      <summary id="discSum">Descartadas automáticamente</summary>
+      <p class="small">El radar las leyó por ti. Si alguna no debió caer, ajusta <code>config/upwork_profile.json</code>.</p>
+      <ul class="disc" id="disc"></ul>
+    </details>
+  </section>
+
+  <section class="box" id="setupBox">
+    <details id="setupDet">
+      <summary>Conectar con Upwork (una sola vez)</summary>
+      <p class="small">El radar no usa tu contraseña: se conecta con la API oficial de Upwork por OAuth, así que Upwork sabe que es tu app y no arriesgas tu cuenta.</p>
+      <ol class="steps">
+        <li><b>Pide tu API key</b> en <a href="https://www.upwork.com/developer/keys/apply" target="_blank" rel="noopener">upwork.com/developer/keys/apply</a>. Tipo: OAuth 2.0. En los permisos marca la lectura de ofertas del marketplace (<i>Marketplace Job Postings</i>). Como <i>Callback URL</i> pon exactamente:
+          <div class="row"><code id="cbUrl"></code><button type="button" data-copy="cbUrl">Copiar</button></div>
+          <span class="small">Upwork la revisa a mano: puede tardar de días a un par de semanas.</span></li>
+        <li><b>Guarda tres secretos</b> en <a id="secretsLink" target="_blank" rel="noopener">GitHub → Settings → Secrets → Actions</a>:
+          <code>UPWORK_CLIENT_ID</code> y <code>UPWORK_CLIENT_SECRET</code> (los da Upwork) y <code>GH_PAT</code>: un <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">token fino</a> solo para este repositorio con permiso <i>Secrets: Read and write</i>, para que el radar renueve solo el acceso a Upwork.
+          <span class="small">Opcional: <code>ANTHROPIC_API_KEY</code> activa el análisis con Claude y el borrador de propuesta.</span></li>
+        <li><b>Conecta tu cuenta</b>. Pega tu Client ID (no es secreto) y autoriza en Upwork:
+          <div class="row"><input type="text" id="cid" placeholder="Client ID de Upwork" autocomplete="off" spellcheck="false"><button class="primary" type="button" id="connect">Conectar con Upwork</button></div>
+          <span class="small">Upwork te devolverá aquí con un código; el panel te pedirá enviarlo con un toque.</span></li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="box">
+    <details>
+      <summary>Cómo puntúa el radar</summary>
+      <p class="small">Cada oferta recibe 0–100 sumando cinco notas. <b>Afinidad</b> (35 %): tus palabras clave por área, el doble si están en el título, más bonos por español o LATAM. <b>Cliente</b> (20 %): pago verificado, lo que ha gastado, sus contrataciones y su nota. <b>Competencia</b> (15 %): pocos postulantes y oferta reciente. <b>Pago</b> (15 %): tarifa contra tu mínimo y tu objetivo. <b>Esfuerzo</b> (15 %): premia lo corto y acotado.</p>
+      <p class="small">Se descarta lo que no encaja, lo viejo, lo mal pagado y lo que huele a estafa (pedir Telegram/WhatsApp o pagos fuera de Upwork). Con 70 o más el radar dice <b>Postula</b>; entre 55 y 69, <b>Revisa</b>. Cambia pesos, palabras y mínimos en <code>config/upwork_profile.json</code>.</p>
+    </details>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* sin almacenamiento: no pasa nada */ } },
+  };
+
+  // Repositorio: se deduce de la URL de GitHub Pages (usuario.github.io/repo/upwork/).
+  const host = location.hostname.endsWith('github.io') ? location.hostname.split('.')[0] : 'mickaxxx';
+  const repoName = location.hostname.endsWith('github.io') ? (location.pathname.split('/')[1] || 'cosas-de-ia') : 'cosas-de-ia';
+  const REPO = `${host}/${repoName}`;
+  const CALLBACK = location.origin + location.pathname.replace(/index\.html$/, '');
+  const DATA = 'data/jobs.json';
+
+  let D = null;
+  const marks = store.get('upw-marks', {});
+  const st = Object.assign({ area: 'all', verdict: 'top', sort: 'score', hideDone: true }, store.get('upw-view', {}));
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 3200);
+  }
+  function ago(isoStr) {
+    if (!isoStr) return '';
+    const m = Math.max(0, Math.round((Date.now() - new Date(isoStr).getTime()) / 60000));
+    if (m < 60) return `hace ${m} min`;
+    const h = Math.round(m / 60);
+    return h < 48 ? `hace ${h} h` : `hace ${Math.round(h / 24)} días`;
+  }
+  function nextRun() {
+    // cron "41 */6 * * *" en UTC
+    const d = new Date(); const n = new Date(d);
+    n.setUTCMinutes(41, 0, 0);
+    n.setUTCHours(Math.floor(d.getUTCHours() / 6) * 6);
+    while (n <= d) n.setUTCHours(n.getUTCHours() + 6);
+    return n.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  }
+  const usd = (v) => v == null ? '' : 'US$' + (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace('.', ',') + 'k' : Math.round(v));
+  function budget(j) {
+    if (j.tipo === 'fijo' && j.fijo) return `${usd(j.fijo)} fijo`;
+    if (j.hmax || j.hmin) return `${j.hmin ? usd(j.hmin) : ''}${j.hmin && j.hmax ? '–' : ''}${j.hmax ? Math.round(j.hmax) : ''}/h`;
+    return j.tipo === 'hora' ? 'Por hora' : 'Sin presupuesto';
+  }
+
+  async function load(fresh) {
+    try {
+      const r = await fetch(`${DATA}?t=${fresh ? Date.now() : Math.floor(Date.now() / 60000)}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      D = await r.json();
+    } catch (e) {
+      D = D || { status: 'sin_datos', jobs: [], message: 'Aún no hay datos publicados.' };
+    }
+    render();
+    return D;
+  }
+
+  function render() {
+    const s = D.stats || {};
+    $('sub').textContent = D.generated_at
+      ? `Actualizado ${ago(D.generated_at)} · próximo run automático ${nextRun()}`
+      : 'Sin datos todavía';
+
+    // Avisos
+    const b = [];
+    const conectado = !['sin_credenciales', 'sin_datos', 'demo'].includes(D.status);
+    if (D.status === 'demo') b.push(['info', 'Estás viendo ofertas de ejemplo', 'Así se verá tu radar. Conecta tu API key de Upwork (abajo) para ver ofertas reales cada 6 horas.']);
+    else if (D.status === 'sin_credenciales') b.push(['warn', 'Falta conectar tu cuenta de Upwork', 'Sigue los tres pasos de «Conectar con Upwork».']);
+    else if (D.status && D.status !== 'ok' && D.status !== 'sin_datos') b.push(['err', 'El último run no pudo leer Upwork', `${D.message || ''}${D.last_ok ? ` Estás viendo los datos de ${ago(D.last_ok)}.` : ''}`]);
+    if (D.token && D.token.rotated && D.token.persisted === false) b.push(['warn', 'El acceso a Upwork no se pudo renovar solo', 'Falta el secreto GH_PAT (o no tiene permiso de escribir secretos). Sin él, tendrás que volver a conectar cuando caduque.']);
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('code')) b.unshift(['info', 'Upwork te devolvió el código de autorización', '<button class="primary" type="button" id="sendCode">Enviar código al radar</button> <span class="small">Se abre GitHub: pulsa «Create» y en ~1 minuto el radar queda conectado.</span>']);
+    $('banners').innerHTML = b.map(([k, t, m]) => `<div class="banner ${k}"><b>${esc(t)}</b>${k === 'info' && m.includes('<button') ? m : esc(m)}</div>`).join('');
+    const sc = $('sendCode'); if (sc) sc.onclick = () => sendCode(qs.get('code'));
+    if (!render.done) { $('setupDet').open = !conectado || !!qs.get('code'); render.done = true; }
+
+    // KPIs
+    const k = [
+      [s.postula ?? 0, 'para postular'],
+      [s.nuevas ?? 0, 'nuevas desde el último run'],
+      [s.descartadas ?? 0, `descartadas de ${s.analizadas ?? 0}`],
+      [s.minutos_ahorrados != null ? (s.minutos_ahorrados >= 60 ? `${(s.minutos_ahorrados / 60).toFixed(1).replace('.', ',')} h` : `${s.minutos_ahorrados} min`) : '–', 'de búsqueda ahorrada'],
+    ];
+    $('kpis').innerHTML = k.map(([v, l]) => `<div class="kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
+
+    // Filtros
+    const areas = Object.entries(D.areas || {});
+    const jobs = D.jobs || [];
+    const cnt = (a) => jobs.filter((j) => a === 'all' || j.area === a).length;
+    $('areas').innerHTML = [['all', 'Todas'], ...areas].map(([key, lab]) =>
+      `<button class="chip" type="button" data-area="${esc(key)}" aria-pressed="${st.area === key}">${esc(lab)} · ${cnt(key)}</button>`).join('');
+    $('verdicts').innerHTML = [['top', 'Postula + Revisa'], ['postula', 'Solo Postula'], ['fav', '★ Guardadas'], ['applied', 'Postulé'], ['all', 'Todo']].map(([key, lab]) =>
+      `<button class="chip" type="button" data-verdict="${key}" aria-pressed="${st.verdict === key}">${lab}</button>`).join('');
+    $('sort').value = st.sort;
+    $('hideDone').checked = st.hideDone;
+
+    // Lista
+    let L = jobs.filter((j) => st.area === 'all' || j.area === st.area);
+    if (st.verdict === 'top') L = L.filter((j) => j.veredicto !== 'baja');
+    else if (st.verdict === 'postula') L = L.filter((j) => j.veredicto === 'postula');
+    else if (st.verdict === 'fav' || st.verdict === 'applied') L = L.filter((j) => marks[j.id] === st.verdict);
+    if (st.hideDone && st.verdict !== 'all') L = L.filter((j) => marks[j.id] !== 'hidden');
+    const sorters = {
+      score: (a, b) => b.score - a.score,
+      recent: (a, b) => (b.at || '').localeCompare(a.at || ''),
+      comp: (a, b) => (a.post ?? 99) - (b.post ?? 99) || b.score - a.score,
+      pay: (a, b) => b.parciales.pago - a.parciales.pago || b.score - a.score,
+    };
+    L.sort(sorters[st.sort] || sorters.score);
+    $('list').innerHTML = L.length ? L.map(card).join('')
+      : `<div class="empty">${jobs.length ? 'Nada con estos filtros. Prueba «Todo».' : 'Todavía no hay ofertas. Conecta tu cuenta o pulsa Actualizar.'}</div>`;
+
+    // Descartadas
+    const dz = D.descartadas || [];
+    $('discBox').hidden = !dz.length;
+    $('discSum').textContent = `Descartadas automáticamente (${dz.length})`;
+    $('disc').innerHTML = dz.map((x) => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.t)}</a> <span class="r">— ${esc(x.why)}</span></li>`).join('');
+  }
+
+  function card(j) {
+    const c = j.cli || {};
+    const areaLab = (D.areas || {})[j.area] || j.area;
+    const vlab = { postula: 'Postula', revisa: 'Revisa', baja: 'Baja prioridad' }[j.veredicto];
+    const tags = [
+      j.nueva ? '<span class="tag new">Nueva</span>' : '',
+      `<span class="tag v-${j.veredicto}">${vlab}</span>`,
+      `<span class="tag">${esc(areaLab)}</span>`,
+      `<span class="tag">${esc(budget(j))}</span>`,
+      j.dur ? `<span class="tag">${esc(j.dur)}</span>` : '',
+      j.post != null ? `<span class="tag">${esc(j.post)} postulantes</span>` : '',
+      j.nivel ? `<span class="tag">${esc({ Entry: 'Nivel inicial', Entry_level: 'Nivel inicial', Intermediate: 'Nivel intermedio', Expert: 'Nivel experto' }[j.nivel] || j.nivel)}</span>` : '',
+      j.at ? `<span class="tag">${esc(ago(j.at))}</span>` : '',
+    ].join('');
+    const cli = [
+      c.verif === true ? '<span class="ok">✓ Pago verificado</span>' : c.verif === false ? '<span class="no">Pago sin verificar</span>' : '',
+      c.gasto ? `${usd(c.gasto)} gastados` : (c.verif != null ? 'Sin gasto previo' : ''),
+      c.nota ? `★ ${Number(c.nota).toFixed(1)}` : '',
+      c.contrat ? `${c.contrat} contrataciones` : '',
+      c.pais ? esc(c.pais) : '',
+    ].filter(Boolean).join(' · ');
+    const kws = (j.coinciden || []).map((k) => `<span class="tag kw">${esc(k)}</span>`).join('');
+    const al = (j.alertas || []).map((a) => `<span class="tag warn">⚠ ${esc(a)}</span>`).join('');
+    const p = j.parciales || {};
+    const bars = [['Afinidad', p.afinidad], ['Cliente', p.cliente], ['Competencia', p.competencia], ['Pago', p.pago], ['Esfuerzo', p.esfuerzo]]
+      .map(([n, v]) => `<span>${n}</span><span class="bar"><i style="width:${Number(v) || 0}%"></i></span><span>${Number(v) || 0}</span>`).join('');
+    const a = j.ai;
+    const ai = a ? `<div class="ai">
+        <p>${esc(a.encaje)}</p>
+        ${a.riesgo ? `<p><span class="lbl">Ojo</span> ${esc(a.riesgo)}</p>` : ''}
+        <p class="small">≈ ${esc(a.horas)} h de trabajo · dificultad ${esc(a.dificultad)}</p>
+        <p><span class="lbl">Pregunta para el cliente</span><br>${esc(a.pregunta)}</p>
+        <div class="lbl" style="margin-top:8px">Inicio de propuesta</div>
+        <div class="opener" id="op-${esc(j.id)}">${esc(a.apertura)}</div>
+      </div>`
+      : `<div class="desc">${esc((j.d || '').slice(0, 320))}${(j.d || '').length > 320 ? '…' : ''}</div>`;
+    const m = marks[j.id];
+    return `<article class="card${m === 'hidden' ? ' dim' : ''}">
+      <div class="top">
+        <div class="ring ${j.veredicto}" title="Puntaje">${j.score}</div>
+        <div style="min-width:0">
+          <a class="title" href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.t)}</a>
+          <div class="meta">${tags}</div>
+        </div>
+      </div>
+      ${cli ? `<div class="client">${cli}</div>` : ''}
+      ${kws || al ? `<div class="meta" style="margin-top:8px">${kws}${al}</div>` : ''}
+      ${ai}
+      <details class="why"><summary>Por qué este puntaje</summary><div class="bars">${bars}</div></details>
+      <div class="actions">
+        <a class="btn primary" href="${esc(j.url)}" target="_blank" rel="noopener">Abrir en Upwork</a>
+        ${a ? `<button type="button" data-copyop="${esc(j.id)}">Copiar propuesta</button>` : ''}
+        <button type="button" data-mark="fav" data-id="${esc(j.id)}" aria-pressed="${m === 'fav'}">★ Guardar</button>
+        <button type="button" data-mark="applied" data-id="${esc(j.id)}" aria-pressed="${m === 'applied'}">✓ Postulé</button>
+        <button type="button" data-mark="hidden" data-id="${esc(j.id)}" aria-pressed="${m === 'hidden'}">✕ No me interesa</button>
+      </div>
+    </article>`;
+  }
+
+  function saveView() { store.set('upw-view', st); render(); }
+  document.addEventListener('click', async (e) => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.area) { st.area = t.dataset.area; saveView(); }
+    else if (t.dataset.verdict) { st.verdict = t.dataset.verdict; saveView(); }
+    else if (t.dataset.mark) {
+      const id = t.dataset.id, k = t.dataset.mark;
+      if (marks[id] === k) delete marks[id]; else marks[id] = k;
+      store.set('upw-marks', marks); render();
+    } else if (t.dataset.copyop || t.dataset.copy) {
+      const el = $(t.dataset.copy || `op-${t.dataset.copyop}`);
+      try { await navigator.clipboard.writeText(el.textContent); toast('Copiado'); }
+      catch { toast('No pude copiar: mantén pulsado el texto para copiarlo'); }
+    }
+  });
+  $('sort').onchange = (e) => { st.sort = e.target.value; saveView(); };
+  $('hideDone').onchange = (e) => { st.hideDone = e.target.checked; saveView(); };
+
+  // --- Actualizar: abre un issue "upwork: actualizar"; el workflow corre y publica.
+  function openIssue(title, body) {
+    window.open(`https://github.com/${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`, '_blank', 'noopener');
+  }
+  async function waitForNew(prevStamp) {
+    const btn = $('refresh'); btn.disabled = true;
+    const t0 = Date.now();
+    while (Date.now() - t0 < 6 * 60000) {
+      btn.textContent = `Esperando datos… ${Math.round((Date.now() - t0) / 1000)} s`;
+      await new Promise((r) => setTimeout(r, 15000));
+      const d = await load(true);
+      if (d.generated_at && d.generated_at !== prevStamp) { toast('Radar actualizado'); break; }
+    }
+    btn.disabled = false; btn.textContent = '↻ Actualizar ahora';
+  }
+  $('refresh').onclick = () => {
+    openIssue('upwork: actualizar', 'Pedido desde el panel: buscar ofertas nuevas ahora.');
+    toast('Pulsa «Create» en GitHub: el radar tarda 1–2 minutos');
+    waitForNew(D && D.generated_at);
+  };
+
+  // --- Conexión OAuth
+  $('cbUrl').textContent = CALLBACK;
+  $('secretsLink').href = `https://github.com/${REPO}/settings/secrets/actions`;
+  $('cid').value = store.get('upw-cid', '');
+  $('connect').onclick = () => {
+    const id = $('cid').value.trim();
+    if (!id) { toast('Pega primero tu Client ID'); $('cid').focus(); return; }
+    store.set('upw-cid', id);
+    location.href = 'https://www.upwork.com/ab/account-security/oauth2/authorize?response_type=code'
+      + `&client_id=${encodeURIComponent(id)}&redirect_uri=${encodeURIComponent(CALLBACK)}`;
+  };
+  function sendCode(code) {
+    openIssue('upwork: conectar', `codigo: ${code}\n\n(El radar lo canjea y lo borra de este issue.)`);
+    history.replaceState(null, '', CALLBACK);
+    toast('Pulsa «Create» en GitHub; vuelve aquí en ~1 minuto');
+    waitForNew(D && D.generated_at);
+  }
+
+  load(false);
+  setInterval(() => { if (document.visibilityState === 'visible') load(false); }, 5 * 60000);
+})();
+</script>
+</body>
+</html>

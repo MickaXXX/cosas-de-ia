@@ -35,6 +35,17 @@ docs/vendor/tess/                 ← motor OCR (tesseract.js) para leer captura
 
 Si Actions no puede hacer push, revisa *Settings → Actions → General → Workflow permissions* y marca **Read and write permissions**.
 
+## 🎯 Radar Upwork
+
+Panel aparte en `https://<tu-usuario>.github.io/cosas-de-ia/upwork/`. Cada 6 horas (y cuando pulsas **Actualizar ahora**) busca ofertas con la **API oficial de Upwork**, las puntúa 0–100 contra tu perfil y te deja solo las que valen la pena, con un análisis de Claude y el inicio de la propuesta listo para copiar.
+
+- No usa tu contraseña ni lee páginas de Upwork: se conecta por OAuth, como cualquier app autorizada.
+- `config/upwork_profile.json` es tu filtro: áreas, palabras clave y pesos, tarifa mínima, preferencia por trabajos cortos, palabras que descartan y alertas de estafa.
+- `scripts/upwork_radar.py` es el motor. Si Upwork renombra un campo de su API, lo quita solo y sigue funcionando (queda anotado en `schema_notes`).
+- `.github/workflows/upwork.yml` lo corre a las :41 de cada 6 horas UTC y cuando el panel abre un issue `upwork: actualizar`.
+
+**Puesta en marcha:** sigue los tres pasos de «Conectar con Upwork» dentro del panel: pedir la API key, guardar los secretos `UPWORK_CLIENT_ID`, `UPWORK_CLIENT_SECRET` y `GH_PAT`, y autorizar tu cuenta. Mientras tanto, el panel muestra ofertas de ejemplo.
+
 ## Cómo se calcula la señal
 
 Tres modelos independientes, cada uno 0–100, con explicaciones en español:
