@@ -1,0 +1,1607 @@
+<title>Radar Sur Antofagasta</title>
+<meta name="description" content="Proyectos inmobiliarios de Antofagasta al sur de calle Copiapó: dividendos por banco, rentabilidad, ranking, mapa de plusvalía y escenarios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra de navegación azul Pacífico a la izquierda + lienzo de tableros; cobre (la identidad minera de Antofagasta) marca lo que importa. */
+:root{
+  --bg:#f2f4f6; --surface:#fdfdfc; --surface-2:#eceff3; --ink:#0f1821; --ink-2:#465260; --muted:#6f7b88;
+  --line:#dde2e8; --line-strong:#c3cad3;
+  --accent:#ad501b; --accent-ink:#ffffff; --accent-soft:#f5e5d8; --accent-text:#9a4615;
+  --nav-bg:#0e2134; --nav-ink:#f3f6f9; --nav-ink-2:#a9b8c8; --nav-hover:#16304a; --nav-active:#1d3b5a;
+  --s1:#2a78d6; --s2:#c0612b; --deemph:#c3c9d0;
+  --good:#0ca30c; --good-ink:#0b6b14; --warn:#fab219; --warn-ink:#8a5a00; --bad:#d03b3b; --bad-ink:#b02a2a;
+  --div-neg:#e34948; --div-mid:#eef0f2; --div-pos:#2a78d6;
+  --sea:#dfe9f2; --land:#f7f4ee; --hill:#ebe3d4; --north-veil:rgba(15,24,33,.05);
+  --shadow:0 1px 2px rgba(15,24,33,.06),0 8px 24px rgba(15,24,33,.06);
+  --f-display:"Archivo",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-ui:"Archivo",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a1017; --surface:#111922; --surface-2:#18222d; --ink:#edf1f5; --ink-2:#b3bdc8; --muted:#8a96a3;
+    --line:#22303d; --line-strong:#33414f;
+    --accent:#e0884f; --accent-ink:#1a0f07; --accent-soft:#2b1d13; --accent-text:#eba273;
+    --nav-bg:#08131f; --nav-ink:#eef3f8; --nav-ink-2:#8fa2b6; --nav-hover:#10233a; --nav-active:#173150;
+    --s1:#3987e5; --s2:#d0703a; --deemph:#3a4654;
+    --good-ink:#3cc45a; --warn-ink:#f2b84b; --bad-ink:#f07272;
+    --div-neg:#e66767; --div-mid:#26303b; --div-pos:#3987e5;
+    --sea:#0d1c2b; --land:#16202a; --hill:#1d2833; --north-veil:rgba(0,0,0,.28);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a1017; --surface:#111922; --surface-2:#18222d; --ink:#edf1f5; --ink-2:#b3bdc8; --muted:#8a96a3;
+  --line:#22303d; --line-strong:#33414f;
+  --accent:#e0884f; --accent-ink:#1a0f07; --accent-soft:#2b1d13; --accent-text:#eba273;
+  --nav-bg:#08131f; --nav-ink:#eef3f8; --nav-ink-2:#8fa2b6; --nav-hover:#10233a; --nav-active:#173150;
+  --s1:#3987e5; --s2:#d0703a; --deemph:#3a4654;
+  --good-ink:#3cc45a; --warn-ink:#f2b84b; --bad-ink:#f07272;
+  --div-neg:#e66767; --div-mid:#26303b; --div-pos:#3987e5;
+  --sea:#0d1c2b; --land:#16202a; --hill:#1d2833; --north-veil:rgba(0,0,0,.28);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:400 14px/1.5 var(--f-ui);-webkit-font-smoothing:antialiased;font-variation-settings:"wdth" 100}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--accent-text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* ---------- Estructura ---------- */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.nav{background:var(--nav-bg);color:var(--nav-ink);position:sticky;top:0;height:100vh;padding:22px 14px 18px;display:flex;flex-direction:column;gap:2px;overflow:auto;z-index:30}
+.brand{display:flex;gap:10px;align-items:center;padding:0 8px 18px}
+.brand-mark{width:34px;height:34px;flex:none}
+.brand b{display:block;font:800 17px/1.05 var(--f-display);font-variation-settings:"wdth" 122;letter-spacing:.005em}
+.brand small{display:block;color:var(--nav-ink-2);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.nav button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:11px;align-items:center;padding:9px 11px;border-radius:9px;color:var(--nav-ink-2);font-weight:500;font-size:14px;white-space:nowrap}
+.nav button svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav button:hover{background:var(--nav-hover);color:var(--nav-ink)}
+.nav button[aria-current="page"]{background:var(--nav-active);color:var(--nav-ink)}
+.nav button[aria-current="page"] svg{stroke:var(--accent)}
+.nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.nav-foot{margin-top:auto;padding:14px 10px 0;border-top:1px solid rgba(255,255,255,.08);color:var(--nav-ink-2);font-size:12px;line-height:1.45}
+.nav-foot b{color:var(--nav-ink);font-family:var(--f-mono);font-weight:500}
+main{min-width:0;padding-block:22px 64px;padding-inline:32px}
+.topbar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.topbar h1{margin:0;font:800 clamp(24px,3vw,32px)/1.05 var(--f-display);font-variation-settings:"wdth" 118;letter-spacing:-.005em;text-wrap:balance}
+.topbar .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:6px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.chip b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
+.view{display:none;flex-direction:column;gap:20px}
+.view.on{display:flex}
+
+/* ---------- Bloques ---------- */
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-side{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}
+.g-wide{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px;min-width:0}
+.panel>h2,.sec-title{margin:0 0 4px;font:700 16px/1.25 var(--f-display);font-variation-settings:"wdth" 110;letter-spacing:.005em;text-wrap:balance}
+.panel>.sub,.sub{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.panel-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.panel-head h2{margin:0 0 2px;font:700 16px/1.25 var(--f-display);font-variation-settings:"wdth" 110}
+.panel-head .sub{margin:0}
+.label{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .ink2{color:var(--ink-2)}
+.small{font-size:12.5px}
+p{margin:0 0 10px;max-width:72ch}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.hero-main{padding:22px 24px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.hero-name{font:800 clamp(22px,2.6vw,30px)/1.08 var(--f-display);font-variation-settings:"wdth" 116;margin:0;text-wrap:balance}
+.hero-meta{color:var(--ink-2);font-size:13.5px}
+.hero-figure{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end;margin-top:4px}
+.hero-figure .big{font:700 52px/1 var(--f-ui);letter-spacing:-.02em}
+.hero-figure .big small{font-size:20px;font-weight:600;color:var(--ink-2);margin-left:2px}
+.hero-side{background:var(--surface-2);padding:20px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;align-content:start;border-left:1px solid var(--line)}
+.kv .k{font-size:11.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.kv .v{font:600 18px/1.25 var(--f-ui);margin-top:2px}
+.kv .v small{font-size:12px;font-weight:500;color:var(--ink-2);display:block}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.kpi{padding:14px 16px;border-right:1px solid var(--line);min-width:0}
+.kpi:last-child{border-right:0}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font:650 22px/1.2 var(--f-ui);margin-top:4px;font-variation-settings:"wdth" 104}
+.kpi .d{font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* Pills de estado */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2)}
+.pill i{font-style:normal;font-size:10px;line-height:1}
+.pill.good{color:var(--good-ink);border-color:color-mix(in srgb,var(--good) 35%,transparent);background:color-mix(in srgb,var(--good) 9%,transparent)}
+.pill.warn{color:var(--warn-ink);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+.pill.bad{color:var(--bad-ink);border-color:color-mix(in srgb,var(--bad) 35%,transparent);background:color-mix(in srgb,var(--bad) 9%,transparent)}
+.pill.acc{color:var(--accent-text);border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)}
+.pos{color:var(--good-ink)} .neg{color:var(--bad-ink)}
+
+/* Formularios */
+.form{display:grid;gap:14px}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>label,.field>.lbl{font-size:12px;font-weight:600;color:var(--ink-2);display:flex;justify-content:space-between;gap:8px}
+.field>label output,.field>.lbl output{font-family:var(--f-mono);font-weight:500;color:var(--ink)}
+.field .hint{font-size:11.5px;color:var(--muted)}
+input[type=number],input[type=text],select{width:100%;min-width:0;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink)}
+input[type=number]{font-family:var(--f-mono)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{all:unset;box-sizing:border-box;cursor:pointer;padding:6px 11px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button:focus-visible{outline:2px solid var(--accent)}
+.toggle{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-2);cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px;margin:2px 0 0;flex:none}
+.filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.filters .field{min-width:150px}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;font-weight:600;font-size:13px;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn:hover{filter:brightness(1.06)}
+
+/* Tablas */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.n,.tbl th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.tbl tbody tr.sel td{background:var(--accent-soft)}
+.tbl .pname{font-weight:650;color:var(--ink)}
+.tbl .pinmo{font-size:12px;color:var(--muted)}
+.tbl tr.best td{background:color-mix(in srgb,var(--s1) 8%,transparent)}
+.tbl td.dim{color:var(--muted)}
+
+/* Barras HTML (ranking, bancos) */
+.bars{display:grid;gap:8px}
+.bar-row{display:grid;grid-template-columns:minmax(120px,210px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;border-radius:6px;padding:2px 0}
+.bar-row .bl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .bl b{font-weight:650}
+.bar-row .bl span{color:var(--muted);font-size:12px}
+.bar-track{height:18px;position:relative}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--deemph);min-width:2px}
+.bar-fill.em{background:var(--s2)}
+.bar-fill.s1{background:var(--s1)}
+.bar-row .bv{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink);text-align:right;min-width:64px}
+.bar-row:hover .bar-fill{filter:brightness(1.08)}
+
+/* Gráficos SVG */
+.chart{width:100%;position:relative;min-height:120px}
+.chart svg{display:block;overflow:visible}
+.chart text{fill:var(--muted);font:11px var(--f-mono)}
+.chart .grid-l{stroke:var(--line);stroke-width:1}
+.chart .axis-l{stroke:var(--line-strong);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%}
+.legend i.line{width:16px;height:2px;border-radius:2px}
+.legend i.sq{border-radius:2px}
+#tip{position:fixed;z-index:100;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-radius:9px;box-shadow:var(--shadow);padding:9px 11px;font-size:12.5px;max-width:280px;opacity:0;transition:opacity .08s}
+#tip.on{opacity:1}
+#tip .tv{font:600 14px var(--f-ui)}
+#tip .tl{color:var(--muted);font-size:12px}
+#tip .tr{display:flex;align-items:center;gap:7px;margin-top:3px}
+#tip .tr i{display:inline-block;width:12px;height:2px;border-radius:2px}
+
+/* Mapa */
+.map-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--sea)}
+.map-wrap>svg,.map-wrap>canvas{position:absolute;inset:0;width:100%;height:100%}
+.map-wrap canvas{mix-blend-mode:normal;opacity:.82;pointer-events:none}
+.map-legend{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-2);margin-top:10px;flex-wrap:wrap}
+.ramp{height:10px;width:180px;border-radius:5px}
+.map-label{font:600 11px var(--f-ui);fill:var(--ink-2);paint-order:stroke;stroke:var(--land);stroke-width:3px;stroke-linejoin:round}
+.map-label.big{font-size:12.5px;fill:var(--ink)}
+.map-mk{cursor:pointer}
+.map-mk:focus{outline:none}
+.map-mk:focus circle.ring{stroke:var(--accent);stroke-width:3}
+
+/* Heat grid */
+.hgrid{border-collapse:separate;border-spacing:2px;font-size:12px;width:100%}
+.hgrid th{font-weight:600;color:var(--muted);font-family:var(--f-mono);font-size:11.5px;padding:4px 6px;text-align:center}
+.hgrid td{text-align:center;padding:9px 4px;border-radius:4px;font-family:var(--f-mono);font-variant-numeric:tabular-nums;cursor:default}
+.hgrid td.cur{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* Tornado */
+.tornado{display:grid;gap:7px}
+.tor-row{display:grid;grid-template-columns:minmax(110px,170px) minmax(0,1fr);gap:10px;align-items:center;font-size:12.5px}
+.tor-track{position:relative;height:18px}
+.tor-track .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line-strong)}
+.tor-bar{position:absolute;top:0;bottom:0}
+.tor-bar.lo{background:var(--div-neg);border-radius:4px 0 0 4px}
+.tor-bar.hi{background:var(--div-pos);border-radius:0 4px 4px 0}
+.tor-row .tv{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+
+/* Detalle de proyecto */
+.detail{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 18px}
+ul.clean{margin:0;padding-left:18px}
+ul.clean li{margin:3px 0}
+.src{font-size:12px;word-break:break-all}
+
+/* Memo de asesoría */
+.memo{max-width:80ch}
+.memo h3{font:700 15px/1.3 var(--f-display);font-variation-settings:"wdth" 108;margin:18px 0 6px}
+.memo h3:first-child{margin-top:0}
+.pick{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.pick:last-child{border-bottom:0}
+.pick .tag{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-text);grid-column:1/-1}
+.pick .pn{font-weight:700;font-size:15px}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px}
+.steps li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center;font:700 12px var(--f-mono)}
+.note{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.fact{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:12px 0;border-bottom:1px solid var(--line)}
+.fact:last-child{border-bottom:0}
+.fact .fv{font:650 20px/1.2 var(--f-ui)}
+.fact .fd{font-size:12.5px;color:var(--ink-2)}
+.fact a{font-size:11.5px}
+
+@media (max-width:1180px){
+  .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero{grid-template-columns:1fr}
+  .hero-side{border-left:0;border-top:1px solid var(--line)}
+}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .nav{position:sticky;top:env(safe-area-inset-top,0px);height:auto;flex-direction:row;overflow-x:auto;padding:8px 16px;gap:4px;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .brand,.nav-foot{display:none}
+  .nav button{padding:8px 11px;font-size:13px}
+  main{padding-inline:16px;padding-block:16px 48px}
+  .g2,.g3,.g-side,.g-wide,.detail{grid-template-columns:1fr}
+  .kpi{border-right:0;border-bottom:1px solid var(--line)}
+  .hero-figure .big{font-size:42px}
+  .bar-row{grid-template-columns:minmax(90px,130px) minmax(0,1fr) auto}
+}
+@media (max-width:480px){
+  .hero-side{grid-template-columns:1fr 1fr}
+  .hero-main,.hero-side{padding:16px}
+  .panel{padding:14px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <nav class="nav" aria-label="Secciones">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#173150"/><path d="M8 25V14l6-4 6 4v11" fill="none" stroke="#e0884f" stroke-width="2.2" stroke-linejoin="round"/><path d="M20 25V9l6 3v13" fill="none" stroke="#f3f6f9" stroke-width="2.2" stroke-linejoin="round"/><path d="M5 27.5h24" stroke="#5aa0ea" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><b>Radar Sur</b><small>Antofagasta</small></div>
+    </div>
+    <button data-v="resumen"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Resumen</button>
+    <button data-v="proyectos"><svg viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>Proyectos</button>
+    <button data-v="simulador"><svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/></svg>Simulador</button>
+    <button data-v="bancos"><svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg>Bancos</button>
+    <button data-v="ranking"><svg viewBox="0 0 24 24"><path d="M8 21V11h8v10"/><path d="M2 21v-6h6M16 21v-8h6v8"/><path d="M2 21h20"/><path d="M12 3l1.2 2.4 2.6.4-1.9 1.8.5 2.6L12 8.9l-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z"/></svg>Ranking</button>
+    <button data-v="mapa"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Mapa de calor</button>
+    <button data-v="escenarios"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Escenarios</button>
+    <button data-v="asesoria"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Asesoría</button>
+    <button data-v="supuestos"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6M9 18h3"/></svg>Supuestos y fuentes</button>
+    <div class="nav-foot">UF del día<br><b id="navUf">$41.081,76</b><br><span id="navFecha">3 oct 2026</span><br><br>Datos públicos de portales e inmobiliarias. Verifica precios en sala de ventas antes de firmar.</div>
+  </nav>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <div class="eyebrow" id="vEyebrow">Antofagasta · al sur de calle Copiapó</div>
+        <h1 id="vTitle">Resumen</h1>
+      </div>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>UF hoy <b id="chipUf">$41.081,76</b></span>
+        <span class="chip">Tasa promedio sistema <b>4,06%</b></span>
+        <span class="chip" id="chipPerfil">Pie 20% · 30 años</span>
+      </div>
+    </header>
+
+    <!-- RESUMEN -->
+    <section class="view" id="v-resumen" aria-labelledby="vTitle"></section>
+    <!-- PROYECTOS -->
+    <section class="view" id="v-proyectos"></section>
+    <!-- SIMULADOR -->
+    <section class="view" id="v-simulador"></section>
+    <!-- BANCOS -->
+    <section class="view" id="v-bancos"></section>
+    <!-- RANKING -->
+    <section class="view" id="v-ranking"></section>
+    <!-- MAPA -->
+    <section class="view" id="v-mapa"></section>
+    <!-- ESCENARIOS -->
+    <section class="view" id="v-escenarios"></section>
+    <!-- ASESORIA -->
+    <section class="view" id="v-asesoria"></section>
+    <!-- SUPUESTOS -->
+    <section class="view" id="v-supuestos"></section>
+  </main>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   1. DATOS (recopilados el 3-oct-2026 desde portales, inmobiliarias y prensa)
+   ===================================================================== */
+const FECHA_DATOS = '3 de octubre de 2026';
+const UF_HOY = 41081.76;
+
+// Sectores: arriendo de referencia (CLP/mes, sin gastos comunes) para 1D1B ~38 m² y 2D2B ~60 m²,
+// gastos comunes CLP/m², plusvalía real anual estimada (% en UF). Editable en "Supuestos".
+const SECTORES = {
+  'centro-sur':   {n:'Centro Sur · Parque Brasil', sur:true,  lat:-23.6605, lon:-70.3985, arr1:560000, arr2:760000, gc:1700, plus:1.6,
+    d:'Barrio tradicional frente a Parque Brasil, a pasos del centro. Oferta premium en Av. Brasil (7.800–10.890 UF). Demanda de ejecutivos y profesionales, pero precios de entrada altos.'},
+  'playa-paraiso':{n:'Playa Paraíso · Gran Vía', sur:true,  lat:-23.6685, lon:-70.4012, arr1:500000, arr2:650000, gc:1100, plus:1.4,
+    d:'Centro sur consolidado, con proyectos con subsidio DS19 y edificios antiguos. Buena conectividad y transporte público; arriendos más bajos que el borde costero sur.'},
+  'playa-blanca': {n:'Playa Blanca · Parque Inglés', sur:true, lat:-23.6765, lon:-70.4052, arr1:580000, arr2:700000, gc:1300, plus:2.0,
+    d:'Rango de inversión (Antilhue y Coviefi Alto, 2.100–3.100 UF). Oferta nueva de Biaggini y Costa Sur. 1D se arriendan entre $570 y $650 mil.'},
+  'coviefi':      {n:'Coviefi · Cerro Paranal · Angamos', sur:true, lat:-23.6880, lon:-70.3975, arr1:620000, arr2:780000, gc:1500, plus:2.3,
+    d:'Polo universitario y comercial (UCN, Mall Parque Angamos, colegios). 13,8% de la oferta de arriendo de la ciudad. Lanzamientos recientes: Almagro Terra (abril 2026) y Sunset (Miramar).'},
+  'jardines-sur': {n:'Jardines del Sur · Valle del Mar', sur:true, lat:-23.7015, lon:-70.4155, arr1:620000, arr2:740000, gc:1700, plus:2.6,
+    d:'Nuevo polo residencial del borde costero (Distrito Valle del Mar de Almagro). 13,6% de la oferta de arriendo. 2D amoblados se arriendan en $700–750 mil más GC de $57–150 mil.'},
+  'llacolen':     {n:'Llacolén', sur:true, lat:-23.7135, lon:-70.4212, arr1:600000, arr2:740000, gc:1500, plus:2.2,
+    d:'Rango medio (4.800–6.350 UF) frente a Playa Llacolén, cerca de universidades y club de golf. Stock con entrega inmediata en Gran Pacífico (Idicsa).'},
+  'centro':       {n:'Centro', sur:false, lat:-23.6470, lon:-70.3975, arr1:500000, arr2:650000, gc:1100, plus:1.0,
+    d:'Concentra el 24,5% de la oferta de arriendo. Al norte de calle Copiapó: fuera de tu zona preferida.'},
+  'norte-hospital':{n:'Norte · Av. Iquique', sur:false, lat:-23.6170, lon:-70.3895, arr1:430000, arr2:560000, gc:1100, plus:1.1,
+    d:'Sector norte cercano al Hospital Regional. Hay 1D en edificios recientes arrendados desde $320 mil.'},
+  'nicolas-tirado':{n:'Nicolás Tirado · Trocadero', sur:false, lat:-23.5965, lon:-70.3885, arr1:440000, arr2:570000, gc:1100, plus:1.3,
+    d:'Proyectos de entrada, desde 1.957 UF.'},
+  'la-chimba':    {n:'La Chimba · Plaza Costanera', sur:false, lat:-23.5745, lon:-70.3935, arr1:480000, arr2:620000, gc:1300, plus:1.5,
+    d:'14,6% de la oferta de arriendo. Concentra lanzamientos de Grupo Coloso.'},
+  'vistamar':     {n:'Parque Vistamar · Altos La Chimba', sur:false, lat:-23.5560, lon:-70.3800, arr1:450000, arr2:580000, gc:1200, plus:1.3,
+    d:'Extremo norte en expansión, con proyectos DS19.'}
+};
+
+// Bancos: tasa fija anual en UF (sin subsidio) y con subsidio a la tasa/FOGAES cuando aplica.
+const BANCOS = [
+  {id:'estado', n:'BancoEstado', tasa:4.19, sub:3.10, fin:'80% · 90% con FOGAES',
+   nota:'Tasa estándar 4,19% UF. Para viviendas sobre 4.000 UF ofrece desde 3,99%. Con garantía FOGAES, 3,10% a 30 años con 10% de pie. Eco-vivienda nueva desde 3,18%.',
+   f:['https://www.df.cl/mercados/banca-fintech/tras-superar-a-santander-en-el-negocio-hipotecario-bancoestado-lanza','https://www.24horas.cl/actualidad/economia/bancoestado-anuncia-creditos-hipotecarios']},
+  {id:'chile', n:'Banco de Chile', tasa:3.95, sub:3.30, est:true, fin:'80% · 90% con FOGAES',
+   nota:'Con FOGAES y subsidio a la tasa llega a 3,30%. No encontramos su tasa estándar publicada: 3,95% es una estimación entre el promedio del sistema (4,06%) y los bancos líderes. Pide cotización.',
+   f:['https://sitiospublicos.bancochile.cl/personas/beneficios/promociones/credito-hipotecario-fogaes']},
+  {id:'santander', n:'Santander', tasa:3.59, sub:3.28, fin:'80% · 90% con subsidio',
+   nota:'Segmento estándar bajo 3,6% UF. Con subsidio estatal entre 3,28% y 3,43%, hasta 90% para primera vivienda (CAE cercana a 4,0%).',
+   f:['https://www.pilares.cl/santander/','https://www.lucasfinanzas.cl/subsidio-hipotecario-chile/']},
+  {id:'bci', n:'BCI', tasa:3.40, sub:3.35, fin:'Hasta 90%',
+   nota:'Campaña octubre 2026: 3,40% para un crédito de referencia de 2.700 UF con 90% de financiamiento a 30 años. Con FOGAES, 3,35% hasta 80% en viviendas nuevas de hasta 6.000 UF.',
+   f:['https://www.bci.cl/personas/credito-hipotecario']},
+  {id:'scotia', n:'Scotiabank', tasa:4.84, sub:null, fin:'Hasta 80%',
+   nota:'Rango publicado de 4,84% a 5,07% a tasa fija, hasta 30 años y 80%. En junio 2026 informó 5,29% para 3.000 UF a 20 años con 20% de pie.',
+   f:['https://www.scotiabankchile.cl/credito-hipotecario','https://valuaciones.cl/bci-y-scotiabank-bajan-tasas-para-creditos-hipotecarios/']},
+  {id:'itau', n:'Itaú', tasa:3.39, sub:null, ref:true, fin:'Hasta 80%',
+   nota:'Encabeza el ranking de septiembre 2026 con 3,39% a tasa fija. Se incluye como sexto banco de referencia.',
+   f:['https://www.neatpagos.com/blog/articulo/mejor-tasa-credito-hipotecario']}
+];
+
+// Proyectos. estado: inmediata | verde | blanco. meses: meses estimados a la entrega desde oct-2026.
+// conf: confianza del dato (alta = ficha oficial/portal con precio y m²; media = precio "desde" o m² inferido; baja = dato parcial o contradictorio).
+const PROYECTOS = [
+  {id:'indico', n:'Almagro Índico', inmo:'Almagro', dir:'Av. Jaime Guzmán Errázuriz 03850', sector:'jardines-sur', lat:-23.7000, lon:-70.4162,
+   estado:'verde', entrega:'2º semestre 2026', meses:3, u:[{t:'2D2B',d:2,b:2,m2:73,uf:5520}],
+   estac:{incl:true}, bodega:{incl:true},
+   pago:['Precio incluye estacionamiento y bodega','Venta en verde con entrega 2º semestre 2026','Elegible a subsidio a la tasa si es tu primera vivienda (≤ 6.000 UF)'],
+   extra:'20 pisos, 148 departamentos, primera línea frente al mar. También tiene 3D de 96–117 m².', conf:'alta',
+   f:['https://www.almagro.cl/edificio-indico/','https://www.toctoc.com/propiedades/compranuevo/departamento/antofagasta/edificio-indico/3240122']},
+  {id:'tirreno', n:'Almagro Tirreno', inmo:'Almagro', dir:'Av. Jaime Guzmán Errázuriz (Valle del Mar)', sector:'jardines-sur', lat:-23.7030, lon:-70.4172,
+   estado:'verde', entrega:'2º semestre 2029', meses:36, u:[{t:'2D2B',d:2,b:2,m2:77.44,uf:5490}],
+   estac:{incl:true, nota:'confirmar'}, bodega:{incl:true, nota:'confirmar'},
+   pago:['Venta en verde: el pie se paga durante la construcción','Precios publicados entre 5.490 y 5.750 UF'],
+   extra:'2D2B de 77, 99 y 99 m²; 3D de 104 y 122 m². Mismo distrito que Índico.', conf:'media',
+   f:['https://www.almagro.cl/distrito-valle-del-mar/']},
+  {id:'atlantico', n:'Almagro Atlántico', inmo:'Almagro', dir:'Av. Jaime Guzmán Errázuriz (Valle del Mar)', sector:'jardines-sur', lat:-23.6988, lon:-70.4150,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:74,uf:5200}],
+   estac:{incl:true, nota:'confirmar'}, bodega:{incl:true, nota:'confirmar'},
+   pago:['Edificio terminado: unidades de stock final o reventa','Precio de publicación de corredora; negociable'],
+   extra:'112 departamentos en 24 pisos, tres ascensores.', conf:'media',
+   f:['https://futurehome.cl/propiedad/2561/']},
+  {id:'terra', n:'Almagro Terra', inmo:'Almagro', dir:'Av. Angamos 02351', sector:'coviefi', lat:-23.6895, lon:-70.4005,
+   estado:'blanco', entrega:'Lanzado abril 2026 (en blanco)', meses:30, u:[{t:'2D2B',d:2,b:2,m2:79.79,uf:5810}],
+   estac:{incl:true, nota:'confirmar'}, bodega:{incl:true, nota:'confirmar'},
+   pago:['Venta en blanco: pie en cuotas durante la obra (confirmar número)','Precios de lanzamiento'],
+   extra:'30 pisos, 185 departamentos y 222 estacionamientos. Cerca de Cerro Paranal, Cascadas del Sur y Mall Parque Angamos.', conf:'alta',
+   f:['https://www.almagro.cl/edificio-almagro-terra/','https://www.almagro.cl/blog/calidad/almagro-terra-departamentos-en-antofagasta-inspirados-en-el-desierto-y-con-look-hotelero']},
+  {id:'rimini', n:'Almagro Rimini', inmo:'Almagro', dir:'Av. Cerro Paranal 380', sector:'coviefi', lat:-23.6915, lon:-70.3960,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:42.48,uf:4070},{t:'2D2B',d:2,b:2,m2:68,uf:5530,m2est:true}],
+   estac:{incl:true, nota:'confirmar'}, bodega:{incl:true, nota:'confirmar'},
+   pago:['Entrega inmediata: arriendas desde el primer mes','Quedan pocas unidades (2 a 6 según portal)'],
+   extra:'1D a 3D de 42 a 138 m² útiles. El m² del 2D es estimado.', conf:'media',
+   f:['https://www.almagro.cl/inversionista/proyectos/edificio-rimini/','https://www.portalinmobiliario.com/venta/departamento/antofagasta-antofagasta/10385-edificio-rimini-nva']},
+  {id:'pbrasil', n:'Almagro Parque Brasil', inmo:'Almagro', dir:'Antonino Toro 873', sector:'centro-sur', lat:-23.6590, lon:-70.3992,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:107,uf:7850}],
+   estac:{incl:true, nota:'confirmar'}, bodega:{incl:true, nota:'confirmar'},
+   pago:['Entrega inmediata','Producto premium: terrazas XL, cubiertas de cuarzo, termopanel'],
+   extra:'Frente a Parque Brasil. 2D2B, 3D3B y 3D4B de 107 a 178 m². Cowork, gimnasio, piscina.', conf:'media',
+   f:['https://www.almagro.cl/edificio-parque-brasil/','https://www.zoominmobiliario.com/proyecto/venta/departamento/antofagasta/6157-edificio-parque-brasil']},
+  {id:'palmas2', n:'Condominio Palmas del Sur II', inmo:'RVC', dir:'Av. Jaime Guzmán 04080', sector:'jardines-sur', lat:-23.7020, lon:-70.4180,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:55.14,uf:3663}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega inmediata','Precios de 3.663 a 4.878 UF','Elegible a subsidio a la tasa si es tu primera vivienda'],
+   extra:'Primera línea frente al mar. 2D2B de 55 m² interiores (61 m² totales) y 3D2B de 79 m².', conf:'alta',
+   f:['https://www.rvc.cl/proyecto/condominio-palmas-del-sur-ii/','https://www.enlacenorte.cl/antofagasta/departamento/condominio-palmas-del-sur-ii/7903']},
+  {id:'trilogia', n:'Edificio Trilogía Sur', inmo:'Costavive (corredora)', dir:'Av. Jaime Guzmán Errázuriz 04300', sector:'jardines-sur', lat:-23.7045, lon:-70.4190,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:37,uf:2505},{t:'2D2B',d:2,b:2,m2:75,uf:5756,dudoso:true}],
+   estac:{incl:false, uf:320}, bodega:{incl:false, uf:50},
+   pago:['Publicitado con “100% financiamiento” (bono pie del vendedor: verificar condiciones)','Estacionamiento 320 UF y bodega 50 UF aparte'],
+   extra:'Piscina, gimnasio, sala multiuso, vista al mar. El 2D de 5.756 UF viene de un aviso: verificar.', conf:'media',
+   f:['https://www.toppropiedades.cl/propiedad/166231','https://www.housepricing.cl/propiedad/100-financiamiento-edificio-trilogia-sur-jaime-guzman-e-jardines-del-sur-antofagasta/hpid-2315247872249089430/']},
+  {id:'gp4', n:'Gran Pacífico Torre 4', inmo:'Idicsa', dir:'Av. Jaime Guzmán 5190', sector:'llacolen', lat:-23.7172, lon:-70.4232,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:62,uf:4041}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega inmediata','Sala de ventas en la misma torre','Elegible a subsidio a la tasa si es tu primera vivienda'],
+   extra:'2D a 4D de 62 a 116 m². Piscina y terrazas panorámicas, gimnasio, seguridad 24 h.', conf:'alta',
+   f:['https://idicsa.cl/proyectos-inmobiliarios/antofagasta/gran-pacifico-iv/','https://www.revistapm.cl/espacio-inmobiliario/condominio-gran-pacifico-antofagasta/']},
+  {id:'gp3', n:'Gran Pacífico Torre 3', inmo:'Idicsa', dir:'Av. Jaime Guzmán 5106', sector:'llacolen', lat:-23.7158, lon:-70.4225,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:74,uf:4714}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega inmediata','24 a 33 unidades disponibles'],
+   extra:'2D y 3D de 74 a 97 m², frente a la playa.', conf:'alta',
+   f:['https://idicsa.cl/proyectos-inmobiliarios/antofagasta/condominio-gran-pacifico-torre-3/']},
+  {id:'vllacolen', n:'Vista Llacolén', inmo:'Biaggini', dir:'Av. Jaime Guzmán 4440', sector:'llacolen', lat:-23.7095, lon:-70.4205,
+   estado:'blanco', entrega:'Promesa 2º sem. 2026 (en blanco)', meses:15, u:[{t:'2D1B',d:2,b:1,m2:52,uf:4207},{t:'2D2B',d:2,b:2,m2:56,uf:4450,ufest:true}],
+   estac:{incl:false, uf:300}, bodega:{incl:false, uf:60},
+   pago:['Descuento de hasta 17% por reserva (campaña de lanzamiento)','Estacionamiento desde 300 UF y bodega 50–80 UF aparte','Precio 2D2B estimado sobre el rango 4.207–5.100 UF'],
+   extra:'Tipologías 2D1B 52 m², 2D2B 56 m², 3D1B 60 m², 3D2B 63 m².', conf:'media',
+   f:['https://www.biaggini.cl/properties/proyecto-vista-llacolen/']},
+  {id:'vpingles', n:'Vista Parque Inglés', inmo:'Biaggini', dir:'Antilhue 1102', sector:'playa-blanca', lat:-23.6745, lon:-70.4045,
+   estado:'blanco', entrega:'En blanco', meses:18, u:[{t:'2D1B',d:2,b:1,m2:45,uf:3195},{t:'2D2B',d:2,b:2,m2:50,uf:3450,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['12% de descuento de lanzamiento (precios desde 3.013 UF)','Elegible a subsidio a la tasa si es tu primera vivienda'],
+   extra:'2D y 3D de 45 a 53 m² útiles; 3D2B desde 3.635 UF.', conf:'media',
+   f:['https://www.biaggini.cl/properties/proyecto-vista-parque-ingles/','https://www.enlaceinmobiliarios.cl/bci/antofagasta/departamento/vista-parque-ingles/9433']},
+  {id:'sunset', n:'Sunset', inmo:'Miramar', dir:'Av. Angamos 02451', sector:'coviefi', lat:-23.6908, lon:-70.4010,
+   estado:'blanco', entrega:'En blanco', meses:24, u:[{t:'1D1B',d:1,b:1,m2:34,uf:2709,m2est:true},{t:'2D2B',d:2,b:2,m2:58,uf:4180,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Venta en blanco: pie en cuotas durante la obra (confirmar)','Studio, 1D y 2D de 24 a 58 m²; precios desde 2.428–2.709 UF'],
+   extra:'Grupo con 26 años en Antofagasta, Iquique, Viña y Santiago. Precio del 2D estimado.', conf:'media',
+   f:['https://miramar.cl/antofagasta.php']},
+  {id:'montevideo', n:'Montevideo 464', inmo:'Inmobiliaria Contigo', dir:'Montevideo 464', sector:'playa-paraiso', lat:-23.6680, lon:-70.4020,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:38.3,uf:2350},{t:'2D1B',d:2,b:1,m2:43.32,uf:2800}],
+   estac:{incl:null, nota:'cupos limitados'}, bodega:{incl:null},
+   pago:['Subsidio DS19 automático (clase media, desde 340 UF; ahorro 80 UF; RSH ≤ 90%)','Con subsidio DS19 rigen prohibiciones de venta: para invertir, evalúa sin subsidio'],
+   extra:'299 departamentos en edificios de 5 pisos, 38–54 m².', conf:'alta',
+   f:['https://icontigo.cl/proyectos/montevideo-464/','https://usatusubsidio.cl/propiedades/montevideo-464/']},
+  {id:'marpacifico', n:'Edificio Marpacífico', inmo:'Costa Sur', dir:'Antilhue 0710', sector:'playa-blanca', lat:-23.6790, lon:-70.4060,
+   estado:'inmediata', entrega:'Pronta entrega', meses:2, u:[{t:'1D1B',d:1,b:1,m2:33,uf:2400,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Costa Sur informa 1D a 3D desde 2.400 UF; los portales sólo muestran 3D desde 4.001 UF: verificar'],
+   extra:'Continuación del proyecto Montemar. Sala de ventas en el mismo edificio.', conf:'baja',
+   f:['https://www.icostasur.cl/','https://bancoestado.enlaceinmobiliario.cl/antofagasta/departamento/edificio-marpacifico/8042']},
+  // ---- Fuera de la zona preferida (al norte de calle Copiapó): referencia de comparación
+  {id:'almendros', n:'Los Almendros · Plaza Costanera', inmo:'Grupo Coloso', dir:'Santiago Humberstone 17', sector:'la-chimba', lat:-23.5760, lon:-70.3920,
+   estado:'verde', entrega:'Entrega futura', meses:18, u:[{t:'1D1B',d:1,b:1,m2:39.91,uf:3084}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Venta en verde'], extra:'', conf:'alta',
+   f:['https://grupocoloso.cl/proyectos/edificio-los-almendros/']},
+  {id:'nogal', n:'Nogal · Plaza Costanera', inmo:'Grupo Coloso', dir:'Plaza Costanera, La Chimba', sector:'la-chimba', lat:-23.5745, lon:-70.3915,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:63.11,uf:4016}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata'], extra:'', conf:'alta',
+   f:['https://grupocoloso.cl/proyectos/edificio-el-nogal/']},
+  {id:'albatros', n:'Albatros · Parque Vistamar', inmo:'Grupo Coloso', dir:'Av. Pedro Aguirre Cerda 11100', sector:'vistamar', lat:-23.5575, lon:-70.3820,
+   estado:'verde', entrega:'En verde', meses:18, u:[{t:'1D1B',d:1,b:1,m2:39.2,uf:3168}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Venta en verde'], extra:'', conf:'alta',
+   f:['https://grupocoloso.cl/proyectos/edificio-albatros/']},
+  {id:'caiquenes', n:'Los Caiquenes · Parque Vistamar', inmo:'Grupo Coloso', dir:'Av. Pedro Aguirre Cerda 11100', sector:'vistamar', lat:-23.5560, lon:-70.3812,
+   estado:'blanco', entrega:'Nuevo proyecto', meses:18, u:[{t:'1D1B',d:1,b:1,m2:37.7,uf:3103}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Lanzamiento'], extra:'1D, 2D y 3D.', conf:'media',
+   f:['https://grupocoloso.cl/proyectos/edificio-los-caiquenes/']},
+  {id:'garzas', n:'Las Garzas · Parque Vistamar', inmo:'Grupo Coloso', dir:'Av. Pedro Aguirre Cerda 11100', sector:'vistamar', lat:-23.5545, lon:-70.3825,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:58,uf:3754,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata'], extra:'m² estimado.', conf:'media',
+   f:['https://grupocoloso.cl/proyectos/edificio-las-garzas/']},
+  {id:'liparita', n:'Edificio Liparita', inmo:'RVC', dir:'Liparita 260', sector:'nicolas-tirado', lat:-23.5935, lon:-70.3860,
+   estado:'verde', entrega:'2º semestre 2026', meses:3, u:[{t:'1D1B',d:1,b:1,m2:34,uf:2090,m2est:true},{t:'2D1B',d:2,b:1,m2:52,uf:3471,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega 2º semestre 2026'], extra:'19 pisos. A 4 minutos de Playa Trocadero. m² estimados.', conf:'media',
+   f:['https://www.rvc.cl/proyecto/edificio-liparita/']},
+  {id:'huasco', n:'Edificio Huasco', inmo:'Costa Sur', dir:'Huasco 86', sector:'norte-hospital', lat:-23.6150, lon:-70.3915,
+   estado:'blanco', entrega:'En blanco', meses:18, u:[{t:'1D1B',d:1,b:1,m2:32,uf:2653}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Venta en blanco'], extra:'1D a 3D de 32 a 60 m². Portales muestran desde 3.068 UF.', conf:'media',
+   f:['https://www.icostasur.cl/']},
+  {id:'phorizonte', n:'Puerto Horizonte', inmo:'MDA', dir:'Pirita 10565 / Los Poetas 10560', sector:'vistamar', lat:-23.5530, lon:-70.3755,
+   estado:'inmediata', entrega:'Etapas I y II', meses:0, u:[{t:'2D1B',d:2,b:1,m2:45,uf:2300}],
+   estac:{incl:null, nota:'218 estac. para 398 deptos'}, bodega:{incl:null}, pago:['Subsidio DS19'], extra:'3 torres, 398 departamentos.', conf:'media',
+   f:['https://www.puertohorizonte.cl/','https://mdai.cl/proyectos/puerto-horizonte']},
+  {id:'bahianorte', n:'Bahía Norte', inmo:'s/i', dir:'La Chimba', sector:'la-chimba', lat:-23.5665, lon:-70.3950,
+   estado:'blanco', entrega:'s/i', meses:12, u:[{t:'1D1B',d:1,b:1,m2:36,uf:2729,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['s/i'], extra:'Dato parcial de portal.', conf:'baja',
+   f:['https://www.portalinmobiliario.com/departamento/proyectos/1-dormitorio/antofagasta']},
+  {id:'velas3', n:'Las Velas del Norte 3', inmo:'s/i', dir:'La Chimba', sector:'la-chimba', lat:-23.5700, lon:-70.3960,
+   estado:'blanco', entrega:'s/i', meses:12, u:[{t:'1D1B',d:1,b:1,m2:32,uf:2160,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['s/i'], extra:'Dato parcial de portal.', conf:'baja',
+   f:['https://www.portalinmobiliario.com/departamento/proyectos/1-dormitorio/antofagasta']},
+  {id:'trocadero', n:'Condominio Trocadero', inmo:'s/i', dir:'Nicolás Tirado', sector:'nicolas-tirado', lat:-23.5985, lon:-70.3875,
+   estado:'verde', entrega:'En verde', meses:12, u:[{t:'1D1B',d:1,b:1,m2:33,uf:1957,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Venta en verde'], extra:'Dato parcial de portal.', conf:'baja',
+   f:['https://www.portalinmobiliario.com/departamento/proyectos/1-dormitorio/antofagasta']}
+];
+
+const MERCADO = [
+  {v:'4,06%', t:'Tasa hipotecaria promedio del sistema', d:'Septiembre 2026, la más baja desde diciembre 2021. TPM 4,5%.', f:'https://www.neatpagos.com/blog/articulo/mejor-tasa-credito-hipotecario'},
+  {v:'+70,8%', t:'Transacciones inmobiliarias en Antofagasta, 1er semestre 2026', d:'El volumen en UF subió 338%. La minería y sus proveedores explican cerca del 70% de las operaciones.', f:'https://tierramarillano.cl/2026/08/01/ventas-inmobiliarias-en-antofagasta-crecen-70-en-el-primer-semestre/'},
+  {v:'−22%', t:'Oferta de arriendo en un año', d:'Los departamentos disponibles bajaron 25% y el arriendo subió 6%: mercado estrecho, baja vacancia.', f:'https://www.coldwellbanker.cl/blog/blog-1/antofagasta-2025-departamentos-usados-218'},
+  {v:'4,5% · 4,7%', t:'Cap rate promedio 1D1B · 2D2B', d:'Arriendo medio $554.000 (1D) y $828.000 (2D); precio medio 3.128 UF y 4.477 UF. Antofagasta supera a Santiago.', f:'https://www.cnnchile.com/pais/antofagasta-la-serena-y-concepcion-superan-a-santiago-en-rentabilidad-para-invertir-en-departamentos/'},
+  {v:'6,6% · 6,4%', t:'Rentabilidad estimada en arriendo de corto plazo', d:'1D y 2D, respectivamente. Exige administración activa y amoblado.', f:'https://www.latercera.com/pulso/noticia/ciudades-y-comunas-donde-es-mas-rentable-comprar-un-departamento-para-arrendarlo/'},
+  {v:'−60 pb', t:'Subsidio a la tasa (Ley 21.836, agosto 2026)', d:'Viviendas nuevas de hasta 6.000 UF, 80.000 cupos, vigente hasta mayo 2028. Orientado a la primera vivienda.', f:'https://www.imagina.cl/blogs/ampliacion-subsidio-hipotecario-fogaes/'}
+];
+
+/* =====================================================================
+   2. ESTADO
+   ===================================================================== */
+const DEF = {
+  uf:UF_HOY, renta:2500000, ahorro:25000000, banco:'mejor', plazo:30, pie:0.20, bono:0, horizonte:10,
+  zona:'sur', tip:'todas', subsidio:false, pieCuotas:true, comprarExtras:true, admin:'propia',
+  vac:0.05, mant:0.05, corr:0.02, desc:0.05, desg:0.000195, inc:0.00026, costoVenta:0.02,
+  gastosFijos:13, cbr:0.003, ite:0.008, contribExento:60000000, contribTasa:0.0098, divRenta:0.25, rentGrowth:0,
+  w:{tir:30, flujo:20, cap:15, plus:10, acceso:15, riesgo:10},
+  sim:null, simOv:{}, escSel:[], escFocus:null, escCustom:{dTasa:0, dArr:0, vac:null, dPlus:0},
+  mapLayer:'plus', mapExt:'sur', provZona:'sur', provTip:'todas', provEstado:'todos', provQ:'', provSel:null,
+  sect:{}, bancosOv:{}
+};
+let S = load();
+function load(){
+  let s = JSON.parse(JSON.stringify(DEF));
+  try { const raw = localStorage.getItem('radarSur.v1'); if (raw) { const o = JSON.parse(raw); s = Object.assign(s, o); s.w = Object.assign({}, DEF.w, o.w||{}); s.escCustom = Object.assign({}, DEF.escCustom, o.escCustom||{}); } } catch(e) {}
+  return s;
+}
+function save(){ try { localStorage.setItem('radarSur.v1', JSON.stringify(S)); } catch(e) {} }
+
+/* =====================================================================
+   3. UTILIDADES
+   ===================================================================== */
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NF0 = new Intl.NumberFormat('es-CL',{maximumFractionDigits:0});
+const NF1 = new Intl.NumberFormat('es-CL',{minimumFractionDigits:1, maximumFractionDigits:1});
+const NF2 = new Intl.NumberFormat('es-CL',{minimumFractionDigits:2, maximumFractionDigits:2});
+const MINUS = '−';
+const sgn = v => v < 0 ? MINUS : '';
+const clp = v => isFinite(v) ? sgn(v) + '$' + NF0.format(Math.abs(Math.round(v))) : '—';
+const clpS = v => isFinite(v) ? (v > 0 ? '+' : sgn(v)) + '$' + NF0.format(Math.abs(Math.round(v))) : '—';
+const clpM = v => { if (!isFinite(v)) return '—'; const a = Math.abs(v); if (a >= 1e6) return sgn(v) + '$' + NF1.format(a/1e6) + ' M'; if (a >= 1e3) return sgn(v) + '$' + NF0.format(a/1e3) + ' mil'; return clp(v); };
+const ufF = (v, d=1) => isFinite(v) ? sgn(v) + 'UF ' + (d===0?NF0:d===2?NF2:NF1).format(Math.abs(v)) : '—';
+const pct = (v, d=1) => isFinite(v) ? sgn(v) + (d===2?NF2:d===0?NF0:NF1).format(Math.abs(v*100)) + '%' : '—';
+const pctS = (v, d=1) => isFinite(v) ? (v>0?'+':sgn(v)) + (d===2?NF2:NF1).format(Math.abs(v*100)) + '%' : '—';
+const num = (v, d=0) => isFinite(v) ? sgn(v) + (d===2?NF2:d===1?NF1:NF0).format(Math.abs(v)) : '—';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const sect = id => Object.assign({}, SECTORES[id], S.sect[id] || {});
+const projById = id => PROYECTOS.find(p => p.id === id);
+const bancoTasa = b => (S.bancosOv[b.id] != null ? S.bancosOv[b.id] : b.tasa);
+const ESTADO_TXT = {inmediata:'Entrega inmediata', verde:'En verde', blanco:'En blanco'};
+const CONF_TXT = {alta:'Dato confiable', media:'Verificar', baja:'Dato parcial'};
+
+/* =====================================================================
+   4. MOTOR FINANCIERO
+   ===================================================================== */
+function rentaEstimada(p, u){
+  const s = sect(p.sector);
+  const dos = u.d >= 2;
+  const base = dos ? s.arr2 : s.arr1;
+  const ref = dos ? 60 : 38;
+  let r = base * Math.pow(u.m2 / ref, 0.45);
+  if (dos && u.b === 1) r *= 0.95;
+  return r;
+}
+function bancoPara(c, P){
+  const eleg = c.subsidio && P <= 6000;
+  const tasaDe = b => { const t = bancoTasa(b); if (!eleg) return t; return b.sub != null ? Math.min(t, b.sub) : t - 0.60; };
+  if (c.banco && c.banco !== 'mejor'){
+    const b = BANCOS.find(x => x.id === c.banco) || BANCOS[0];
+    return {b, tasa: tasaDe(b), eleg};
+  }
+  let best = null;
+  BANCOS.forEach(b => { const t = tasaDe(b); if (!best || t < best.tasa) best = {b, tasa:t, eleg}; });
+  return best;
+}
+function irr(flows){
+  const npv = r => { let v = 0, d = 1; for (let t = 0; t < flows.length; t++){ v += flows[t] / d; d *= (1 + r); } return v; };
+  let lo = -0.0099, hi = 0.08, flo = npv(lo), fhi = npv(hi);
+  if (!isFinite(flo) || !isFinite(fhi) || flo * fhi > 0) return NaN;
+  for (let k = 0; k < 80; k++){
+    const mid = (lo + hi) / 2, fm = npv(mid);
+    if (fm * flo > 0){ lo = mid; flo = fm; } else { hi = mid; }
+  }
+  return (lo + hi) / 2;
+}
+/* Evalúa una unidad. Todos los flujos en UF (términos reales: arriendo y deuda indexados a UF). */
+function evaluar(p, u, ov){
+  const c = Object.assign({}, S, ov || {});
+  const UFv = c.uf;
+  const s = sect(p.sector);
+  const estacAparte = p.estac && p.estac.incl === false;
+  const bodAparte = p.bodega && p.bodega.incl === false;
+  const extras = c.comprarExtras ? (estacAparte ? (p.estac.uf || 300) : 0) + (bodAparte ? (p.bodega.uf || 50) : 0) : 0;
+  const sinEstac = estacAparte && !c.comprarExtras;
+  const P = u.uf + extras;
+  const bk = bancoPara(c, P);
+  let tasa = (c.tasaOv != null ? c.tasaOv : bk.tasa) + (c.dTasa || 0);
+  tasa = Math.max(0.1, tasa);
+  const pie = clamp(c.pie, 0, 1);
+  const bono = clamp(c.bono || 0, 0, pie);
+  const L = P * (1 - pie);
+  const piePago = P * (pie - bono);
+  const n = c.plazo * 12, i = tasa / 100 / 12;
+  const cuota = L * i / (1 - Math.pow(1 + i, -n));
+  const segInc = P * 0.8 * c.inc;
+  const div1 = cuota + segInc + L * c.desg;
+  const gastos = c.gastosFijos + P * c.cbr + L * c.ite;
+  const invIni = piePago + gastos;
+
+  const rentBase = (c.arrOv != null ? c.arrOv : rentaEstimada(p, u) * (sinEstac ? 0.93 : 1));
+  const rent = rentBase * (1 + (c.dArr || 0));
+  const gcCLP = u.m2 * s.gc;
+  const rentUF = rent / UFv;
+  const vac = c.vacOv != null ? c.vacOv : c.vac;
+  const adminPct = c.admin === 'corredor' ? 0.08 * 1.19 : 0;
+  const opexPct = c.mant + c.corr + adminPct;
+  const gcOwnerUF = gcCLP * vac / UFv;
+  const contribAnual = Math.max(0, (P * UFv * 0.55 - c.contribExento)) * c.contribTasa * 0.5; // DFL2 (≤140 m²): 50% de exención
+  const contribUF = contribAnual / 12 / UFv;
+  const noi1 = rentUF * (1 - vac) - rentUF * opexPct - gcOwnerUF - contribUF;
+  const flujo1 = noi1 - div1;
+  const capRate = noi1 * 12 / P;
+  const brutaRent = rentUF * 12 / P;
+  const rentBEclp = ((div1 + contribUF + gcOwnerUF) / (1 - vac - opexPct)) * UFv;
+  const sueldoReq = div1 * UFv / c.divRenta;
+
+  // Línea de tiempo mensual
+  const D = c.forceInmediata ? 0 : (p.meses || 0);
+  const H = Math.round(c.horizonte * 12);
+  const g = s.plus / 100 + (c.dPlus || 0);
+  const rg = Math.pow(1 + (c.rentGrowth || 0), 1/12) - 1;
+  const flows = new Array(D + H + 1).fill(0);
+  if (D > 0 && c.pieCuotas){ for (let t = 0; t < D; t++) flows[t] -= piePago / D; } else flows[0] -= piePago;
+  flows[D] -= gastos;
+  let saldo = L, intAcum = 0, capAcum = 0;
+  const years = [];
+  let yr = {arr:0, div:0, flujo:0, int:0, cap:0};
+  for (let m = 1; m <= H; m++){
+    const t = D + m;
+    let pago = segInc, interes = 0, amort = 0;
+    if (m <= n){ interes = saldo * i; amort = cuota - interes; pago += cuota + saldo * c.desg; }
+    saldo = Math.max(0, saldo - amort);
+    intAcum += interes; capAcum += amort;
+    const rm = rentUF * Math.pow(1 + rg, m - 1);
+    const noi = rm * (1 - vac) - rm * opexPct - gcOwnerUF - contribUF;
+    const f = noi - pago;
+    flows[t] += f;
+    yr.arr += rm * (1 - vac); yr.div += pago; yr.flujo += f; yr.int += interes; yr.cap += amort;
+    if (m % 12 === 0){
+      const val = P * Math.pow(1 + g, t / 12);
+      years.push({y: m / 12, arr: yr.arr, div: yr.div, flujo: yr.flujo, int: yr.int, cap: yr.cap, saldo, valor: val, equity: val - saldo});
+      yr = {arr:0, div:0, flujo:0, int:0, cap:0};
+    }
+  }
+  const valorFinal = P * Math.pow(1 + g, (D + H) / 12);
+  const netoVenta = valorFinal * (1 - c.costoVenta) - saldo;
+  flows[D + H] += netoVenta;
+  const irrM = irr(flows);
+  const tir = isFinite(irrM) ? Math.pow(1 + irrM, 12) - 1 : NaN;
+  const dm = Math.pow(1 + c.desc, 1/12) - 1;
+  let van = 0, dd = 1; for (let t = 0; t < flows.length; t++){ van += flows[t] / dd; dd *= (1 + dm); }
+  const totalIn = flows.filter(x => x < 0).reduce((a, x) => a - x, 0);
+  const totalOut = flows.filter(x => x > 0).reduce((a, x) => a + x, 0);
+  const coc = flujo1 * 12 / invIni;
+  return {
+    p, u, P, extras, sinEstac, banco: bk.b, tasa, subsidio: bk.eleg, L, piePago, bono, gastos, invIni, cuota, div1, segInc,
+    rent, rentUF, gcCLP, vac, noi1, flujo1, capRate, brutaRent, rentBEclp, sueldoReq, contribUF,
+    D, H, g, years, valorFinal, saldoFinal: saldo, netoVenta, tir, van, coc, mult: totalOut / totalIn, totalIn, intAcum,
+    ufm2: u.uf / u.m2, per: P / (rentUF * 12),
+    okAhorro: invIni * UFv <= c.ahorro, okRenta: sueldoReq <= c.renta
+  };
+}
+function unidades(filtro){
+  const f = Object.assign({zona: S.zona, tip: S.tip}, filtro || {});
+  const out = [];
+  PROYECTOS.forEach(p => {
+    const s = sect(p.sector);
+    if (f.zona === 'sur' && !s.sur) return;
+    if (f.zona === 'norte' && s.sur) return;
+    p.u.forEach((u, k) => {
+      if (f.tip === '1D' && u.d !== 1) return;
+      if (f.tip === '2D' && u.d !== 2) return;
+      out.push({p, u, key: p.id + ':' + k});
+    });
+  });
+  return out;
+}
+function unitByKey(key){ const [id, k] = String(key).split(':'); const p = projById(id); return p ? {p, u: p.u[+k] || p.u[0], key} : null; }
+const riesgoBase = (p) => clamp(100 - (p.meses || 0) / 36 * 45 - ({alta:0, media:15, baja:35})[p.conf] - (p.estado === 'inmediata' ? 0 : 8), 0, 100);
+
+/* Ranking ponderado. Cada componente se normaliza 0–100 dentro del conjunto evaluado. */
+function ranking(filtro){
+  const list = unidades(filtro).map(x => Object.assign(x, {r: evaluar(x.p, x.u)}));
+  if (!list.length) return [];
+  const comp = {
+    tir: x => isFinite(x.r.tir) ? x.r.tir : -0.2,
+    flujo: x => x.r.flujo1,
+    cap: x => x.r.capRate,
+    plus: x => sect(x.p.sector).plus,
+    acceso: x => -(x.r.invIni) - (x.r.okRenta ? 0 : 400),
+    riesgo: x => riesgoBase(x.p)
+  };
+  const norm = {};
+  Object.keys(comp).forEach(k => {
+    const vals = list.map(comp[k]);
+    const mn = Math.min(...vals), mx = Math.max(...vals);
+    norm[k] = v => mx - mn < 1e-12 ? 50 : (v - mn) / (mx - mn) * 100;
+  });
+  const W = S.w, wsum = Object.values(W).reduce((a, b) => a + b, 0) || 1;
+  list.forEach(x => {
+    x.c = {};
+    let sc = 0;
+    Object.keys(comp).forEach(k => { x.c[k] = norm[k](comp[k](x)); sc += x.c[k] * (W[k] || 0); });
+    x.score = sc / wsum;
+  });
+  list.sort((a, b) => b.score - a.score);
+  list.forEach((x, i) => x.rank = i + 1);
+  return list;
+}
+const COMP_TXT = {tir:'TIR', flujo:'flujo mensual', cap:'cap rate', plus:'plusvalía del sector', acceso:'pie y renta exigidos', riesgo:'riesgo de entrega y dato'};
+function porQue(x){
+  const ks = Object.keys(x.c).filter(k => (S.w[k]||0) > 0).sort((a, b) => x.c[b] - x.c[a]);
+  const fuertes = ks.slice(0, 2).map(k => COMP_TXT[k]);
+  const debil = ks[ks.length - 1];
+  return 'Destaca en ' + fuertes.join(' y ') + '. Más débil en ' + COMP_TXT[debil] + '.' + (x.p.conf === 'baja' ? ' Dato parcial: confirma precio y m² antes de decidir.' : '');
+}
+
+/* =====================================================================
+   5. TOOLTIP Y GRÁFICOS
+   ===================================================================== */
+const tip = $('#tip');
+function showTip(html, x, y){
+  tip.innerHTML = html; tip.classList.add('on');
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = x + 14, top = y + 14;
+  if (left + w > window.innerWidth - 8) left = x - w - 14;
+  if (top + h > window.innerHeight - 8) top = y - h - 14;
+  tip.style.left = Math.max(8, left) + 'px'; tip.style.top = Math.max(8, top) + 'px';
+}
+function hideTip(){ tip.classList.remove('on'); }
+function niceTicks(min, max, count){
+  if (min === max){ min -= 1; max += 1; }
+  const span = max - min, step0 = span / count, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const err = step0 / mag; const step = (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+  const t = []; for (let v = lo; v <= hi + step / 2; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* Barras horizontales HTML (una serie; énfasis en el elemento destacado) */
+function barsHTML(rows, fmt, opts){
+  opts = opts || {};
+  const max = Math.max(...rows.map(r => Math.abs(r.v)), 1e-9);
+  return '<div class="bars">' + rows.map((r, i) => {
+    const w = Math.max(0, r.v) / max * 100;
+    return `<div class="bar-row" tabindex="0" data-tip="${esc(r.tip || '')}"><div class="bl"><b>${esc(r.l)}</b>${r.s ? ' <span>' + esc(r.s) + '</span>' : ''}</div><div class="bar-track"><div class="bar-fill ${r.em ? (opts.emClass || 'em') : ''}" style="width:${w.toFixed(2)}%"></div></div><div class="bv">${esc(fmt(r.v))}</div></div>`;
+  }).join('') + '</div>';
+}
+function bindBarTips(root){
+  $$('.bar-row[data-tip]', root).forEach(el => {
+    const t = el.getAttribute('data-tip'); if (!t) return;
+    el.addEventListener('pointermove', e => showTip(t, e.clientX, e.clientY));
+    el.addEventListener('pointerleave', hideTip);
+    el.addEventListener('focus', () => { const r = el.getBoundingClientRect(); showTip(t, r.left + 40, r.bottom); });
+    el.addEventListener('blur', hideTip);
+  });
+}
+
+/* Dispersión: x, y con grupo principal (zona sur, cobre) y contexto (gris). */
+function scatter(el, pts, o){
+  const W = Math.max(280, el.clientWidth), Hh = o.h || 300;
+  const m = {l: 64, r: 14, t: 12, b: 40};
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const xt = niceTicks(Math.min(...xs), Math.max(...xs), 5), yt = niceTicks(Math.min(0, ...ys), Math.max(0, ...ys), 5);
+  const x0 = xt[0], x1 = xt[xt.length - 1], y0 = yt[0], y1 = yt[yt.length - 1];
+  const X = v => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r);
+  const Y = v => Hh - m.b - (v - y0) / (y1 - y0) * (Hh - m.t - m.b);
+  let s = `<svg width="${W}" height="${Hh}" role="img" aria-label="${esc(o.aria || '')}">`;
+  yt.forEach(v => { s += `<line class="${v === 0 ? 'axis-l' : 'grid-l'}" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${esc(o.yFmt(v))}</text>`; });
+  xt.forEach(v => { s += `<text x="${X(v)}" y="${Hh - m.b + 18}" text-anchor="middle">${esc(o.xFmt(v))}</text>`; });
+  s += `<text x="${(m.l + W - m.r) / 2}" y="${Hh - 4}" text-anchor="middle">${esc(o.xLabel)}</text>`;
+  const order = pts.slice().sort((a, b) => (a.main ? 1 : 0) - (b.main ? 1 : 0));
+  order.forEach(p => {
+    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${p.big ? 7 : 5}" fill="${p.main ? 'var(--s2)' : 'var(--deemph)'}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  pts.filter(p => p.label).forEach(p => {
+    const lx = X(p.x), anchor = lx > W * 0.7 ? 'end' : 'start';
+    s += `<text x="${lx + (anchor === 'end' ? -10 : 10)}" y="${Y(p.y) - 8}" text-anchor="${anchor}" style="fill:var(--ink-2);font-family:var(--f-ui);font-weight:600">${esc(p.label)}</text>`;
+  });
+  s += '</svg>';
+  el.innerHTML = s;
+  const svg = el.querySelector('svg');
+  svg.addEventListener('pointermove', e => {
+    const r = svg.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    let best = null, bd = 24 * 24;
+    pts.forEach(p => { const dx = X(p.x) - mx, dy = Y(p.y) - my, d = dx * dx + dy * dy; if (d < bd){ bd = d; best = p; } });
+    if (best) showTip(best.tip, e.clientX, e.clientY); else hideTip();
+  });
+  svg.addEventListener('pointerleave', hideTip);
+}
+
+/* Líneas con cruz que se ajusta al año más cercano */
+function lines(el, series, o){
+  const W = Math.max(280, el.clientWidth), Hh = o.h || 260;
+  const m = {l: 64, r: 92, t: 14, b: 34};
+  const all = series.flatMap(s => s.v);
+  const xs = all.map(p => p.x), ys = all.map(p => p.y);
+  const xmin = Math.min(...xs), xmax = Math.max(...xs);
+  const yt = niceTicks(Math.min(0, ...ys), Math.max(...ys), 5);
+  const y0 = yt[0], y1 = yt[yt.length - 1];
+  const X = v => m.l + (v - xmin) / Math.max(1e-9, xmax - xmin) * (W - m.l - m.r);
+  const Y = v => Hh - m.b - (v - y0) / (y1 - y0) * (Hh - m.t - m.b);
+  let s = `<svg width="${W}" height="${Hh}" role="img" aria-label="${esc(o.aria || '')}">`;
+  yt.forEach(v => { s += `<line class="${v === 0 ? 'axis-l' : 'grid-l'}" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${esc(o.yFmt(v))}</text>`; });
+  const xsU = [...new Set(xs)].sort((a, b) => a - b);
+  const stepLbl = Math.ceil(xsU.length / 8);
+  xsU.forEach((v, k) => { if (k % stepLbl === 0 || k === xsU.length - 1) s += `<text x="${X(v)}" y="${Hh - m.b + 18}" text-anchor="middle">${esc(o.xFmt(v))}</text>`; });
+  series.forEach(se => {
+    if (se.area){
+      const d = se.v.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ` L${X(se.v[se.v.length - 1].x).toFixed(1)} ${Y(0)} L${X(se.v[0].x).toFixed(1)} ${Y(0)} Z`;
+      s += `<path d="${d}" fill="${se.c}" opacity=".10"/>`;
+    }
+    const d = se.v.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ');
+    s += `<path d="${d}" fill="none" stroke="${se.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const last = se.v[se.v.length - 1];
+    s += `<circle cx="${X(last.x)}" cy="${Y(last.y)}" r="4" fill="${se.c}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  // etiquetas finales con separación mínima
+  const ends = series.map(se => ({n: se.n, y: Y(se.v[se.v.length - 1].y), v: se.v[se.v.length - 1].y})).sort((a, b) => a.y - b.y);
+  for (let k = 1; k < ends.length; k++) if (ends[k].y - ends[k - 1].y < 26) ends[k].y = ends[k - 1].y + 26;
+  ends.forEach(e => { s += `<text x="${W - m.r + 8}" y="${e.y - 2}" style="fill:var(--ink-2);font-family:var(--f-ui);font-weight:600">${esc(e.n)}</text><text x="${W - m.r + 8}" y="${e.y + 11}">${esc(o.yFmt(e.v))}</text>`; });
+  s += `<line class="xh" x1="0" x2="0" y1="${m.t}" y2="${Hh - m.b}" stroke="var(--line-strong)" stroke-width="1" opacity="0"/></svg>`;
+  el.innerHTML = s;
+  const svg = el.querySelector('svg'), xh = svg.querySelector('.xh');
+  svg.addEventListener('pointermove', e => {
+    const r = svg.getBoundingClientRect(), mx = e.clientX - r.left;
+    let bx = xsU[0], bd = Infinity; xsU.forEach(v => { const d = Math.abs(X(v) - mx); if (d < bd){ bd = d; bx = v; } });
+    xh.setAttribute('x1', X(bx)); xh.setAttribute('x2', X(bx)); xh.setAttribute('opacity', 1);
+    let h = `<div class="tl">${esc(o.xFmt(bx, true))}</div>`;
+    series.forEach(se => { const p = se.v.find(q => q.x === bx); if (p) h += `<div class="tr"><i style="background:${se.c}"></i><span class="tv">${esc(o.yFmt(p.y, true))}</span> <span class="tl">${esc(se.n)}</span></div>`; });
+    showTip(h, e.clientX, e.clientY);
+  });
+  svg.addEventListener('pointerleave', () => { xh.setAttribute('opacity', 0); hideTip(); });
+}
+
+/* Interpolación de colores para cuadrículas divergentes */
+function hex2rgb(h){ h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return [0, 2, 4].map(k => parseInt(h.substr(k, 2), 16)); }
+function mix(a, b, t){ const A = hex2rgb(a), B = hex2rgb(b); return A.map((v, k) => Math.round(v + (B[k] - v) * t)); }
+function divColor(v, center, span){
+  const neg = cssVar('--div-neg') || '#e34948', mid = cssVar('--div-mid') || '#eef0f2', pos = cssVar('--div-pos') || '#2a78d6';
+  const t = clamp((v - center) / span, -1, 1);
+  const rgb = t >= 0 ? mix(mid, pos, t) : mix(mid, neg, -t);
+  const lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+  return {bg: `rgb(${rgb.join(',')})`, fg: lum > 0.55 ? '#0f1821' : '#ffffff'};
+}
+
+/* =====================================================================
+   6. NAVEGACIÓN
+   ===================================================================== */
+const VIEWS = {
+  resumen:{t:'Resumen', e:'Antofagasta · al sur de calle Copiapó'},
+  proyectos:{t:'Proyectos mapeados', e:'Catálogo · ' + PROYECTOS.length + ' proyectos de ' + new Set(PROYECTOS.map(p => p.inmo)).size + ' inmobiliarias'},
+  simulador:{t:'Simulador de inversión', e:'Dividendo, flujo y rentabilidad'},
+  bancos:{t:'Comparador de bancos', e:'Dividendo por banco y plazo'},
+  ranking:{t:'Ranking de conveniencia', e:'Lo que más te conviene hoy'},
+  mapa:{t:'Mapa de calor', e:'Focos de plusvalía y arriendo'},
+  escenarios:{t:'Análisis de escenarios', e:'Qué pasa si cambian tasa, arriendo o plusvalía'},
+  asesoria:{t:'Asesoría y estudio de mercado', e:'Recomendación del ' + FECHA_DATOS},
+  supuestos:{t:'Supuestos y fuentes', e:'Todo lo que el modelo asume, editable'}
+};
+let current = 'resumen';
+function go(v, push){
+  if (!VIEWS[v]) v = 'resumen';
+  current = v;
+  $$('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'));
+  $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v));
+  $('#vTitle').textContent = VIEWS[v].t;
+  $('#vEyebrow').textContent = VIEWS[v].e;
+  if (push !== false){ try { history.replaceState(null, '', '#' + v); } catch(e) {} }
+  render();
+  window.scrollTo({top: 0});
+}
+$$('.nav button').forEach(b => b.addEventListener('click', () => go(b.dataset.v)));
+
+function render(){
+  hideTip();
+  $('#chipUf').textContent = '$' + NF2.format(S.uf);
+  $('#navUf').textContent = '$' + NF2.format(S.uf);
+  $('#chipPerfil').textContent = 'Pie ' + NF0.format(S.pie * 100) + '% · ' + S.plazo + ' años · ' + (S.banco === 'mejor' ? 'mejor tasa' : BANCOS.find(b => b.id === S.banco).n);
+  const fn = {resumen:rResumen, proyectos:rProyectos, simulador:rSimulador, bancos:rBancos, ranking:rRanking, mapa:rMapa, escenarios:rEscenarios, asesoria:rAsesoria, supuestos:rSupuestos}[current];
+  fn($('#v-' + current));
+}
+function set(k, v){ S[k] = v; save(); render(); }
+
+/* Controles compartidos */
+function segHTML(id, opts, val){
+  return `<div class="seg" role="group" data-seg="${id}">` + opts.map(o => `<button type="button" data-val="${esc(o[0])}" aria-pressed="${String(o[0]) === String(val)}">${esc(o[1])}</button>`).join('') + '</div>';
+}
+function bindSegs(root, handler){
+  $$('[data-seg]', root).forEach(g => $$('button', g).forEach(b => b.addEventListener('click', () => handler(g.dataset.seg, b.dataset.val))));
+}
+function bancoOptions(sel, mejor){
+  return (mejor ? `<option value="mejor"${sel === 'mejor' ? ' selected' : ''}>Mejor tasa disponible</option>` : '') + BANCOS.map(b => `<option value="${b.id}"${sel === b.id ? ' selected' : ''}>${esc(b.n)} · ${NF2.format(bancoTasa(b))}%</option>`).join('');
+}
+function unitLabel(p, u){ return p.n + ' · ' + u.t + ' ' + NF1.format(u.m2) + ' m²'; }
+function estadoPill(p){
+  const cls = p.estado === 'inmediata' ? 'good' : 'warn';
+  const ic = p.estado === 'inmediata' ? '●' : '◐';
+  return `<span class="pill ${cls}"><i>${ic}</i>${esc(ESTADO_TXT[p.estado])}</span>`;
+}
+function confPill(p){
+  const cls = {alta:'good', media:'warn', baja:'bad'}[p.conf], ic = {alta:'✓', media:'!', baja:'?'}[p.conf];
+  return `<span class="pill ${cls}" title="Confianza del dato"><i>${ic}</i>${esc(CONF_TXT[p.conf])}</span>`;
+}
+function extraTxt(x){
+  if (!x) return '<span class="muted">s/i</span>';
+  if (x.incl === true) return 'Incluido' + (x.nota ? ' <span class="muted">(' + esc(x.nota) + ')</span>' : '');
+  if (x.incl === false) return 'Aparte' + (x.uf ? ' · ' + ufF(x.uf, 0) : '');
+  return '<span class="muted">Consultar' + (x.nota ? ' · ' + esc(x.nota) : '') + '</span>';
+}
+function flujoCell(v){ return `<span class="${v >= 0 ? 'pos' : 'neg'}">${clpS(v)}</span>`; }
+function perfilHTML(){
+  return `<div class="panel"><div class="panel-head"><div><h2>Tu perfil de inversión</h2><p class="sub">Valores de ejemplo: cámbialos por los tuyos y todo se recalcula.</p></div></div>
+  <div class="frow">
+    <div class="field"><label for="pfRenta">Renta líquida mensual</label><input id="pfRenta" type="number" step="50000" min="0" value="${S.renta}"></div>
+    <div class="field"><label for="pfAhorro">Ahorro disponible para pie y gastos</label><input id="pfAhorro" type="number" step="500000" min="0" value="${S.ahorro}"></div>
+    <div class="field"><label for="pfPie">Pie <output>${NF0.format(S.pie * 100)}%</output></label><input id="pfPie" type="range" min="0.1" max="0.4" step="0.01" value="${S.pie}"></div>
+    <div class="field"><label for="pfPlazo">Plazo <output>${S.plazo} años</output></label><input id="pfPlazo" type="range" min="15" max="30" step="5" value="${S.plazo}"></div>
+    <div class="field"><label for="pfBanco">Banco</label><select id="pfBanco">${bancoOptions(S.banco, true)}</select></div>
+  </div>
+  <div class="filters" style="margin-top:12px">
+    <div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur','Sur de Copiapó'],['todas','Toda la ciudad'],['norte','Sólo norte']], S.zona)}</div>
+    <div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1 dormitorio'],['2D','2 dormitorios']], S.tip)}</div>
+    <label class="toggle" style="align-self:center"><input id="pfSub" type="checkbox"${S.subsidio ? ' checked' : ''}><span>Aplicar subsidio a la tasa / FOGAES<br><span class="muted small">Sólo si será tu primera vivienda (nueva, ≤ 6.000 UF)</span></span></label>
+  </div></div>`;
+}
+function bindPerfil(root){
+  const n = (id, k) => { const el = $('#' + id, root); if (el) el.addEventListener('change', () => set(k, Math.max(0, +el.value || 0))); };
+  n('pfRenta', 'renta'); n('pfAhorro', 'ahorro');
+  const r = (id, k) => { const el = $('#' + id, root); if (!el) return; el.addEventListener('input', () => { el.previousElementSibling.querySelector('output').textContent = k === 'pie' ? NF0.format(el.value * 100) + '%' : el.value + ' años'; }); el.addEventListener('change', () => set(k, +el.value)); };
+  r('pfPie', 'pie'); r('pfPlazo', 'plazo');
+  const b = $('#pfBanco', root); if (b) b.addEventListener('change', () => set('banco', b.value));
+  const sub = $('#pfSub', root); if (sub) sub.addEventListener('change', () => set('subsidio', sub.checked));
+  bindSegs(root, (k, v) => set(k, v));
+}
+
+/* =====================================================================
+   7. VISTAS
+   ===================================================================== */
+function rResumen(el){
+  const rk = ranking();
+  const todos = ranking({zona:'todas', tip:'todas'});
+  const sur = PROYECTOS.filter(p => sect(p.sector).sur);
+  if (!rk.length){ el.innerHTML = perfilHTML() + '<div class="panel">No hay unidades con estos filtros.</div>'; bindPerfil(el); return; }
+  const top = rk[0], r = top.r;
+  const surU = todos.filter(x => sect(x.p.sector).sur);
+  const avg = (arr, f) => arr.reduce((a, x) => a + f(x), 0) / Math.max(1, arr.length);
+  const best = BANCOS.reduce((a, b) => bancoTasa(b) < bancoTasa(a) ? b : a);
+  const presup = (x) => x.r.okAhorro && x.r.okRenta;
+  el.innerHTML = `
+  <div class="hero">
+    <div class="hero-main">
+      <div class="label">Hoy te conviene · #1 de ${rk.length} unidades evaluadas</div>
+      <h2 class="hero-name">${esc(top.p.n)} <span class="muted" style="font-weight:600">${esc(top.u.t)}</span></h2>
+      <div class="hero-meta">${esc(top.p.inmo)} · ${esc(top.p.dir)} · ${esc(sect(top.p.sector).n)} · ${NF1.format(top.u.m2)} m² · ${ufF(top.u.uf, 0)}</div>
+      <div class="hero-figure">
+        <div><div class="label">TIR estimada a ${S.horizonte} años</div><div class="big">${isFinite(r.tir) ? NF1.format(r.tir * 100) : '—'}<small>% real</small></div></div>
+        <div><div class="label">Puntaje</div><div class="big" style="font-size:36px">${NF0.format(top.score)}<small>/100</small></div></div>
+      </div>
+      <div class="chips">${estadoPill(top.p)} ${confPill(top.p)} ${presup(top) ? '<span class="pill good"><i>✓</i>Dentro de tu presupuesto</span>' : '<span class="pill bad"><i>✕</i>Excede tu ahorro o renta</span>'}</div>
+      <p class="small ink2" style="margin:0">${esc(porQue(top))}</p>
+      <div><button class="btn" data-sim="${top.key}">Simular esta unidad</button></div>
+    </div>
+    <div class="hero-side">
+      <div class="kv"><div class="k">Pie a pagar</div><div class="v">${ufF(r.piePago, 0)}<small>${clp(r.piePago * S.uf)}</small></div></div>
+      <div class="kv"><div class="k">Inversión inicial</div><div class="v">${clpM(r.invIni * S.uf)}<small>pie + gastos operacionales</small></div></div>
+      <div class="kv"><div class="k">Dividendo</div><div class="v">${clp(r.div1 * S.uf)}<small>${ufF(r.div1, 2)} · ${esc(r.banco.n)} ${NF2.format(r.tasa)}%</small></div></div>
+      <div class="kv"><div class="k">Arriendo estimado</div><div class="v">${clp(r.rent)}<small>+ GC ≈ ${clp(r.gcCLP)} que paga el arrendatario</small></div></div>
+      <div class="kv"><div class="k">Flujo mensual</div><div class="v ${r.flujo1 >= 0 ? 'pos' : 'neg'}">${clpS(r.flujo1 * S.uf)}<small>después de dividendo y costos</small></div></div>
+      <div class="kv"><div class="k">Renta exigida</div><div class="v">${clp(r.sueldoReq)}<small>dividendo ≤ 25% de la renta</small></div></div>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="k">Proyectos mapeados</div><div class="v">${PROYECTOS.length}</div><div class="d">${sur.length} al sur de Copiapó</div></div>
+    <div class="kpi"><div class="k">Precio medio sur</div><div class="v">${NF1.format(avg(surU, x => x.u.uf / x.u.m2))} UF/m²</div><div class="d">${surU.length} unidades 1D y 2D</div></div>
+    <div class="kpi"><div class="k">Cap rate medio sur</div><div class="v">${pct(avg(surU, x => x.r.capRate))}</div><div class="d">Mercado: 4,5% (1D) · 4,7% (2D)</div></div>
+    <div class="kpi"><div class="k">Mejor tasa hipotecaria</div><div class="v">${NF2.format(bancoTasa(best))}%</div><div class="d">${esc(best.n)} · promedio 4,06%</div></div>
+    <div class="kpi"><div class="k">Con flujo positivo</div><div class="v">${rk.filter(x => x.r.flujo1 >= 0).length} de ${rk.length}</div><div class="d">con pie ${NF0.format(S.pie * 100)}% a ${S.plazo} años</div></div>
+    <div class="kpi"><div class="k">Dentro de tu presupuesto</div><div class="v">${rk.filter(presup).length} de ${rk.length}</div><div class="d">según ahorro y renta</div></div>
+  </div>
+
+  ${perfilHTML()}
+
+  <div class="grid g2">
+    <div class="panel"><h2>Top 8 del ranking</h2><p class="sub">Puntaje 0–100 con tus ponderaciones actuales. Cambia los pesos en Ranking.</p><div id="rsTop"></div></div>
+    <div class="panel"><h2>Flujo mensual frente a la inversión inicial</h2><p class="sub">Cada punto es una unidad. Arriba a la izquierda: menos capital y mejor flujo.</p>
+      <div class="legend"><span><i style="background:var(--s2)"></i>Sur de Copiapó</span><span><i style="background:var(--deemph)"></i>Norte (referencia)</span></div>
+      <div class="chart" id="rsScatter"></div></div>
+  </div>
+
+  <div class="panel"><h2>Pulso del mercado</h2><p class="sub">Datos públicos de prensa y portales a ${esc(FECHA_DATOS)}.</p>
+    <div class="grid g3">${MERCADO.map(m => `<div class="fact"><div class="fv">${esc(m.v)}</div><div><b>${esc(m.t)}</b></div><div class="fd">${esc(m.d)}</div><a href="${esc(m.f)}" target="_blank" rel="noopener">Fuente</a></div>`).join('')}</div>
+  </div>`;
+  bindPerfil(el);
+  $$('[data-sim]', el).forEach(b => b.addEventListener('click', () => { S.sim = b.dataset.sim; S.simOv = {}; save(); go('simulador'); }));
+  $('#rsTop', el).innerHTML = barsHTML(rk.slice(0, 8).map((x, i) => ({l: '#' + x.rank + ' ' + x.p.n, s: x.u.t, v: x.score, em: i === 0,
+    tip: `<div class="tv">${NF0.format(x.score)} puntos</div><div class="tl">${esc(unitLabel(x.p, x.u))}</div><div class="tl">TIR ${pct(x.r.tir)} · flujo ${clpS(x.r.flujo1 * S.uf)}</div>`})), v => NF0.format(v));
+  bindBarTips($('#rsTop', el));
+  const pts = todos.map(x => ({x: x.r.invIni * S.uf / 1e6, y: x.r.flujo1 * S.uf / 1e3, main: sect(x.p.sector).sur, big: x.key === top.key,
+    label: x.key === top.key ? '#1 ' + x.p.n : '',
+    tip: `<div class="tv">${clpS(x.r.flujo1 * S.uf)} / mes</div><div class="tl">${esc(unitLabel(x.p, x.u))}</div><div class="tl">Inversión inicial ${clpM(x.r.invIni * S.uf)} · ${esc(sect(x.p.sector).n)}</div>`}));
+  scatter($('#rsScatter', el), pts, {xFmt: v => '$' + NF0.format(v) + ' M', yFmt: v => (v > 0 ? '+' : sgn(v)) + '$' + NF0.format(Math.abs(v)) + ' mil', xLabel: 'Inversión inicial (millones de pesos)', aria: 'Flujo mensual versus inversión inicial'});
+}
+
+function rProyectos(el){
+  const zonaOk = p => S.provZona === 'todas' || (S.provZona === 'sur') === sect(p.sector).sur;
+  const q = S.provQ.trim().toLowerCase();
+  const rows = [];
+  PROYECTOS.forEach(p => {
+    if (!zonaOk(p)) return;
+    if (S.provEstado !== 'todos' && p.estado !== S.provEstado) return;
+    if (q && !(p.n + ' ' + p.inmo + ' ' + p.dir + ' ' + sect(p.sector).n).toLowerCase().includes(q)) return;
+    p.u.forEach((u, k) => {
+      if (S.provTip === '1D' && u.d !== 1) return;
+      if (S.provTip === '2D' && u.d !== 2) return;
+      rows.push({p, u, key: p.id + ':' + k, r: evaluar(p, u)});
+    });
+  });
+  const sel = S.provSel ? projById(S.provSel) : null;
+  el.innerHTML = `
+  <div class="filters">
+    <div class="field"><span class="lbl">Zona</span>${segHTML('provZona', [['sur','Sur de Copiapó'],['todas','Todas'],['norte','Norte']], S.provZona)}</div>
+    <div class="field"><span class="lbl">Tipología</span>${segHTML('provTip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.provTip)}</div>
+    <div class="field"><span class="lbl">Estado</span>${segHTML('provEstado', [['todos','Todos'],['inmediata','Inmediata'],['verde','En verde'],['blanco','En blanco']], S.provEstado)}</div>
+    <div class="field" style="flex:1;min-width:180px"><label for="provQ">Buscar</label><input id="provQ" type="text" placeholder="Proyecto, inmobiliaria o calle" value="${esc(S.provQ)}"></div>
+  </div>
+  <p class="small muted" style="margin:0">${rows.length} unidades en ${new Set(rows.map(r => r.p.id)).size} proyectos. Arriendo y flujo con tu perfil actual (pie ${NF0.format(S.pie*100)}%, ${S.plazo} años, ${S.banco === 'mejor' ? 'mejor tasa' : esc(BANCOS.find(b=>b.id===S.banco).n)}). Toca una fila para ver la ficha.</p>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Proyecto</th><th>Sector</th><th>Tipo</th><th class="n">m²</th><th class="n">Precio</th><th class="n">UF/m²</th><th>Estac.</th><th>Bodega</th><th>Entrega</th><th class="n">Arriendo est.</th><th class="n">GC est.</th><th class="n">Cap rate</th><th class="n">Dividendo</th><th class="n">Flujo/mes</th><th>Dato</th></tr></thead>
+    <tbody>${rows.map(x => `<tr class="click${sel && sel.id === x.p.id ? ' sel' : ''}" data-p="${x.p.id}" tabindex="0">
+      <td><div class="pname">${esc(x.p.n)}</div><div class="pinmo">${esc(x.p.inmo)} · ${esc(x.p.dir)}</div></td>
+      <td>${esc(sect(x.p.sector).n)}${sect(x.p.sector).sur ? '' : ' <span class="pill"><i>↑</i>Norte</span>'}</td>
+      <td>${esc(x.u.t)}</td>
+      <td class="n">${NF1.format(x.u.m2)}${x.u.m2est ? '*' : ''}</td>
+      <td class="n">${ufF(x.u.uf, 0)}${x.u.ufest || x.u.dudoso ? '*' : ''}<div class="pinmo">${clpM(x.u.uf * S.uf)}</div></td>
+      <td class="n">${NF1.format(x.u.uf / x.u.m2)}</td>
+      <td>${extraTxt(x.p.estac)}</td><td>${extraTxt(x.p.bodega)}</td>
+      <td>${estadoPill(x.p)}<div class="pinmo">${esc(x.p.entrega)}</div></td>
+      <td class="n">${clp(x.r.rent)}</td><td class="n">${clp(x.r.gcCLP)}</td>
+      <td class="n">${pct(x.r.capRate)}</td><td class="n">${clp(x.r.div1 * S.uf)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td>
+      <td>${confPill(x.p)}</td></tr>`).join('')}</tbody></table></div>
+  <p class="small muted" style="margin:0">* m² o precio estimado a partir de rangos publicados. Arriendo estimado sin gastos comunes (GC): en Antofagasta casi todos los avisos cobran los GC aparte, así que los paga el arrendatario y tú sólo los cubres en meses vacíos.</p>
+  <div id="provDetail"></div>`;
+  bindSegs(el, (k, v) => set(k, v));
+  const qi = $('#provQ', el);
+  qi.addEventListener('input', () => { S.provQ = qi.value; save(); clearTimeout(qi._t); qi._t = setTimeout(() => { const pos = qi.selectionStart; render(); const n = $('#provQ'); n.focus(); try { n.setSelectionRange(pos, pos); } catch(e) {} }, 250); });
+  $$('tr.click', el).forEach(tr => {
+    const open = () => { S.provSel = tr.dataset.p; save(); render(); const d = $('#provDetail'); if (d) d.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+    tr.addEventListener('click', open);
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+  if (sel) renderDetalle($('#provDetail', el), sel);
+}
+function renderDetalle(el, p){
+  const s = sect(p.sector);
+  const evs = p.u.map((u, k) => ({u, k, r: evaluar(p, u)}));
+  el.innerHTML = `<div class="panel">
+    <div class="panel-head"><div><div class="label">${esc(p.inmo)}</div><h2 style="font-size:20px">${esc(p.n)}</h2><p class="sub">${esc(p.dir)} · ${esc(s.n)}</p></div>
+    <div class="chips">${estadoPill(p)} ${confPill(p)} ${s.sur ? '<span class="pill acc"><i>◆</i>Zona preferida</span>' : '<span class="pill"><i>↑</i>Fuera de zona</span>'}</div></div>
+    <div class="detail">
+      <div>
+        <div class="facts">
+          <div class="kv"><div class="k">Entrega</div><div class="v" style="font-size:15px">${esc(p.entrega)}</div></div>
+          <div class="kv"><div class="k">Estacionamiento</div><div class="v" style="font-size:15px">${extraTxt(p.estac)}</div></div>
+          <div class="kv"><div class="k">Bodega</div><div class="v" style="font-size:15px">${extraTxt(p.bodega)}</div></div>
+          <div class="kv"><div class="k">Plusvalía estimada del sector</div><div class="v" style="font-size:15px">${NF1.format(s.plus)}% real anual</div></div>
+        </div>
+        <h3 class="sec-title" style="margin-top:16px">Facilidades de pago y condiciones</h3>
+        <ul class="clean">${p.pago.map(x => '<li>' + esc(x) + '</li>').join('')}</ul>
+        ${p.extra ? '<p class="small ink2" style="margin-top:8px">' + esc(p.extra) + '</p>' : ''}
+        <h3 class="sec-title" style="margin-top:14px">El sector</h3>
+        <p class="small ink2">${esc(s.d)}</p>
+        <h3 class="sec-title" style="margin-top:14px">Fuentes</h3>
+        <ul class="clean src">${p.f.map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a></li>`).join('')}</ul>
+      </div>
+      <div class="tbl-wrap" style="align-self:start"><table class="tbl"><thead><tr><th>Indicador</th>${evs.map(e => `<th class="n">${esc(e.u.t)}</th>`).join('')}</tr></thead><tbody>
+        ${[['Superficie', e => NF1.format(e.u.m2) + ' m²'], ['Precio lista', e => ufF(e.u.uf, 0)], ['Precio con extras', e => ufF(e.r.P, 0)], ['Pie a pagar', e => clp(e.r.piePago * S.uf)], ['Gastos operacionales', e => clp(e.r.gastos * S.uf)],
+           ['Dividendo', e => clp(e.r.div1 * S.uf)], ['Renta exigida', e => clp(e.r.sueldoReq)], ['Arriendo estimado', e => clp(e.r.rent)], ['Gastos comunes', e => clp(e.r.gcCLP)],
+           ['Rentabilidad bruta', e => pct(e.r.brutaRent)], ['Cap rate', e => pct(e.r.capRate)], ['Flujo mensual', e => flujoCell(e.r.flujo1 * S.uf)], ['TIR ' + S.horizonte + ' años', e => pct(e.r.tir)], ['VAN al ' + NF0.format(S.desc*100) + '%', e => clpM(e.r.van * S.uf)]]
+           .map(row => `<tr><td>${row[0]}</td>${evs.map(e => `<td class="n">${row[1](e)}</td>`).join('')}</tr>`).join('')}
+        <tr><td></td>${evs.map(e => `<td class="n"><button class="btn ghost" data-sim="${p.id}:${e.k}">Simular</button></td>`).join('')}</tr>
+      </tbody></table></div>
+    </div></div>`;
+  $$('[data-sim]', el).forEach(b => b.addEventListener('click', () => { S.sim = b.dataset.sim; S.simOv = {}; save(); go('simulador'); }));
+}
+
+function simUnit(){
+  let x = S.sim ? unitByKey(S.sim) : null;
+  if (!x){ const rk = ranking(); x = rk[0] ? {p: rk[0].p, u: rk[0].u, key: rk[0].key} : unitByKey(PROYECTOS[0].id + ':0'); S.sim = x.key; }
+  return x;
+}
+function rSimulador(el){
+  const x = simUnit(), o = S.simOv;
+  const r = evaluar(x.p, x.u, o);
+  const opts = PROYECTOS.map(p => `<optgroup label="${esc(p.n)}${sect(p.sector).sur ? '' : ' (norte)'}">` + p.u.map((u, k) => `<option value="${p.id}:${k}"${x.key === p.id + ':' + k ? ' selected' : ''}>${esc(u.t)} · ${NF1.format(u.m2)} m² · ${ufF(u.uf, 0)}</option>`).join('') + '</optgroup>').join('');
+  const val = (k, d) => o[k] != null ? o[k] : d;
+  const estacAparte = x.p.estac && x.p.estac.incl === false, bodAparte = x.p.bodega && x.p.bodega.incl === false;
+  el.innerHTML = `<div class="grid g-side">
+    <div class="panel form" style="align-self:start">
+      <div class="field"><label for="smU">Unidad</label><select id="smU">${opts}</select><span class="hint">${esc(x.p.inmo)} · ${esc(x.p.dir)}</span></div>
+      <div class="field"><label for="smB">Banco</label><select id="smB">${bancoOptions(val('banco', S.banco), true)}</select></div>
+      <div class="field"><label for="smPie">Pie <output>${NF0.format(val('pie', S.pie) * 100)}%</output></label><input id="smPie" type="range" min="0.1" max="0.5" step="0.01" value="${val('pie', S.pie)}"></div>
+      <div class="field"><label for="smBono">Bono pie del vendedor <output>${NF0.format(val('bono', 0) * 100)}%</output></label><input id="smBono" type="range" min="0" max="0.2" step="0.01" value="${val('bono', 0)}"><span class="hint">Descuento que el banco cuenta como pie. Pagas menos al contado.</span></div>
+      <div class="field"><span class="lbl">Plazo</span>${segHTML('smPlazo', [[15,'15'],[20,'20'],[25,'25'],[30,'30 años']], val('plazo', S.plazo))}</div>
+      <div class="frow">
+        <div class="field"><label for="smTasa">Tasa anual %</label><input id="smTasa" type="number" step="0.01" min="0.5" max="15" value="${NF2.format(r.tasa).replace(',', '.')}"><span class="hint">${esc(r.banco.n)}${r.subsidio ? ' con subsidio' : ''}</span></div>
+        <div class="field"><label for="smArr">Arriendo $/mes</label><input id="smArr" type="number" step="10000" min="0" value="${Math.round(o.arrOv != null ? o.arrOv : r.rent)}"><span class="hint">${o.arrOv != null ? 'Valor tuyo' : 'Estimado del sector'}</span></div>
+      </div>
+      <div class="field"><label for="smH">Horizonte de venta <output>${val('horizonte', S.horizonte)} años</output></label><input id="smH" type="range" min="3" max="30" step="1" value="${val('horizonte', S.horizonte)}"></div>
+      <div class="field"><span class="lbl">Administración del arriendo</span>${segHTML('smAdm', [['propia','La hago yo'],['corredor','Corredora (8% + IVA)']], val('admin', S.admin))}</div>
+      ${(estacAparte || bodAparte) ? `<label class="toggle"><input id="smExtras" type="checkbox"${val('comprarExtras', S.comprarExtras) ? ' checked' : ''}><span>Comprar ${estacAparte ? 'estacionamiento (' + ufF(x.p.estac.uf, 0) + ')' : ''}${estacAparte && bodAparte ? ' y ' : ''}${bodAparte ? 'bodega (' + ufF(x.p.bodega.uf, 0) + ')' : ''}<br><span class="muted small">Sin estacionamiento el arriendo baja cerca de 7%</span></span></label>` : ''}
+      ${x.p.meses > 0 ? `<label class="toggle"><input id="smCuotas" type="checkbox"${val('pieCuotas', S.pieCuotas) ? ' checked' : ''}><span>Pagar el pie en ${x.p.meses} cuotas hasta la entrega</span></label>` : ''}
+      <label class="toggle"><input id="smSub" type="checkbox"${val('subsidio', S.subsidio) ? ' checked' : ''}><span>Subsidio a la tasa / FOGAES (primera vivienda nueva ≤ 6.000 UF)</span></label>
+      <button class="btn ghost" id="smReset" type="button">Volver a mi perfil</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <div class="kpis">
+        <div class="kpi"><div class="k">Dividendo mensual</div><div class="v">${clp(r.div1 * S.uf)}</div><div class="d">${ufF(r.div1, 2)} · ${NF2.format(r.tasa)}% · ${val('plazo', S.plazo)} años</div></div>
+        <div class="kpi"><div class="k">Pie a pagar</div><div class="v">${clpM(r.piePago * S.uf)}</div><div class="d">${ufF(r.piePago, 0)}${r.D > 0 && val('pieCuotas', S.pieCuotas) ? ' · ' + r.D + ' cuotas de ' + clp(r.piePago * S.uf / r.D) : ''}</div></div>
+        <div class="kpi"><div class="k">Renta exigida por el banco</div><div class="v">${clpM(r.sueldoReq)}</div><div class="d">${r.okRenta ? '<span class="pos">✓ Tu renta alcanza</span>' : '<span class="neg">✕ Supera tu renta</span>'}</div></div>
+        <div class="kpi"><div class="k">Flujo mensual</div><div class="v ${r.flujo1 >= 0 ? 'pos' : 'neg'}">${clpS(r.flujo1 * S.uf)}</div><div class="d">Arriendo de equilibrio ${clp(r.rentBEclp)}</div></div>
+      </div>
+      <div class="grid g2">
+        <div class="panel"><h2>De dónde sale y a dónde va cada mes</h2><p class="sub">Primer año, en pesos de hoy.</p>
+          <div class="tbl-wrap"><table class="tbl"><tbody>
+            <tr><td>Arriendo estimado</td><td class="n">${clp(r.rent)}</td></tr>
+            <tr><td>Vacancia (${NF0.format(r.vac * 100)}% del año)</td><td class="n neg">${clp(-r.rent * r.vac)}</td></tr>
+            <tr><td>Mantención, corretaje${val('admin', S.admin) === 'corredor' ? ' y administración' : ''}</td><td class="n neg">${clp(-(r.rentUF * (1 - r.vac) - r.noi1 - r.contribUF - r.gcCLP * r.vac / S.uf) * S.uf)}</td></tr>
+            <tr><td>Gastos comunes en meses vacíos</td><td class="n neg">${clp(-r.gcCLP * r.vac)}</td></tr>
+            <tr><td>Contribuciones (DFL2)</td><td class="n neg">${clp(-r.contribUF * S.uf)}</td></tr>
+            <tr><td><b>Ingreso neto (NOI)</b></td><td class="n"><b>${clp(r.noi1 * S.uf)}</b></td></tr>
+            <tr><td>Dividendo (cuota ${clp(r.cuota * S.uf)} + seguros ${clp((r.div1 - r.cuota) * S.uf)})</td><td class="n neg">${clp(-r.div1 * S.uf)}</td></tr>
+            <tr><td><b>Flujo para ti</b></td><td class="n"><b>${flujoCell(r.flujo1 * S.uf)}</b></td></tr>
+          </tbody></table></div></div>
+        <div class="panel"><h2>Indicadores de la inversión</h2><p class="sub">Rentabilidades reales (en UF). VAN descontado al ${NF0.format(S.desc * 100)}% real.</p>
+          <div class="facts">
+            <div class="kv"><div class="k">TIR</div><div class="v">${pct(r.tir)}</div></div>
+            <div class="kv"><div class="k">VAN</div><div class="v ${r.van >= 0 ? 'pos' : 'neg'}">${clpM(r.van * S.uf)}</div></div>
+            <div class="kv"><div class="k">Cap rate</div><div class="v">${pct(r.capRate)}</div></div>
+            <div class="kv"><div class="k">Rentab. bruta</div><div class="v">${pct(r.brutaRent)}</div></div>
+            <div class="kv"><div class="k">Cash-on-cash</div><div class="v ${r.coc >= 0 ? 'pos' : 'neg'}">${pct(r.coc)}</div></div>
+            <div class="kv"><div class="k">Multiplicador</div><div class="v">${NF2.format(r.mult)}×</div></div>
+            <div class="kv"><div class="k">Inversión inicial</div><div class="v">${clpM(r.invIni * S.uf)}</div></div>
+            <div class="kv"><div class="k">PER (años de arriendo)</div><div class="v">${NF1.format(r.per)}</div></div>
+            <div class="kv"><div class="k">Patrimonio al vender</div><div class="v">${clpM(r.netoVenta * S.uf)}</div></div>
+          </div>
+          <p class="small muted" style="margin-top:12px">${r.capRate < r.tasa / 100 ? 'El cap rate es menor que la tasa del crédito: cada UF prestada rinde menos de lo que cuesta. La ganancia depende de la plusvalía y de la amortización.' : 'El cap rate supera la tasa del crédito: el apalancamiento suma rentabilidad desde el primer año.'}</p></div>
+      </div>
+      <div class="panel"><h2>Valor de la propiedad frente a la deuda</h2><p class="sub">Plusvalía estimada de ${NF1.format(r.g * 100)}% real anual en ${esc(sect(x.p.sector).n)}${r.D > 0 ? '; la entrega ocurre en ' + r.D + ' meses' : ''}. La distancia entre ambas líneas es tu patrimonio.</p>
+        <div class="legend"><span><i class="line" style="background:var(--s1)"></i>Valor de la propiedad</span><span><i class="line" style="background:var(--s2)"></i>Saldo de la deuda</span></div>
+        <div class="chart" id="smChart"></div></div>
+      <div class="panel"><h2>Evaluación año por año</h2><p class="sub">Montos anuales en pesos de hoy (UF ${clp(S.uf)}).</p>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">Año</th><th class="n">Arriendo cobrado</th><th class="n">Dividendos</th><th class="n">Intereses</th><th class="n">Amortización</th><th class="n">Flujo del año</th><th class="n">Saldo deuda</th><th class="n">Valor propiedad</th><th class="n">Patrimonio</th></tr></thead>
+        <tbody>${r.years.map(y => `<tr><td class="n">${y.y}</td><td class="n">${clpM(y.arr * S.uf)}</td><td class="n">${clpM(y.div * S.uf)}</td><td class="n">${clpM(y.int * S.uf)}</td><td class="n">${clpM(y.cap * S.uf)}</td><td class="n">${flujoCell(y.flujo * S.uf)}</td><td class="n">${clpM(y.saldo * S.uf)}</td><td class="n">${clpM(y.valor * S.uf)}</td><td class="n">${clpM(y.equity * S.uf)}</td></tr>`).join('')}</tbody></table></div></div>
+    </div></div>`;
+  const setO = (k, v) => { S.simOv[k] = v; save(); render(); };
+  $('#smU', el).addEventListener('change', e => { S.sim = e.target.value; S.simOv = {}; save(); render(); });
+  $('#smB', el).addEventListener('change', e => { delete S.simOv.tasaOv; setO('banco', e.target.value); });
+  const rng = (id, k, f) => { const i = $('#' + id, el); i.addEventListener('input', () => { i.previousElementSibling.querySelector('output').textContent = f(i.value); }); i.addEventListener('change', () => setO(k, +i.value)); };
+  rng('smPie', 'pie', v => NF0.format(v * 100) + '%'); rng('smBono', 'bono', v => NF0.format(v * 100) + '%'); rng('smH', 'horizonte', v => v + ' años');
+  $('#smTasa', el).addEventListener('change', e => setO('tasaOv', +e.target.value));
+  $('#smArr', el).addEventListener('change', e => setO('arrOv', +e.target.value));
+  const tg = (id, k) => { const i = $('#' + id, el); if (i) i.addEventListener('change', () => { if (k === 'subsidio') delete S.simOv.tasaOv; setO(k, i.checked); }); };
+  tg('smExtras', 'comprarExtras'); tg('smCuotas', 'pieCuotas'); tg('smSub', 'subsidio');
+  bindSegs(el, (k, v) => { if (k === 'smPlazo') setO('plazo', +v); if (k === 'smAdm') setO('admin', v); });
+  $('#smReset', el).addEventListener('click', () => { S.simOv = {}; save(); render(); });
+  const v = [{x: 0, y: r.P}].concat(r.years.map(y => ({x: y.y, y: y.valor})));
+  const d = [{x: 0, y: r.L}].concat(r.years.map(y => ({x: y.y, y: y.saldo})));
+  lines($('#smChart', el), [{n: 'Valor', c: 'var(--s1)', v: v.map(p => ({x: p.x, y: p.y * S.uf / 1e6}))}, {n: 'Deuda', c: 'var(--s2)', v: d.map(p => ({x: p.x, y: p.y * S.uf / 1e6}))}],
+    {xFmt: (v, l) => l ? 'Año ' + v + ' desde la entrega' : 'Año ' + v, yFmt: (v, l) => '$' + NF0.format(v) + (l ? ' millones' : ' M'), aria: 'Valor de la propiedad y saldo de la deuda por año'});
+}
+
+function rBancos(el){
+  const x = simUnit();
+  const plazos = [15, 20, 25, 30];
+  const ev = (b, pl) => evaluar(x.p, x.u, {banco: b.id, plazo: pl});
+  const mat = BANCOS.map(b => ({b, e: plazos.map(pl => ev(b, pl))}));
+  const k30 = plazos.indexOf(S.plazo) >= 0 ? plazos.indexOf(S.plazo) : 3;
+  const bestDiv = Math.min(...mat.map(m => m.e[k30].div1));
+  const opts = PROYECTOS.map(p => `<optgroup label="${esc(p.n)}">` + p.u.map((u, k) => `<option value="${p.id}:${k}"${x.key === p.id + ':' + k ? ' selected' : ''}>${esc(u.t)} · ${ufF(u.uf, 0)}</option>`).join('') + '</optgroup>').join('');
+  el.innerHTML = `
+  <div class="filters">
+    <div class="field" style="min-width:260px;flex:1"><label for="bkU">Unidad a financiar</label><select id="bkU">${opts}</select></div>
+    <div class="field"><span class="lbl">Plazo destacado</span>${segHTML('bkPlazo', plazos.map(p => [p, p + ' años']), plazos[k30])}</div>
+    <label class="toggle" style="align-self:center"><input id="bkSub" type="checkbox"${S.subsidio ? ' checked' : ''}><span>Con subsidio a la tasa / FOGAES</span></label>
+  </div>
+  <div class="grid g-wide">
+    <div class="panel"><h2>Dividendo mensual por banco a ${plazos[k30]} años</h2><p class="sub">${esc(unitLabel(x.p, x.u))} · crédito de ${ufF(evaluar(x.p, x.u).L, 0)} (pie ${NF0.format(S.pie * 100)}%). Incluye seguros de desgravamen e incendio y sismo.</p>
+      <div id="bkBars"></div></div>
+    <div class="panel"><h2>Lo que define el costo</h2><p class="sub">Con el mismo crédito, 1 punto de tasa cambia el dividendo cerca de 11% a 30 años.</p>
+      <div class="facts">
+        <div class="kv"><div class="k">Banco más barato</div><div class="v" style="font-size:16px">${esc(mat.find(m => m.e[k30].div1 === bestDiv).b.n)}</div></div>
+        <div class="kv"><div class="k">Ahorro vs. el más caro</div><div class="v" style="font-size:16px">${clp((Math.max(...mat.map(m => m.e[k30].div1)) - bestDiv) * S.uf)}/mes</div></div>
+        <div class="kv"><div class="k">Intereses pagados a ${plazos[k30]} años</div><div class="v" style="font-size:16px">${clpM(Math.min(...mat.map(m => m.e[k30].cuota * plazos[k30] * 12 - m.e[k30].L)) * S.uf)}</div></div>
+        <div class="kv"><div class="k">Promedio del sistema</div><div class="v" style="font-size:16px">4,06%</div></div>
+      </div>
+      <p class="small muted" style="margin-top:12px">Las tasas cambian cada semana y dependen de tu perfil. Pide al menos tres cotizaciones formales y compara la CAE, que suma seguros y gastos.</p></div>
+  </div>
+  <div class="panel"><h2>Dividendo según plazo</h2><p class="sub">Pesos por mes. Resaltado: el menor de cada plazo. Debajo, la renta líquida que exige el banco (dividendo ≤ 25% de la renta).</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Banco</th><th class="n">Tasa</th>${plazos.map(p => `<th class="n">${p} años</th>`).join('')}<th class="n">Total pagado a 30 años</th></tr></thead>
+    <tbody>${mat.map(m => `<tr><td><b>${esc(m.b.n)}</b>${m.b.est ? ' <span class="pill warn" title="Tasa estimada"><i>!</i>Estimada</span>' : ''}${m.b.ref ? ' <span class="pill"><i>+</i>Referencia</span>' : ''}</td><td class="n">${NF2.format(m.e[0].tasa)}%</td>${m.e.map((e, k) => { const minK = Math.min(...mat.map(mm => mm.e[k].div1)); return `<td class="n" style="${e.div1 === minK ? 'background:color-mix(in srgb,var(--s1) 12%,transparent);font-weight:600' : ''}">${clp(e.div1 * S.uf)}<div class="pinmo">renta ${clpM(e.sueldoReq)}</div></td>`; }).join('')}<td class="n">${clpM(m.e[3].div1 * 360 * S.uf)}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="panel"><h2>Condiciones por banco</h2><p class="sub">Tasas fijas en UF recopiladas a ${esc(FECHA_DATOS)}. Puedes reemplazarlas por tu cotización.</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Banco</th><th class="n">Tasa estándar</th><th class="n">Con subsidio</th><th>Financiamiento</th><th>Detalle</th><th>Tu cotización %</th></tr></thead>
+    <tbody>${BANCOS.map(b => `<tr><td><b>${esc(b.n)}</b></td><td class="n">${NF2.format(b.tasa)}%</td><td class="n">${b.sub != null ? NF2.format(b.sub) + '%' : '<span class="muted">' + NF2.format(b.tasa - 0.6) + '%*</span>'}</td><td>${esc(b.fin)}</td><td class="small" style="min-width:280px">${esc(b.nota)} ${b.f.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener">fuente ${i + 1}</a>`).join(' ')}</td><td style="min-width:110px"><input type="number" step="0.01" min="0.5" max="15" data-bov="${b.id}" value="${S.bancosOv[b.id] != null ? S.bancosOv[b.id] : ''}" placeholder="${NF2.format(b.tasa).replace(',', '.')}" aria-label="Tu cotización ${esc(b.n)}"></td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted" style="margin-top:8px">* Sin dato publicado: se aplica la rebaja legal de 60 puntos base. El subsidio y la garantía FOGAES están orientados a la primera vivienda; si este departamento es tu segunda propiedad, evalúa sin ellos.</p></div>`;
+  $('#bkU', el).addEventListener('change', e => { S.sim = e.target.value; S.simOv = {}; save(); render(); });
+  bindSegs(el, (k, v) => set('plazo', +v));
+  $('#bkSub', el).addEventListener('change', e => set('subsidio', e.target.checked));
+  $$('[data-bov]', el).forEach(i => i.addEventListener('change', () => { const v = i.value.trim(); if (v === '') delete S.bancosOv[i.dataset.bov]; else S.bancosOv[i.dataset.bov] = +v; save(); render(); }));
+  const rows = mat.map(m => ({l: m.b.n, s: NF2.format(m.e[k30].tasa) + '%', v: m.e[k30].div1 * S.uf, em: m.e[k30].div1 === bestDiv,
+    tip: `<div class="tv">${clp(m.e[k30].div1 * S.uf)} / mes</div><div class="tl">${esc(m.b.n)} · ${NF2.format(m.e[k30].tasa)}% · ${plazos[k30]} años</div><div class="tl">Renta exigida ${clp(m.e[k30].sueldoReq)}</div>`}))
+    .sort((a, b) => a.v - b.v);
+  $('#bkBars', el).innerHTML = barsHTML(rows, v => clp(v), {emClass: 's1'});
+  bindBarTips($('#bkBars', el));
+}
+
+function rRanking(el){
+  const rk = ranking();
+  const W = S.w;
+  const sl = (k, l, h) => `<div class="field"><label for="w_${k}">${l} <output>${W[k]}</output></label><input id="w_${k}" type="range" min="0" max="50" step="5" value="${W[k]}" data-w="${k}"><span class="hint">${h}</span></div>`;
+  el.innerHTML = `
+  <div class="panel"><div class="panel-head"><div><h2>¿Qué te importa más?</h2><p class="sub">Pondera cada criterio. El puntaje se recalcula al instante.</p></div><div class="chips"><button class="btn ghost" id="wPre1" type="button">Rentabilidad</button><button class="btn ghost" id="wPre2" type="button">Flujo positivo</button><button class="btn ghost" id="wPre3" type="button">Plusvalía</button><button class="btn ghost" id="wPre4" type="button">Equilibrado</button></div></div>
+    <div class="frow">${sl('tir', 'TIR', 'Retorno total con venta')}${sl('flujo', 'Flujo mensual', 'Que el arriendo pague el dividendo')}${sl('cap', 'Cap rate', 'Renta neta sobre precio')}${sl('plus', 'Plusvalía', 'Potencial del sector')}${sl('acceso', 'Accesibilidad', 'Menos pie y renta exigida')}${sl('riesgo', 'Seguridad', 'Entrega pronta y dato confiable')}</div>
+    <div class="filters" style="margin-top:12px"><div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur','Sur de Copiapó'],['todas','Toda la ciudad'],['norte','Norte']], S.zona)}</div><div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.tip)}</div>
+    <button class="btn ghost" id="rkCopy" type="button" style="align-self:flex-end">Copiar tabla</button></div>
+  </div>
+  <div class="tbl-wrap"><table class="tbl" id="rkTbl"><thead><tr><th class="n">#</th><th>Unidad</th><th style="min-width:150px">Puntaje</th><th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">Cap rate</th><th class="n">Pie + gastos</th><th class="n">Dividendo</th><th class="n">Plusvalía</th><th>Presupuesto</th><th style="min-width:220px">Por qué</th></tr></thead>
+  <tbody>${rk.map(x => `<tr class="click" data-k="${x.key}" tabindex="0"><td class="n"><b>${x.rank}</b></td><td><div class="pname">${esc(x.p.n)} · ${esc(x.u.t)}</div><div class="pinmo">${esc(x.p.inmo)} · ${esc(sect(x.p.sector).n)} · ${NF1.format(x.u.m2)} m² · ${ufF(x.u.uf, 0)}</div></td>
+    <td><div class="bar-track" style="height:14px"><div class="bar-fill ${x.rank === 1 ? 'em' : ''}" style="width:${x.score.toFixed(1)}%"></div></div><div class="pinmo mono">${NF0.format(x.score)} / 100</div></td>
+    <td class="n">${pct(x.r.tir)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td><td class="n">${pct(x.r.capRate)}</td><td class="n">${clpM(x.r.invIni * S.uf)}</td><td class="n">${clp(x.r.div1 * S.uf)}</td><td class="n">${NF1.format(sect(x.p.sector).plus)}%</td>
+    <td>${x.r.okAhorro && x.r.okRenta ? '<span class="pill good"><i>✓</i>Alcanza</span>' : !x.r.okAhorro ? '<span class="pill bad"><i>✕</i>Falta ahorro</span>' : '<span class="pill bad"><i>✕</i>Falta renta</span>'}</td>
+    <td class="small ink2">${esc(porQue(x))}</td></tr>`).join('')}</tbody></table></div>
+  <p class="small muted" style="margin:0">Cada criterio se escala de 0 a 100 entre las unidades visibles, así que el puntaje es relativo: compara opciones, no mide calidad absoluta. Toca una fila para simularla.</p>`;
+  $$('[data-w]', el).forEach(i => { i.addEventListener('input', () => { i.previousElementSibling.querySelector('output').textContent = i.value; }); i.addEventListener('change', () => { S.w[i.dataset.w] = +i.value; save(); render(); }); });
+  const pre = {wPre1:{tir:45, flujo:10, cap:15, plus:15, acceso:5, riesgo:10}, wPre2:{tir:10, flujo:45, cap:20, plus:5, acceso:10, riesgo:10}, wPre3:{tir:20, flujo:5, cap:5, plus:45, acceso:10, riesgo:15}, wPre4:Object.assign({}, DEF.w)};
+  Object.keys(pre).forEach(id => $('#' + id, el).addEventListener('click', () => { S.w = Object.assign({}, pre[id]); save(); render(); }));
+  bindSegs(el, (k, v) => set(k, v));
+  $$('tr.click', el).forEach(tr => { const f = () => { S.sim = tr.dataset.k; S.simOv = {}; save(); go('simulador'); }; tr.addEventListener('click', f); tr.addEventListener('keydown', e => { if (e.key === 'Enter') f(); }); });
+  $('#rkCopy', el).addEventListener('click', e => {
+    const txt = ['Rank\tProyecto\tTipo\tInmobiliaria\tSector\tm2\tPrecio UF\tPuntaje\tTIR\tFlujo mes CLP\tCap rate\tInversion inicial CLP\tDividendo CLP']
+      .concat(rk.map(x => [x.rank, x.p.n, x.u.t, x.p.inmo, sect(x.p.sector).n, x.u.m2, x.u.uf, x.score.toFixed(1), (x.r.tir * 100).toFixed(2) + '%', Math.round(x.r.flujo1 * S.uf), (x.r.capRate * 100).toFixed(2) + '%', Math.round(x.r.invIni * S.uf), Math.round(x.r.div1 * S.uf)].join('\t'))).join('\n');
+    const b = e.currentTarget;
+    const done = ok => { b.textContent = ok ? 'Copiada' : 'Selecciona la tabla y copia'; setTimeout(() => { b.textContent = 'Copiar tabla'; }, 2200); };
+    try { navigator.clipboard.writeText(txt).then(() => done(true), () => { selectNode($('#rkTbl')); done(false); }); } catch(err) { selectNode($('#rkTbl')); done(false); }
+  });
+}
+function selectNode(n){ try { const r = document.createRange(); r.selectNodeContents(n); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(e) {} }
+
+/* ---------- Mapa ---------- */
+const COSTA = [[-23.515,-70.418],[-23.530,-70.412],[-23.545,-70.405],[-23.558,-70.400],[-23.572,-70.398],[-23.586,-70.397],[-23.600,-70.396],[-23.615,-70.398],[-23.630,-70.401],[-23.641,-70.404],[-23.645,-70.411],[-23.649,-70.412],[-23.653,-70.405],[-23.662,-70.406],[-23.671,-70.408],[-23.681,-70.411],[-23.691,-70.414],[-23.700,-70.419],[-23.710,-70.423],[-23.720,-70.428],[-23.730,-70.436],[-23.742,-70.446]];
+const CERROS = [[-23.515,-70.392],[-23.540,-70.378],[-23.560,-70.369],[-23.600,-70.370],[-23.640,-70.377],[-23.670,-70.382],[-23.700,-70.393],[-23.725,-70.408],[-23.742,-70.424]];
+function rMapa(el){
+  const ext = S.mapExt === 'sur' ? {la:-23.6440, lb:-23.7240, oa:-70.4400, ob:-70.3740} : {la:-23.5400, lb:-23.7280, oa:-70.4480, ob:-70.3560};
+  const kx = Math.cos(23.65 * Math.PI / 180);
+  const aspect = ((ext.ob - ext.oa) * kx) / (ext.la - ext.lb);
+  const all = ranking({zona:'todas', tip:'todas'});
+  const scoreBy = {}; all.forEach(x => { if (!scoreBy[x.p.id] || scoreBy[x.p.id].score < x.score) scoreBy[x.p.id] = x; });
+  const layers = [['plus','Plusvalía estimada'],['arriendo','Arriendo por m²'],['cap','Cap rate de proyectos'],['score','Puntaje del ranking']];
+  const secIds = Object.keys(SECTORES);
+  el.innerHTML = `
+  <div class="filters">
+    <div class="field"><span class="lbl">Capa de calor</span>${segHTML('mapLayer', layers, S.mapLayer)}</div>
+    <div class="field"><span class="lbl">Encuadre</span>${segHTML('mapExt', [['sur','Zona sur'],['ciudad','Ciudad completa']], S.mapExt)}</div>
+  </div>
+  <div class="grid g-wide">
+    <div class="panel"><div class="map-wrap" id="mapBox" style="aspect-ratio:${aspect.toFixed(3)};${S.mapExt === 'ciudad' ? 'max-width:420px;margin:0 auto' : ''}"></div>
+      <div class="map-legend"><span>Bajo</span><span class="ramp" id="mapRamp"></span><span>Alto</span><span class="muted">· ${esc(layers.find(l => l[0] === S.mapLayer)[1])}</span>
+      <span style="margin-left:auto;display:inline-flex;gap:12px"><span style="display:inline-flex;gap:6px;align-items:center"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/></svg>Proyecto al sur</span><span style="display:inline-flex;gap:6px;align-items:center"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--deemph)" stroke="var(--surface)" stroke-width="2"/></svg>Norte</span></span></div>
+      <p class="small muted" style="margin:8px 0 0">Mapa esquemático: costa y ubicaciones aproximadas, sin calles. La línea punteada marca calle Copiapó, el límite norte de tu zona.</p></div>
+    <div class="panel"><h2>Sectores ordenados por plusvalía</h2><p class="sub">Supuestos editables en Supuestos y fuentes.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sector</th><th class="n">Plusvalía</th><th class="n">Arriendo 2D</th><th class="n">Proyectos</th></tr></thead>
+      <tbody>${secIds.map(id => ({id, s: sect(id)})).sort((a, b) => b.s.plus - a.s.plus).map(o => `<tr><td><b>${esc(o.s.n)}</b>${o.s.sur ? '' : ' <span class="pill"><i>↑</i>Norte</span>'}</td><td class="n">${NF1.format(o.s.plus)}%</td><td class="n">${clpM(o.s.arr2)}</td><td class="n">${PROYECTOS.filter(p => p.sector === o.id).length}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>
+  <div class="panel"><h2>Qué mueve la plusvalía en tu zona</h2><p class="sub">Sectores al sur de calle Copiapó, de mayor a menor potencial estimado.</p>
+    <div class="grid g3">${secIds.map(id => ({id, s: sect(id)})).filter(o => o.s.sur).sort((a, b) => b.s.plus - a.s.plus).map(o => `<div class="fact"><div class="fv">${NF1.format(o.s.plus)}% <span class="small muted" style="font-weight:500">real anual</span></div><div><b>${esc(o.s.n)}</b></div><div class="fd">${esc(o.s.d)}</div></div>`).join('')}</div></div>`;
+  bindSegs(el, (k, v) => set(k, v));
+  const box = $('#mapBox', el);
+  const W = box.clientWidth, H = Math.round(W / aspect);
+  const X = lon => (lon - ext.oa) / (ext.ob - ext.oa) * W;
+  const Y = lat => (ext.la - lat) / (ext.la - ext.lb) * H;
+  const pxPerKm = W / ((ext.ob - ext.oa) * 111.32 * kx);
+  // Capa base (SVG)
+  const land = COSTA.map(p => [X(p[1]), Y(p[0])]).concat(CERROS.slice().reverse().map(p => [X(p[1]), Y(p[0])]));
+  const hills = CERROS.map(p => [X(p[1]), Y(p[0])]).concat([[W + 50, Y(CERROS[CERROS.length - 1][0])], [W + 50, Y(CERROS[0][0]) - 50]]);
+  const yCop = Y(-23.6585);
+  let base = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">
+    <rect width="${W}" height="${H}" fill="var(--sea)"/>
+    <polygon points="${hills.map(p => p.join(',')).join(' ')}" fill="var(--hill)"/>
+    <polygon points="${land.map(p => p.join(',')).join(' ')}" fill="var(--land)" stroke="var(--line-strong)" stroke-width="1"/>
+    <rect x="0" y="0" width="${W}" height="${Math.max(0, yCop)}" fill="var(--north-veil)"/>
+  </svg>`;
+  // Overlay (SVG) con límite, etiquetas y marcadores
+  let ov = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Mapa esquemático de Antofagasta con proyectos y focos de ${esc(layers.find(l => l[0] === S.mapLayer)[1].toLowerCase())}">`;
+  if (yCop > 0 && yCop < H) ov += `<line x1="${X(-70.412)}" x2="${X(-70.380)}" y1="${yCop}" y2="${yCop}" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5"/><text class="map-label" x="${X(-70.381)}" y="${yCop - 7}" text-anchor="end" style="fill:var(--accent-text)">Calle Copiapó</text>`;
+  ov += `<text class="map-label" x="${X(-70.430)}" y="${Y(S.mapExt === 'sur' ? -23.690 : -23.640)}" style="fill:var(--muted);stroke:var(--sea);font-style:italic">Océano Pacífico</text>`;
+  // etiquetas de sector a la derecha de la costa, sin pisarse
+  const lbls = secIds.map(id => ({s: sect(id), y: Y(sect(id).lat)})).filter(o => o.y > 10 && o.y < H - 10).sort((a, b) => a.y - b.y);
+  for (let k = 1; k < lbls.length; k++) if (lbls[k].y - lbls[k - 1].y < 15) lbls[k].y = lbls[k - 1].y + 15;
+  lbls.forEach(o => { ov += `<text class="map-label" x="${W - 8}" y="${o.y + 4}" text-anchor="end">${esc(o.s.n.split(' · ')[0])}</text>`; });
+  const visibles = PROYECTOS.filter(p => { const y = Y(p.lat), x = X(p.lon); return y > 0 && y < H && x > 0 && x < W; });
+  const top5 = all.filter(x => sect(x.p.sector).sur).slice(0, 5).map(x => x.p.id);
+  visibles.forEach(p => {
+    const x = X(p.lon), y = Y(p.lat), best = scoreBy[p.id];
+    const sur = sect(p.sector).sur, rnk = top5.indexOf(p.id);
+    const r = 5 + (best ? best.score / 100 * 4 : 0);
+    ov += `<g class="map-mk" tabindex="0" data-p="${p.id}"><circle cx="${x}" cy="${y}" r="16" fill="transparent"/><circle class="ring" cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${sur ? 'var(--s2)' : 'var(--deemph)'}" stroke="var(--surface)" stroke-width="2"/>${rnk >= 0 ? `<text x="${x - r - 4}" y="${y + 4}" text-anchor="end" class="map-label big">${rnk + 1}</text>` : ''}</g>`;
+  });
+  ov += '</svg>';
+  box.innerHTML = base + '<canvas></canvas>' + ov;
+  // Calor
+  const cv = box.querySelector('canvas');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const pts = [];
+  const metric = {
+    plus: id => sect(id).plus,
+    arriendo: id => sect(id).arr2 / 60,
+    cap: id => { const xs = all.filter(x => x.p.sector === id); return xs.length ? xs.reduce((a, x) => a + x.r.capRate, 0) / xs.length : null; },
+    score: id => { const xs = all.filter(x => x.p.sector === id); return xs.length ? Math.max(...xs.map(x => x.score)) : null; }
+  }[S.mapLayer];
+  const vals = secIds.map(id => ({id, v: metric(id)})).filter(o => o.v != null);
+  const mn = Math.min(...vals.map(o => o.v)), mx = Math.max(...vals.map(o => o.v));
+  vals.forEach(o => { const s = sect(o.id); pts.push({x: X(s.lon), y: Y(s.lat), r: 1.25 * pxPerKm, v: 0.18 + 0.82 * (mx - mn < 1e-9 ? 0.5 : (o.v - mn) / (mx - mn))}); });
+  if (S.mapLayer === 'cap' || S.mapLayer === 'score'){
+    const pv = visibles.map(p => { const b = scoreBy[p.id]; return b ? {p, v: S.mapLayer === 'cap' ? b.r.capRate : b.score} : null; }).filter(Boolean);
+    const a = Math.min(...pv.map(o => o.v)), b = Math.max(...pv.map(o => o.v));
+    pv.forEach(o => pts.push({x: X(o.p.lon), y: Y(o.p.lat), r: 0.55 * pxPerKm, v: 0.15 + 0.85 * (b - a < 1e-9 ? 0.5 : (o.v - a) / (b - a))}));
+  }
+  pts.forEach(p => { const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r); g.addColorStop(0, `rgba(0,0,0,${p.v.toFixed(3)})`); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); });
+  // Recorte a tierra firme y coloreo por intensidad
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.beginPath(); land.forEach((p, k) => k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fillStyle = '#000'; ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  const stops = ['#fff3b0', '#fdd36a', '#f7a541', '#ec7432', '#d2452a', '#9e1f1c'];
+  const lut = new Uint8ClampedArray(256 * 3);
+  for (let k = 0; k < 256; k++){ const t = k / 255 * (stops.length - 1), i0 = Math.floor(t), i1 = Math.min(stops.length - 1, i0 + 1); const c = mix(stops[i0], stops[i1], t - i0); lut[k * 3] = c[0]; lut[k * 3 + 1] = c[1]; lut[k * 3 + 2] = c[2]; }
+  const img = ctx.getImageData(0, 0, cv.width, cv.height), d = img.data;
+  for (let k = 0; k < d.length; k += 4){ const a = d[k + 3]; if (!a) continue; const idx = Math.min(255, Math.round(a * 1.15)); d[k] = lut[idx * 3]; d[k + 1] = lut[idx * 3 + 1]; d[k + 2] = lut[idx * 3 + 2]; d[k + 3] = Math.min(235, 70 + a * 0.9); }
+  ctx.putImageData(img, 0, 0);
+  $('#mapRamp', el).style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
+  // Interacción con marcadores
+  $$('.map-mk', box).forEach(g => {
+    const p = projById(g.dataset.p), b = scoreBy[p.id];
+    const h = `<div class="tv">${esc(p.n)}</div><div class="tl">${esc(p.inmo)} · ${esc(sect(p.sector).n)}</div><div class="tl">${p.u.map(u => esc(u.t) + ' ' + ufF(u.uf, 0)).join(' · ')}</div>${b ? `<div class="tl">Puntaje ${NF0.format(b.score)} · TIR ${pct(b.r.tir)} · cap rate ${pct(b.r.capRate)}</div>` : ''}<div class="tl">${esc(ESTADO_TXT[p.estado])} · ${esc(p.entrega)}</div>`;
+    g.addEventListener('pointermove', e => showTip(h, e.clientX, e.clientY));
+    g.addEventListener('pointerleave', hideTip);
+    g.addEventListener('focus', () => { const r = g.getBoundingClientRect(); showTip(h, r.right, r.bottom); });
+    g.addEventListener('blur', hideTip);
+    const open = () => { S.provSel = p.id; S.provZona = sect(p.sector).sur ? 'sur' : 'todas'; save(); go('proyectos'); };
+    g.addEventListener('click', open);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter') open(); });
+  });
+}
+
+/* ---------- Escenarios ---------- */
+const ESCENARIOS = [
+  {id:'pes', n:'Pesimista', d:'Tasa +1 pp, arriendo −15%, vacancia 10%, plusvalía −1,5 pp', ov:{dTasa:1.0, dArr:-0.15, vacOv:0.10, dPlus:-0.015}},
+  {id:'base', n:'Base', d:'Supuestos actuales', ov:{}},
+  {id:'opt', n:'Optimista', d:'Tasa −0,4 pp, arriendo +8%, vacancia 3%, plusvalía +1 pp', ov:{dTasa:-0.4, dArr:0.08, vacOv:0.03, dPlus:0.01}},
+  {id:'min', n:'Ciclo minero a la baja', d:'Como 2015–2016: arriendo −25%, vacancia 15%, plusvalía 0%', ov:{dArr:-0.25, vacOv:0.15, plusAbs:0}}
+];
+function evalEsc(x, ov){
+  const o = Object.assign({}, ov);
+  if (o.plusAbs != null){ o.dPlus = o.plusAbs - sect(x.p.sector).plus / 100; delete o.plusAbs; }
+  return evaluar(x.p, x.u, o);
+}
+function rEscenarios(el){
+  const rk = ranking();
+  let sel = (S.escSel || []).map(unitByKey).filter(Boolean);
+  if (!sel.length) sel = rk.slice(0, 3).map(x => ({p: x.p, u: x.u, key: x.key}));
+  const focus = (S.escFocus && unitByKey(S.escFocus)) || sel[0];
+  if (!focus){ el.innerHTML = '<div class="panel">No hay unidades con estos filtros.</div>'; return; }
+  const opts = (cur) => PROYECTOS.map(p => `<optgroup label="${esc(p.n)}">` + p.u.map((u, k) => `<option value="${p.id}:${k}"${cur === p.id + ':' + k ? ' selected' : ''}>${esc(u.t)} · ${ufF(u.uf, 0)}</option>`).join('') + '</optgroup>').join('');
+  const C = S.escCustom;
+  const custom = {dTasa: C.dTasa, dArr: C.dArr, dPlus: C.dPlus}; if (C.vac != null) custom.vacOv = C.vac;
+  const escs = ESCENARIOS.concat([{id:'cus', n:'Tu escenario', d:'Definido con los controles de abajo', ov: custom}]);
+  el.innerHTML = `
+  <div class="panel"><div class="panel-head"><div><h2>Compara hasta 3 unidades</h2><p class="sub">Por defecto, las 3 primeras del ranking. TIR y VAN reales a ${S.horizonte} años.</p></div></div>
+    <div class="frow">${[0, 1, 2].map(i => `<div class="field"><label for="es${i}">Unidad ${i + 1}</label><select id="es${i}" data-es="${i}"><option value="">—</option>${opts(sel[i] ? sel[i].key : '')}</select></div>`).join('')}</div></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Escenario</th>${sel.map(x => `<th colspan="3">${esc(x.p.n)} · ${esc(x.u.t)}</th>`).join('')}</tr><tr><th></th>${sel.map(() => '<th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">VAN</th>').join('')}</tr></thead>
+  <tbody>${escs.map(e => `<tr${e.id === 'base' ? ' style="font-weight:600"' : ''}><td><b>${esc(e.n)}</b><div class="pinmo">${esc(e.d)}</div></td>${sel.map(x => { const r = evalEsc(x, e.ov); return `<td class="n">${pct(r.tir)}</td><td class="n">${flujoCell(r.flujo1 * S.uf)}</td><td class="n ${r.van >= 0 ? 'pos' : 'neg'}">${clpM(r.van * S.uf)}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>
+  <div class="panel"><h2>Tu escenario</h2><p class="sub">Mueve las variables y mira la última fila de la tabla.</p>
+    <div class="frow">
+      <div class="field"><label for="ecT">Cambio de tasa <output>${(C.dTasa >= 0 ? '+' : MINUS) + NF2.format(Math.abs(C.dTasa))} pp</output></label><input id="ecT" type="range" min="-1" max="2" step="0.1" value="${C.dTasa}" data-ec="dTasa"></div>
+      <div class="field"><label for="ecA">Cambio de arriendo <output>${pctS(C.dArr, 0)}</output></label><input id="ecA" type="range" min="-0.3" max="0.2" step="0.01" value="${C.dArr}" data-ec="dArr"></div>
+      <div class="field"><label for="ecV">Vacancia <output>${pct(C.vac != null ? C.vac : S.vac, 0)}</output></label><input id="ecV" type="range" min="0" max="0.25" step="0.01" value="${C.vac != null ? C.vac : S.vac}" data-ec="vac"></div>
+      <div class="field"><label for="ecP">Cambio de plusvalía <output>${(C.dPlus >= 0 ? '+' : MINUS) + NF1.format(Math.abs(C.dPlus * 100))} pp</output></label><input id="ecP" type="range" min="-0.03" max="0.03" step="0.005" value="${C.dPlus}" data-ec="dPlus"></div>
+    </div></div>
+  <div class="grid g2">
+    <div class="panel"><div class="panel-head"><div><h2>TIR según tasa y plusvalía</h2><p class="sub">Azul: supera tu tasa de descuento (${NF0.format(S.desc * 100)}% real). Rojo: no la alcanza.</p></div>
+      <select id="esF" aria-label="Unidad a analizar" style="max-width:260px">${sel.map(x => `<option value="${x.key}"${x.key === focus.key ? ' selected' : ''}>${esc(x.p.n)} · ${esc(x.u.t)}</option>`).join('')}</select></div>
+      <div style="overflow-x:auto" id="esGrid"></div></div>
+    <div class="panel"><h2>Qué variable pesa más</h2><p class="sub">Cambio en la TIR de ${esc(focus.p.n)} ${esc(focus.u.t)} al mover cada variable hacia un extremo razonable.</p><div id="esTor"></div></div>
+  </div>`;
+  $$('[data-es]', el).forEach(s => s.addEventListener('change', () => { const arr = sel.map(x => x.key); arr[+s.dataset.es] = s.value; S.escSel = arr.filter(Boolean); save(); render(); }));
+  $$('[data-ec]', el).forEach(i => { i.addEventListener('change', () => { S.escCustom[i.dataset.ec] = +i.value; save(); render(); }); });
+  $('#esF', el).addEventListener('change', e => { S.escFocus = e.target.value; save(); render(); });
+  // Cuadrícula de sensibilidad
+  const r0 = evaluar(focus.p, focus.u);
+  const tasas = [-1, -0.5, 0, 0.5, 1, 1.5, 2].map(d => +(r0.tasa + d).toFixed(2)).filter(t => t > 0.5);
+  const plus = [0, 0.01, 0.015, 0.02, 0.025, 0.03, 0.04];
+  const gNow = sect(focus.p.sector).plus / 100;
+  let h = '<table class="hgrid"><thead><tr><th>Tasa ↓ · Plusvalía →</th>' + plus.map(p => `<th>${NF1.format(p * 100)}%</th>`).join('') + '</tr></thead><tbody>';
+  tasas.forEach(t => {
+    h += `<tr><th>${NF2.format(t)}%</th>`;
+    plus.forEach(p => {
+      const r = evaluar(focus.p, focus.u, {tasaOv: t, dPlus: p - gNow});
+      const c = divColor(isFinite(r.tir) ? r.tir : -0.1, S.desc, 0.08);
+      const cur = Math.abs(t - r0.tasa) < 1e-6 && Math.abs(p - gNow) < 0.0026;
+      h += `<td class="${cur ? 'cur' : ''}" style="background:${c.bg};color:${c.fg}" title="Tasa ${NF2.format(t)}% · plusvalía ${NF1.format(p * 100)}%: TIR ${pct(r.tir)}">${pct(r.tir)}</td>`;
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table><p class="small muted" style="margin:8px 0 0">Recuadro: tu situación actual (plusvalía más cercana a la del sector).</p>';
+  $('#esGrid', el).innerHTML = h;
+  // Tornado
+  const base = r0.tir;
+  const vars = [
+    ['Tasa ±1 pp', {dTasa: 1}, {dTasa: -1}],
+    ['Arriendo ±15%', {dArr: -0.15}, {dArr: 0.15}],
+    ['Plusvalía ±1,5 pp', {dPlus: -0.015}, {dPlus: 0.015}],
+    ['Vacancia 15% / 2%', {vacOv: 0.15}, {vacOv: 0.02}],
+    ['Pie 30% / 15%', {pie: 0.30}, {pie: 0.15}],
+    ['Plazo 20 / 30 años', {plazo: 20}, {plazo: 30}]
+  ].map(v => ({l: v[0], lo: evaluar(focus.p, focus.u, v[1]).tir - base, hi: evaluar(focus.p, focus.u, v[2]).tir - base}))
+   .map(v => ({l: v.l, a: Math.min(v.lo, v.hi), b: Math.max(v.lo, v.hi)}))
+   .sort((x, y) => (y.b - y.a) - (x.b - x.a));
+  const span = Math.max(0.005, ...vars.map(v => Math.max(Math.abs(v.a), Math.abs(v.b))));
+  $('#esTor', el).innerHTML = `<div class="legend"><span><i class="sq" style="background:var(--div-neg)"></i>Baja la TIR</span><span><i class="sq" style="background:var(--div-pos)"></i>Sube la TIR</span><span class="muted">TIR base ${pct(base)}</span></div><div class="tornado">` + vars.map(v => {
+    const lw = Math.max(0, -v.a) / span * 50, rw = Math.max(0, v.b) / span * 50;
+    return `<div class="tor-row"><div><b>${esc(v.l)}</b><div class="tv">${pctS(v.a)} / ${pctS(v.b)}</div></div><div class="tor-track"><div class="mid"></div>${lw > 0 ? `<div class="tor-bar lo" style="right:50%;width:${lw.toFixed(1)}%"></div>` : ''}${rw > 0 ? `<div class="tor-bar hi" style="left:50%;width:${rw.toFixed(1)}%"></div>` : ''}</div></div>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- Asesoría ---------- */
+function rAsesoria(el){
+  const rk = ranking();
+  if (!rk.length){ el.innerHTML = '<div class="panel">No hay unidades con estos filtros.</div>'; return; }
+  const by = (f, dir) => rk.slice().sort((a, b) => dir * (f(b) - f(a)))[0];
+  const pres = rk.filter(x => x.r.okAhorro && x.r.okRenta);
+  const top = rk[0];
+  const flujo = by(x => x.r.flujo1, 1);
+  const plus = by(x => sect(x.p.sector).plus * 10 + (isFinite(x.r.tir) ? x.r.tir : 0), 1);
+  const barato = by(x => -x.r.invIni, 1);
+  const best1 = rk.find(x => x.u.d === 1), best2 = rk.find(x => x.u.d === 2);
+  const inm = rk.find(x => x.p.estado === 'inmediata'), verde = rk.find(x => x.p.estado !== 'inmediata');
+  const pos = rk.filter(x => x.r.flujo1 >= 0).length;
+  const capVsTasa = rk.filter(x => x.r.capRate < x.r.tasa / 100).length;
+  const pick = (tag, x, extra) => x ? `<div class="pick"><div class="tag">${esc(tag)}</div><div class="pn">${esc(x.p.n)} · ${esc(x.u.t)}</div><div class="small muted" style="text-align:right">#${x.rank} · ${NF0.format(x.score)} pts</div>
+    <div class="small ink2" style="grid-column:1/-1">${esc(x.p.inmo)}, ${esc(sect(x.p.sector).n)}. ${NF1.format(x.u.m2)} m² en ${ufF(x.u.uf, 0)}. Pie ${clpM(x.r.piePago * S.uf)}, dividendo ${clp(x.r.div1 * S.uf)}, arriendo estimado ${clp(x.r.rent)}, flujo ${clpS(x.r.flujo1 * S.uf)} al mes, TIR ${pct(x.r.tir)}. ${extra || ''}</div></div>` : '';
+  el.innerHTML = `<div class="grid g-wide">
+  <div class="panel memo">
+    <h3>Recomendación de hoy</h3>
+    <p>Con pie de ${NF0.format(S.pie * 100)}%, crédito a ${S.plazo} años con ${S.banco === 'mejor' ? 'la mejor tasa disponible' : esc(BANCOS.find(b => b.id === S.banco).n)} y venta a ${S.horizonte} años, la mejor opción al sur de calle Copiapó es <b>${esc(top.p.n)} ${esc(top.u.t)}</b>. ${esc(porQue(top))}</p>
+    <p>${pos} de ${rk.length} unidades se pagan solas desde el primer mes. En ${capVsTasa} de ${rk.length} el cap rate es menor que la tasa del crédito: ahí la ganancia viene de la plusvalía y de la deuda que amortiza el arrendatario, no del flujo.</p>
+    ${pres.length < rk.length ? `<p>Con tu ahorro de ${clpM(S.ahorro)} y renta de ${clpM(S.renta)}, ${pres.length} unidades quedan dentro de tu presupuesto${pres[0] ? '. La mejor de ellas es <b>' + esc(pres[0].p.n) + ' ' + esc(pres[0].u.t) + '</b> (#' + pres[0].rank + ')' : ''}.</p>` : '<p>Todas las unidades evaluadas caben en tu ahorro y renta actuales.</p>'}
+    <div>${pick('Mejor opción global', top)}${pick('Mejor flujo mensual', flujo, flujo.r.flujo1 >= 0 ? 'El arriendo cubre el dividendo y todos los costos.' : 'Incluso la mejor requiere aportar cada mes.')}${pick('Mayor potencial de plusvalía', plus, 'Sector con ' + NF1.format(sect(plus.p.sector).plus) + '% real anual estimado.')}${pick('Menor capital inicial', barato, 'Inversión inicial de ' + clpM(barato.r.invIni * S.uf) + ' incluyendo gastos.')}${best1 && best1 !== top ? pick('Mejor 1 dormitorio', best1) : ''}${best2 && best2 !== top ? pick('Mejor 2 dormitorios', best2) : ''}</div>
+    <h3>Entrega inmediata o en verde</h3>
+    <p>${inm ? 'La mejor con entrega inmediata es <b>' + esc(inm.p.n) + ' ' + esc(inm.u.t) + '</b> (#' + inm.rank + '): arriendas desde el primer mes y ves el producto terminado.' : ''} ${verde ? 'La mejor en verde o en blanco es <b>' + esc(verde.p.n) + ' ' + esc(verde.u.t) + '</b> (#' + verde.rank + '): pagas el pie en cuotas y capturas plusvalía durante la obra, a cambio de riesgo de plazo y de no recibir arriendo hasta la entrega.' : ''}</p>
+    <h3>Plan de acción</h3>
+    <ol class="steps">
+      <li><div><b>Preaprueba tu crédito en tres bancos.</b> Pide cotización formal con CAE a BancoEstado, Santander y BCI (o Itaú). Entrega la misma información a todos y compara dividendo y seguros.</div></li>
+      <li><div><b>Confirma qué incluye el precio.</b> Pregunta por estacionamiento, bodega, terminaciones y gastos comunes reales del edificio. En Trilogía Sur y Vista Llacolén el estacionamiento se paga aparte.</div></li>
+      <li><div><b>Negocia.</b> Biaggini publica descuentos de 12% a 17%, hay bonos pie y el stock final de edificios terminados suele tener margen. Pide el descuento por escrito en la cotización.</div></li>
+      <li><div><b>Valida el arriendo.</b> Busca 5 avisos de departamentos similares en el mismo edificio o cuadra. Si el arriendo real es 10% menor que el estimado, revisa el escenario pesimista.</div></li>
+      <li><div><b>Protege la compra en verde.</b> Exige que el pie quede respaldado por póliza de seguro o boleta de garantía, revisa la fecha de recepción municipal y la trayectoria de la inmobiliaria.</div></li>
+      <li><div><b>Arma un fondo de reserva.</b> Guarda al menos 6 dividendos para vacancia, reparaciones o un alza de gastos comunes.</div></li>
+    </ol>
+    <h3>Riesgos que no se ven en la planilla</h3>
+    <ul class="clean">
+      <li><b>Ciclo minero.</b> Cerca del 70% de las operaciones viene de la minería y sus proveedores. En 2015–2016 los arriendos cayeron fuerte. Revisa el escenario "Ciclo minero a la baja".</li>
+      <li><b>Borde costero.</b> Los edificios de primera línea en Av. Jaime Guzmán y Av. Grecia están en zona de evacuación por tsunami. Revisa la póliza de sismo y el plan de evacuación del edificio.</li>
+      <li><b>Salinidad y camanchaca.</b> Frente al mar la mantención de fachadas, ventanas y equipos es más cara. Pregunta por el fondo de reserva del condominio.</li>
+      <li><b>Subsidios.</b> El subsidio a la tasa y FOGAES son para la primera vivienda. Si compras con subsidio DS19, rigen prohibiciones de venta; para un departamento de inversión evalúa sin subsidio.</li>
+      <li><b>Datos de este informe.</b> Precios "desde" de portales a ${esc(FECHA_DATOS)}. Las unidades marcadas como Verificar o Dato parcial necesitan confirmación en sala de ventas.</li>
+    </ul>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+    <div class="panel"><h2>Estudio de mercado</h2><p class="sub">Antofagasta, ${esc(FECHA_DATOS)}.</p>
+      ${MERCADO.map(m => `<div class="fact"><div class="fv">${esc(m.v)}</div><div><b>${esc(m.t)}</b></div><div class="fd">${esc(m.d)}</div><a href="${esc(m.f)}" target="_blank" rel="noopener">Fuente</a></div>`).join('')}
+      <div class="fact"><div class="fv">2.100–3.100 · 4.800–6.350 · 7.500–11.900 UF</div><div><b>Rangos de precio por subzona</b></div><div class="fd">Inversión (Antilhue, Coviefi Alto) · medio (Cerro Paranal, Llacolén) · premium (Av. Brasil, Jardines del Sur).</div></div>
+    </div>
+    <div class="panel"><h2>Indicadores, en simple</h2>
+      <ul class="clean small">
+        <li><b>Dividendo:</b> cuota del crédito más seguros de desgravamen e incendio y sismo.</li>
+        <li><b>Cap rate:</b> arriendo neto anual dividido por el precio. Mide la renta sin considerar el crédito.</li>
+        <li><b>Flujo mensual:</b> lo que te queda (o pones) después de pagar dividendo, vacancia, mantención y contribuciones.</li>
+        <li><b>Cash-on-cash:</b> flujo anual dividido por el capital que pusiste (pie más gastos).</li>
+        <li><b>TIR:</b> rentabilidad anual de todo el ciclo: pie, flujos y venta. Está en UF, o sea, sobre la inflación.</li>
+        <li><b>VAN:</b> cuánto vale hoy la inversión por sobre una alternativa que rinde ${NF0.format(S.desc * 100)}% real.</li>
+        <li><b>PER:</b> años de arriendo bruto para pagar el precio. Bajo 18 es atractivo en Chile.</li>
+        <li><b>Arriendo de equilibrio:</b> arriendo mínimo para que el flujo sea cero.</li>
+      </ul></div>
+  </div></div>`;
+}
+
+/* ---------- Supuestos ---------- */
+function rSupuestos(el){
+  const f = (id, l, v, step, hint, scale) => `<div class="field"><label for="${id}">${l}</label><input id="${id}" type="number" step="${step}" value="${+(v * (scale || 1)).toFixed(6)}" data-sup="${id}" data-scale="${scale || 1}">${hint ? '<span class="hint">' + hint + '</span>' : ''}</div>`;
+  const secIds = Object.keys(SECTORES);
+  el.innerHTML = `
+  <div class="panel"><h2>Supuestos del modelo</h2><p class="sub">Se guardan en este navegador. Los porcentajes se ingresan como número (5 = 5%).</p>
+    <div class="frow">
+      ${f('uf', 'Valor UF ($)', S.uf, 0.01, 'UF del ' + FECHA_DATOS + ': $41.081,76')}
+      ${f('horizonte', 'Horizonte de venta (años)', S.horizonte, 1, 'Desde la entrega')}
+      ${f('desc', 'Tasa de descuento real (%)', S.desc, 0.1, 'Para el VAN', 100)}
+      ${f('vac', 'Vacancia (%)', S.vac, 0.5, '5% ≈ 18 días al año', 100)}
+      ${f('mant', 'Mantención (% del arriendo)', S.mant, 0.5, '', 100)}
+      ${f('corr', 'Corretaje anualizado (%)', S.corr, 0.5, 'Medio mes por contrato cada 2 años', 100)}
+      ${f('costoVenta', 'Costo de venta (%)', S.costoVenta, 0.5, 'Corretaje al vender', 100)}
+      ${f('desg', 'Seguro desgravamen (% mensual s/saldo)', S.desg, 0.001, '', 100)}
+      ${f('inc', 'Seguro incendio y sismo (% mensual)', S.inc, 0.001, 'Sobre 80% del precio', 100)}
+      ${f('gastosFijos', 'Gastos fijos de compra (UF)', S.gastosFijos, 1, 'Tasación, estudio de títulos, notaría')}
+      ${f('cbr', 'Conservador de Bienes Raíces (%)', S.cbr, 0.05, '', 100)}
+      ${f('ite', 'Impuesto al mutuo (%)', S.ite, 0.1, 'Timbres y estampillas', 100)}
+      ${f('divRenta', 'Dividendo máximo sobre renta (%)', S.divRenta, 1, 'Criterio bancario usual', 100)}
+      ${f('rentGrowth', 'Alza real del arriendo (% anual)', S.rentGrowth, 0.1, 'Sobre la UF', 100)}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="supReset" type="button">Restablecer todos los supuestos</button></div></div>
+  <div class="panel"><h2>Supuestos por sector</h2><p class="sub">Arriendo de referencia sin gastos comunes para un 1D1B de 38 m² y un 2D2B de 60 m². Se ajusta por superficie con elasticidad 0,45 (un depto 20% más grande arrienda cerca de 9% más).</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sector</th><th>Zona</th><th class="n">Arriendo 1D $</th><th class="n">Arriendo 2D $</th><th class="n">GC $/m²</th><th class="n">Plusvalía % real</th></tr></thead>
+    <tbody>${secIds.map(id => { const s = sect(id); return `<tr><td><b>${esc(s.n)}</b></td><td>${s.sur ? 'Sur' : 'Norte'}</td>${['arr1', 'arr2', 'gc', 'plus'].map(k => `<td class="n" style="min-width:120px"><input type="number" step="${k === 'plus' ? 0.1 : k === 'gc' ? 50 : 10000}" value="${s[k]}" data-sec="${id}" data-k="${k}" aria-label="${esc(s.n)} ${k}"></td>`).join('')}</tr>`; }).join('')}</tbody></table></div></div>
+  <div class="grid g2">
+    <div class="panel"><h2>Cómo se calcula</h2>
+      <ul class="clean small">
+        <li>Dividendo: sistema francés con tasa mensual = anual/12, más desgravamen sobre el saldo e incendio y sismo sobre el 80% del precio.</li>
+        <li>Todo se modela en UF: arriendo, deuda y precio se reajustan con la inflación, así que la TIR es real.</li>
+        <li>Gastos operacionales: gastos fijos + CBR sobre el precio + impuesto al mutuo sobre el crédito.</li>
+        <li>Contribuciones: (55% del precio − exención) × 0,98% anual, con 50% de rebaja DFL2.</li>
+        <li>En verde y en blanco: el pie se paga en cuotas hasta la entrega (si lo activas), sin arriendo ni dividendo en ese período; la plusvalía corre desde hoy.</li>
+        <li>Venta al final del horizonte: valor con plusvalía menos 2% de costo y menos el saldo de la deuda.</li>
+        <li>El ranking normaliza cada criterio de 0 a 100 entre las unidades visibles y pondera con tus pesos.</li>
+      </ul></div>
+    <div class="panel"><h2>Fuentes generales</h2>
+      <ul class="clean src">
+        ${['https://www.pauta.cl/dato-en-pauta/2026/10/03/valor-de-la-uf-hoy-sabado-3-de-octubre-revisa-el-precio-de-la-unidad-de-fomento.html',
+           'https://www.neatpagos.com/blog/articulo/mejor-tasa-credito-hipotecario',
+           'https://www.rvc.cl/tasas-hipotecarias-2026-tendencia-a-la-baja/',
+           'https://fogaes.cl/sitio/requisitos/',
+           'https://www.imagina.cl/blogs/ampliacion-subsidio-hipotecario-fogaes/',
+           'https://www.cnnchile.com/pais/antofagasta-la-serena-y-concepcion-superan-a-santiago-en-rentabilidad-para-invertir-en-departamentos/',
+           'https://tierramarillano.cl/2026/08/01/ventas-inmobiliarias-en-antofagasta-crecen-70-en-el-primer-semestre/',
+           'https://www.coldwellbanker.cl/blog/blog-1/antofagasta-2025-departamentos-usados-218',
+           'https://casas.mitula.cl/casas/arriendo-departamentos-zona-sur-antofagasta',
+           'https://www.portalinmobiliario.com/arriendo/departamento/antofagasta/antofagasta/playa-blanca'].map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a></li>`).join('')}
+      </ul>
+      <p class="small muted" style="margin-top:10px">Las fuentes de cada proyecto están en su ficha (Proyectos → toca una fila). Este análisis es educativo y no reemplaza la asesoría de un profesional ni la cotización formal de bancos e inmobiliarias.</p></div>
+  </div>`;
+  $$('[data-sup]', el).forEach(i => i.addEventListener('change', () => { const v = +i.value; if (!isFinite(v)) return; S[i.dataset.sup] = v / (+i.dataset.scale); save(); render(); }));
+  $$('[data-sec]', el).forEach(i => i.addEventListener('change', () => { const v = +i.value; if (!isFinite(v)) return; S.sect[i.dataset.sec] = Object.assign({}, S.sect[i.dataset.sec] || {}, {[i.dataset.k]: v}); save(); render(); }));
+  $('#supReset', el).addEventListener('click', () => { const keep = {renta: S.renta, ahorro: S.ahorro}; S = Object.assign(JSON.parse(JSON.stringify(DEF)), keep); save(); render(); });
+}
+
+/* =====================================================================
+   8. ARRANQUE
+   ===================================================================== */
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (['resumen', 'simulador', 'mapa'].includes(current)) render(); }, 180); });
+const h0 = (location.hash || '').replace('#', '');
+go(VIEWS[h0] ? h0 : 'resumen', false);
+window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (VIEWS[h] && h !== current) go(h, false); });
+window.RadarSur = {evaluar, ranking, PROYECTOS, BANCOS, SECTORES, S: () => S};
+})();
+</script>
