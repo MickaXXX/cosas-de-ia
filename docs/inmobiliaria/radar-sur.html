@@ -224,6 +224,24 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .tor-bar.hi{background:var(--div-pos);border-radius:0 4px 4px 0}
 .tor-row .tv{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
 
+.banner{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:var(--r);padding:14px 18px}
+.banner p{margin:4px 0 0;max-width:90ch;color:var(--ink)}
+.ruta{display:grid;gap:9px}
+.ruta-row{display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr) minmax(92px,auto);gap:12px;align-items:center;font-size:13px}
+.ruta-row .rl{min-width:0}
+.ruta-row .rl b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ruta-row .rl span{font-size:11.5px;color:var(--muted)}
+.ruta-track{position:relative;height:16px;background:color-mix(in srgb,var(--line) 45%,transparent);border-radius:4px}
+.ruta-seg{position:absolute;top:0;bottom:0}
+.ruta-seg.wait{background:var(--deemph)}
+.ruta-seg.obra{background:var(--s2)}
+.ruta-seg.first{border-radius:4px 0 0 4px}
+.ruta-dot{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--s1);box-shadow:0 0 0 2px var(--surface)}
+.ruta-row .rv{font-family:var(--f-mono);font-size:12px;text-align:right;white-space:nowrap}
+.ruta-axis{position:relative;height:16px;font:11px var(--f-mono);color:var(--muted)}
+.ruta-axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.ruta-head{display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr) minmax(92px,auto);gap:12px}
+@media (max-width:900px){.ruta-row,.ruta-head{grid-template-columns:minmax(100px,130px) minmax(0,1fr) auto}}
 /* Detalle de proyecto */
 .detail{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 18px}
@@ -281,6 +299,7 @@ ul.clean li{margin:3px 0}
       <div><b>Radar Sur</b><small>Antofagasta</small></div>
     </div>
     <button data-v="resumen"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Resumen</button>
+    <button data-v="situacion"><svg viewBox="0 0 24 24"><path d="M3 7h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7l12-4v4"/><circle cx="16.5" cy="14" r="1.2"/></svg>Mi situación</button>
     <button data-v="proyectos"><svg viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>Proyectos</button>
     <button data-v="simulador"><svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/></svg>Simulador</button>
     <button data-v="bancos"><svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg>Bancos</button>
@@ -308,6 +327,7 @@ ul.clean li{margin:3px 0}
     <!-- RESUMEN -->
     <section class="view" id="v-resumen" aria-labelledby="vTitle"></section>
     <!-- PROYECTOS -->
+    <section class="view" id="v-situacion"></section>
     <section class="view" id="v-proyectos"></section>
     <!-- SIMULADOR -->
     <section class="view" id="v-simulador"></section>
@@ -402,7 +422,7 @@ const PROYECTOS = [
    extra:'2D2B de 77, 99 y 99 m²; 3D de 104 y 122 m². Mismo distrito que Índico.', conf:'media',
    f:['https://www.almagro.cl/distrito-valle-del-mar/']},
   {id:'atlantico', n:'Almagro Atlántico', inmo:'Almagro', dir:'Av. Jaime Guzmán Errázuriz (Valle del Mar)', sector:'jardines-sur', lat:-23.6988, lon:-70.4150,
-   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D2B',d:2,b:2,m2:74,uf:5200}],
+   estado:'inmediata', entrega:'Inmediata', meses:0, fogaesDuda:true, u:[{t:'2D2B',d:2,b:2,m2:74,uf:5200}],
    estac:{incl:true, nota:'confirmar'}, bodega:{incl:true, nota:'confirmar'},
    pago:['Edificio terminado: unidades de stock final o reventa','Precio de publicación de corredora; negociable'],
    extra:'112 departamentos en 24 pisos, tres ascensores.', conf:'media',
@@ -432,7 +452,7 @@ const PROYECTOS = [
    extra:'Primera línea frente al mar. 2D2B de 55 m² interiores (61 m² totales) y 3D2B de 79 m².', conf:'alta',
    f:['https://www.rvc.cl/proyecto/condominio-palmas-del-sur-ii/','https://www.enlacenorte.cl/antofagasta/departamento/condominio-palmas-del-sur-ii/7903']},
   {id:'trilogia', n:'Edificio Trilogía Sur', inmo:'Costavive (corredora)', dir:'Av. Jaime Guzmán Errázuriz 04300', sector:'jardines-sur', lat:-23.7045, lon:-70.4190,
-   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:37,uf:2505},{t:'2D2B',d:2,b:2,m2:75,uf:5756,dudoso:true}],
+   estado:'inmediata', entrega:'Inmediata', meses:0, fogaesDuda:true, u:[{t:'1D1B',d:1,b:1,m2:37,uf:2505},{t:'2D2B',d:2,b:2,m2:75,uf:5756,dudoso:true}],
    estac:{incl:false, uf:320}, bodega:{incl:false, uf:50},
    pago:['Publicitado con “100% financiamiento” (bono pie del vendedor: verificar condiciones)','Estacionamiento 320 UF y bodega 50 UF aparte'],
    extra:'Piscina, gimnasio, sala multiuso, vista al mar. El 2D de 5.756 UF viene de un aviso: verificar.', conf:'media',
@@ -539,7 +559,8 @@ const MERCADO = [
    2. ESTADO
    ===================================================================== */
 const DEF = {
-  uf:UF_HOY, renta:2500000, ahorro:25000000, banco:'mejor', plazo:30, pie:0.20, bono:0, horizonte:10,
+  uf:UF_HOY, sueldo:1800000, honor:250000, honorPct:1, ahorro:5000000, ahorroMes:350000, deudas:0, primeraViv:true,
+  cargaMax:0.40, consTasa:0.0149, consPlazo:48, sitSel:null, banco:'mejor', plazo:30, pie:0.20, bono:0, horizonte:10,
   zona:'sur', tip:'todas', subsidio:false, pieCuotas:true, comprarExtras:true, admin:'propia',
   vac:0.05, mant:0.05, corr:0.02, desc:0.05, desg:0.000195, inc:0.00026, costoVenta:0.02,
   gastosFijos:13, cbr:0.003, ite:0.008, contribExento:60000000, contribTasa:0.0098, divRenta:0.25, rentGrowth:0,
@@ -551,10 +572,10 @@ const DEF = {
 let S = load();
 function load(){
   let s = JSON.parse(JSON.stringify(DEF));
-  try { const raw = localStorage.getItem('radarSur.v1'); if (raw) { const o = JSON.parse(raw); s = Object.assign(s, o); s.w = Object.assign({}, DEF.w, o.w||{}); s.escCustom = Object.assign({}, DEF.escCustom, o.escCustom||{}); } } catch(e) {}
+  try { const raw = localStorage.getItem('radarSur.v2'); if (raw) { const o = JSON.parse(raw); s = Object.assign(s, o); s.w = Object.assign({}, DEF.w, o.w||{}); s.escCustom = Object.assign({}, DEF.escCustom, o.escCustom||{}); } } catch(e) {}
   return s;
 }
-function save(){ try { localStorage.setItem('radarSur.v1', JSON.stringify(S)); } catch(e) {} }
+function save(){ try { localStorage.setItem('radarSur.v2', JSON.stringify(S)); } catch(e) {} }
 
 /* =====================================================================
    3. UTILIDADES
@@ -580,6 +601,11 @@ const projById = id => PROYECTOS.find(p => p.id === id);
 const bancoTasa = b => (S.bancosOv[b.id] != null ? S.bancosOv[b.id] : b.tasa);
 const ESTADO_TXT = {inmediata:'Entrega inmediata', verde:'En verde', blanco:'En blanco'};
 const CONF_TXT = {alta:'Dato confiable', media:'Verificar', baja:'Dato parcial'};
+const RET_HONOR = 0.1525; // retención de boletas de honorarios 2026 (Ley 21.133)
+const rentaComp = c => { c = c || S; return c.sueldo + c.honor * (1 - RET_HONOR) * c.honorPct; };
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const fechaEn = n => { if (!isFinite(n)) return '—'; const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + n); return MESES[d.getMonth()] + ' ' + d.getFullYear(); };
+const mesesTxt = n => !isFinite(n) ? 'sin fecha' : n === 0 ? 'hoy' : n === 1 ? '1 mes' : n + ' meses';
 
 /* =====================================================================
    4. MOTOR FINANCIERO
@@ -595,7 +621,7 @@ function rentaEstimada(p, u){
 }
 function bancoPara(c, P){
   const eleg = c.subsidio && P <= 6000;
-  const tasaDe = b => { const t = bancoTasa(b); if (!eleg) return t; return b.sub != null ? Math.min(t, b.sub) : t - 0.60; };
+  const tasaDe = b => { const t = bancoTasa(b); if (!eleg) return t; return b.sub != null ? Math.min(t, b.sub) : t; };
   if (c.banco && c.banco !== 'mejor'){
     const b = BANCOS.find(x => x.id === c.banco) || BANCOS[0];
     return {b, tasa: tasaDe(b), eleg};
@@ -663,6 +689,14 @@ function evaluar(p, u, ov){
   const flows = new Array(D + H + 1).fill(0);
   if (D > 0 && c.pieCuotas){ for (let t = 0; t < D; t++) flows[t] -= piePago / D; } else flows[0] -= piePago;
   flows[D] -= gastos;
+  let consUF = 0, consCuota = 0, consN = 0;
+  if (c.consumo && c.consumo.monto > 0){
+    const rc = c.consumo.tasaM; consN = c.consumo.n; consUF = c.consumo.monto / UFv;
+    consCuota = rc > 0 ? consUF * rc / (1 - Math.pow(1 + rc, -consN)) : consUF / consN;
+    flows[0] += consUF;
+    for (let t = 1; t <= consN && t < flows.length; t++) flows[t] -= consCuota;
+    if (consN >= flows.length && rc > 0){ const k = flows.length - 1, f = Math.pow(1 + rc, k); flows[k] -= Math.max(0, consUF * f - consCuota * (f - 1) / rc); }
+  }
   let saldo = L, intAcum = 0, capAcum = 0;
   const years = [];
   let yr = {arr:0, div:0, flujo:0, int:0, cap:0};
@@ -698,7 +732,8 @@ function evaluar(p, u, ov){
     rent, rentUF, gcCLP, vac, noi1, flujo1, capRate, brutaRent, rentBEclp, sueldoReq, contribUF,
     D, H, g, years, valorFinal, saldoFinal: saldo, netoVenta, tir, van, coc, mult: totalOut / totalIn, totalIn, intAcum,
     ufm2: u.uf / u.m2, per: P / (rentUF * 12),
-    okAhorro: invIni * UFv <= c.ahorro, okRenta: sueldoReq <= c.renta
+    consUF, consCuota, divRatio: div1 * UFv / rentaComp(c),
+    okAhorro: invIni * UFv <= c.ahorro, okRenta: div1 * UFv <= rentaComp(c) * c.divRenta + 1e-6
   };
 }
 function unidades(filtro){
@@ -719,16 +754,83 @@ function unidades(filtro){
 function unitByKey(key){ const [id, k] = String(key).split(':'); const p = projById(id); return p ? {p, u: p.u[+k] || p.u[0], key} : null; }
 const riesgoBase = (p) => clamp(100 - (p.meses || 0) / 36 * 45 - ({alta:0, media:15, baja:35})[p.conf] - (p.estado === 'inmediata' ? 0 : 8), 0, 100);
 
+/* Caminos de compra con tu renta y tu ahorro. Para cada unidad calcula cuándo podrías firmar
+   y recibir las llaves: (1) ahorrando el pie normal, (2) primera vivienda con FOGAES (pie 10%
+   y subsidio a la tasa) y (3) completando el pie con un crédito de consumo. En venta en verde o
+   en blanco el pie se paga en cuotas hasta la entrega, así que tu ahorro mensual también cuenta. */
+const planCache = new Map(); let planSig = '';
+function planes(p, u){
+  const sig = JSON.stringify([S.sueldo, S.honor, S.honorPct, S.ahorro, S.ahorroMes, S.deudas, S.primeraViv, S.cargaMax, S.consTasa, S.consPlazo, S.divRenta, S.banco, S.plazo, S.pie, S.uf, S.sect, S.bancosOv, S.vac, S.mant, S.corr, S.horizonte, S.desg, S.inc, S.gastosFijos, S.cbr, S.ite, S.comprarExtras]);
+  if (sig !== planSig){ planCache.clear(); planSig = sig; }
+  const key = p.id + ':' + p.u.indexOf(u);
+  if (planCache.has(key)) return planCache.get(key);
+  const R = rentaComp(), m = Math.max(0, S.ahorroMes), A0 = Math.max(0, S.ahorro), D = p.meses || 0;
+  const base = evaluar(p, u);
+  const eligFog = !!S.primeraViv && base.P <= 6000;
+  const enConsumo = o => o.loan > 0 && S.consPlazo > D;
+  const check = o => {
+    o.cuotaCons = o.r.consCuota * S.uf;
+    o.divRatio = o.r.div1 * S.uf / R;
+    o.carga = (o.r.div1 * S.uf + S.deudas + (enConsumo(o) ? o.cuotaCons : 0)) / R;
+    o.holgura = m + o.r.flujo1 * S.uf - (enConsumo(o) ? o.cuotaCons : 0);
+    o.okDiv = o.divRatio <= S.divRenta + 1e-9;
+    o.okCarga = o.carga <= S.cargaMax + 1e-9;
+    o.okHolgura = o.holgura >= 0;
+    o.llaves = o.w + D;
+    o.viable = o.okDiv && o.okCarga && o.okHolgura && isFinite(o.w);
+    return o;
+  };
+  const ahorrar = (id, n, ov) => {
+    const r = evaluar(p, u, Object.assign({pieCuotas: true}, ov));
+    const need = (r.piePago + r.gastos) * S.uf, falta = need - A0 - m * D;
+    const w = falta <= 0 ? 0 : (m > 0 ? Math.ceil(falta / m) : Infinity);
+    return check({id, n, r, need, w, loan: 0, pie: ov.pie, sub: !!ov.subsidio});
+  };
+  const lst = [ahorrar('ahorro', 'Ahorrar el pie de ' + NF0.format(S.pie * 100) + '%', {pie: S.pie, subsidio: false})];
+  if (eligFog) lst.push(ahorrar('fogaes', 'Primera vivienda: pie 10% con FOGAES', {pie: 0.10, subsidio: true}));
+  const pieC = eligFog ? Math.min(0.10, S.pie) : S.pie;
+  const r0 = evaluar(p, u, {pie: pieC, subsidio: eligFog, pieCuotas: true});
+  const need = (r0.piePago + r0.gastos) * S.uf, gap = need - A0 - m * D;
+  if (gap > 0){
+    const rc = S.consTasa, nC = S.consPlazo;
+    const a = rc > 0 ? rc / (1 - Math.pow(1 + rc, -nC)) : 1 / nC;
+    const den = 1 - a * Math.min(D, nC);   // en verde, las cuotas del consumo corren durante la obra
+    if (den > 0.05){
+      const loan = gap / den;
+      const r = evaluar(p, u, {pie: pieC, subsidio: eligFog, pieCuotas: true, consumo: {monto: loan, tasaM: rc, n: nC}});
+      lst.push(check({id: 'consumo', n: 'Crédito de consumo para completar el pie', r, need, w: 0, loan, pie: pieC, sub: eligFog}));
+    }
+  }
+  const costo = o => o.llaves + (o.id === 'consumo' ? 12 : 0);   // la deuda de consumo debe adelantar más de un año para preferirse
+  const viables = lst.filter(o => o.viable);
+  const best = viables.slice().sort((x, y) => costo(x) - costo(y) || ((y.r.tir || 0) - (x.r.tir || 0)))[0] || null;
+  const sinDeuda = viables.filter(o => o.id !== 'consumo').sort((x, y) => x.llaves - y.llaves)[0] || null;
+  const res = {lst, best, sinDeuda, consumo: lst.find(o => o.id === 'consumo') || null, eligFog, rentaFalta: !lst.some(o => o.okDiv)};
+  planCache.set(key, res);
+  return res;
+}
+function estadoPlan(pl){
+  if (pl.best){
+    const b = pl.best;
+    if (b.w === 0) return b.id === 'consumo' ? {t: 'Hoy, con consumo', cls: 'warn', ic: '!'} : {t: 'Puedes firmar hoy', cls: 'good', ic: '✓'};
+    return {t: 'Firmas en ' + mesesTxt(b.w), cls: b.w <= 12 ? 'good' : b.w <= 36 ? 'warn' : 'bad', ic: b.w <= 12 ? '◷' : '…'};
+  }
+  if (pl.rentaFalta) return {t: 'Tu renta no alcanza', cls: 'bad', ic: '✕'};
+  return {t: 'No sostenible', cls: 'bad', ic: '✕'};
+}
+const planPill = pl => { const e = estadoPlan(pl); return `<span class="pill ${e.cls}"><i>${e.ic}</i>${esc(e.t)}</span>`; };
+const caminoCorto = o => !o ? '—' : o.id === 'consumo' ? 'Consumo ' + clpM(o.loan) + (o.sub ? ' + FOGAES' : '') : o.id === 'fogaes' ? 'FOGAES pie 10%' : 'Ahorro pie ' + NF0.format(o.pie * 100) + '%';
+
 /* Ranking ponderado. Cada componente se normaliza 0–100 dentro del conjunto evaluado. */
 function ranking(filtro){
-  const list = unidades(filtro).map(x => Object.assign(x, {r: evaluar(x.p, x.u)}));
+  const list = unidades(filtro).map(x => Object.assign(x, {r: evaluar(x.p, x.u), plan: planes(x.p, x.u)}));
   if (!list.length) return [];
   const comp = {
     tir: x => isFinite(x.r.tir) ? x.r.tir : -0.2,
     flujo: x => x.r.flujo1,
     cap: x => x.r.capRate,
     plus: x => sect(x.p.sector).plus,
-    acceso: x => -(x.r.invIni) - (x.r.okRenta ? 0 : 400),
+    acceso: x => x.plan.best ? -(x.plan.best.llaves + (x.plan.best.id === 'consumo' ? 12 : 0)) : -150,
     riesgo: x => riesgoBase(x.p)
   };
   const norm = {};
@@ -748,7 +850,7 @@ function ranking(filtro){
   list.forEach((x, i) => x.rank = i + 1);
   return list;
 }
-const COMP_TXT = {tir:'TIR', flujo:'flujo mensual', cap:'cap rate', plus:'plusvalía del sector', acceso:'pie y renta exigidos', riesgo:'riesgo de entrega y dato'};
+const COMP_TXT = {tir:'TIR', flujo:'flujo mensual', cap:'cap rate', plus:'plusvalía del sector', acceso:'tiempo para poder comprar con tu renta y ahorro', riesgo:'riesgo de entrega y dato'};
 function porQue(x){
   const ks = Object.keys(x.c).filter(k => (S.w[k]||0) > 0).sort((a, b) => x.c[b] - x.c[a]);
   const fuertes = ks.slice(0, 2).map(k => COMP_TXT[k]);
@@ -789,7 +891,7 @@ function barsHTML(rows, fmt, opts){
   }).join('') + '</div>';
 }
 function bindBarTips(root){
-  $$('.bar-row[data-tip]', root).forEach(el => {
+  $$('.bar-row[data-tip], .ruta-row[data-tip]', root).forEach(el => {
     const t = el.getAttribute('data-tip'); if (!t) return;
     el.addEventListener('pointermove', e => showTip(t, e.clientX, e.clientY));
     el.addEventListener('pointerleave', hideTip);
@@ -891,6 +993,7 @@ function divColor(v, center, span){
    ===================================================================== */
 const VIEWS = {
   resumen:{t:'Resumen', e:'Antofagasta · al sur de calle Copiapó'},
+  situacion:{t:'Mi situación hoy', e:'Qué puedes comprar con tu renta y tu ahorro'},
   proyectos:{t:'Proyectos mapeados', e:'Catálogo · ' + PROYECTOS.length + ' proyectos de ' + new Set(PROYECTOS.map(p => p.inmo)).size + ' inmobiliarias'},
   simulador:{t:'Simulador de inversión', e:'Dividendo, flujo y rentabilidad'},
   bancos:{t:'Comparador de bancos', e:'Dividendo por banco y plazo'},
@@ -919,7 +1022,7 @@ function render(){
   $('#chipUf').textContent = '$' + NF2.format(S.uf);
   $('#navUf').textContent = '$' + NF2.format(S.uf);
   $('#chipPerfil').textContent = 'Pie ' + NF0.format(S.pie * 100) + '% · ' + S.plazo + ' años · ' + (S.banco === 'mejor' ? 'mejor tasa' : BANCOS.find(b => b.id === S.banco).n);
-  const fn = {resumen:rResumen, proyectos:rProyectos, simulador:rSimulador, bancos:rBancos, ranking:rRanking, mapa:rMapa, escenarios:rEscenarios, asesoria:rAsesoria, supuestos:rSupuestos}[current];
+  const fn = {resumen:rResumen, situacion:rSituacion, proyectos:rProyectos, simulador:rSimulador, bancos:rBancos, ranking:rRanking, mapa:rMapa, escenarios:rEscenarios, asesoria:rAsesoria, supuestos:rSupuestos}[current];
   fn($('#v-' + current));
 }
 function set(k, v){ S[k] = v; save(); render(); }
@@ -952,10 +1055,14 @@ function extraTxt(x){
 }
 function flujoCell(v){ return `<span class="${v >= 0 ? 'pos' : 'neg'}">${clpS(v)}</span>`; }
 function perfilHTML(){
-  return `<div class="panel"><div class="panel-head"><div><h2>Tu perfil de inversión</h2><p class="sub">Valores de ejemplo: cámbialos por los tuyos y todo se recalcula.</p></div></div>
+  return `<div class="panel"><div class="panel-head"><div><h2>Tu perfil de inversión</h2><p class="sub">Tus datos actuales. Más detalle (deudas, primera vivienda, crédito de consumo) en Mi situación.</p></div></div>
   <div class="frow">
-    <div class="field"><label for="pfRenta">Renta líquida mensual</label><input id="pfRenta" type="number" step="50000" min="0" value="${S.renta}"></div>
-    <div class="field"><label for="pfAhorro">Ahorro disponible para pie y gastos</label><input id="pfAhorro" type="number" step="500000" min="0" value="${S.ahorro}"></div>
+    <div class="field"><label for="pfSueldo">Sueldo líquido mensual</label><input id="pfSueldo" type="number" step="50000" min="0" value="${S.sueldo}"></div>
+    <div class="field"><label for="pfHonor">Boletas de honorarios (bruto/mes)</label><input id="pfHonor" type="number" step="10000" min="0" value="${S.honor}"></div>
+    <div class="field"><label for="pfAhorro">Ahorro actual</label><input id="pfAhorro" type="number" step="100000" min="0" value="${S.ahorro}"></div>
+    <div class="field"><label for="pfAhorroMes">Ahorro mensual</label><input id="pfAhorroMes" type="number" step="10000" min="0" value="${S.ahorroMes}"></div>
+  </div>
+  <div class="frow" style="margin-top:12px">
     <div class="field"><label for="pfPie">Pie <output>${NF0.format(S.pie * 100)}%</output></label><input id="pfPie" type="range" min="0.1" max="0.4" step="0.01" value="${S.pie}"></div>
     <div class="field"><label for="pfPlazo">Plazo <output>${S.plazo} años</output></label><input id="pfPlazo" type="range" min="15" max="30" step="5" value="${S.plazo}"></div>
     <div class="field"><label for="pfBanco">Banco</label><select id="pfBanco">${bancoOptions(S.banco, true)}</select></div>
@@ -968,7 +1075,7 @@ function perfilHTML(){
 }
 function bindPerfil(root){
   const n = (id, k) => { const el = $('#' + id, root); if (el) el.addEventListener('change', () => set(k, Math.max(0, +el.value || 0))); };
-  n('pfRenta', 'renta'); n('pfAhorro', 'ahorro');
+  n('pfSueldo', 'sueldo'); n('pfHonor', 'honor'); n('pfAhorro', 'ahorro'); n('pfAhorroMes', 'ahorroMes');
   const r = (id, k) => { const el = $('#' + id, root); if (!el) return; el.addEventListener('input', () => { el.previousElementSibling.querySelector('output').textContent = k === 'pie' ? NF0.format(el.value * 100) + '%' : el.value + ' años'; }); el.addEventListener('change', () => set(k, +el.value)); };
   r('pfPie', 'pie'); r('pfPlazo', 'plazo');
   const b = $('#pfBanco', root); if (b) b.addEventListener('change', () => set('banco', b.value));
@@ -988,8 +1095,15 @@ function rResumen(el){
   const surU = todos.filter(x => sect(x.p.sector).sur);
   const avg = (arr, f) => arr.reduce((a, x) => a + f(x), 0) / Math.max(1, arr.length);
   const best = BANCOS.reduce((a, b) => bancoTasa(b) < bancoTasa(a) ? b : a);
-  const presup = (x) => x.r.okAhorro && x.r.okRenta;
+  const R = rentaComp();
+  const cerca = rk.filter(x => x.plan.sinDeuda).sort((a, b) => a.plan.sinDeuda.w - b.plan.sinDeuda.w || a.plan.sinDeuda.llaves - b.plan.sinDeuda.llaves)[0];
+  const hoySin = rk.filter(x => x.plan.sinDeuda && x.plan.sinDeuda.w === 0).length;
+  const hoyCon = rk.filter(x => !(x.plan.sinDeuda && x.plan.sinDeuda.w === 0) && x.plan.consumo && x.plan.consumo.viable).length;
   el.innerHTML = `
+  <div class="banner"><div><div class="label">Tu situación hoy</div>
+    <p>El banco ve una renta de <b>${clp(R)}</b> y te aprueba un dividendo de hasta <b>${clp(R * S.divRenta)}</b>. Tienes ${clpM(S.ahorro)} y ahorras ${clpM(S.ahorroMes)} al mes.
+    ${cerca ? `Lo más cercano sin crédito de consumo: <b>${esc(cerca.p.n)} ${esc(cerca.u.t)}</b>. ${cerca.plan.sinDeuda.w === 0 ? 'Puedes firmar hoy' : 'Firmas en ' + fechaEn(cerca.plan.sinDeuda.w)} y recibes las llaves en ${fechaEn(cerca.plan.sinDeuda.llaves)} (${esc(caminoCorto(cerca.plan.sinDeuda))}).` : 'Hoy ninguna unidad es viable sin crédito de consumo.'}</p></div>
+    <button class="btn" type="button" data-go="situacion">Ver mi situación</button></div>
   <div class="hero">
     <div class="hero-main">
       <div class="label">Hoy te conviene · #1 de ${rk.length} unidades evaluadas</div>
@@ -999,7 +1113,7 @@ function rResumen(el){
         <div><div class="label">TIR estimada a ${S.horizonte} años</div><div class="big">${isFinite(r.tir) ? NF1.format(r.tir * 100) : '—'}<small>% real</small></div></div>
         <div><div class="label">Puntaje</div><div class="big" style="font-size:36px">${NF0.format(top.score)}<small>/100</small></div></div>
       </div>
-      <div class="chips">${estadoPill(top.p)} ${confPill(top.p)} ${presup(top) ? '<span class="pill good"><i>✓</i>Dentro de tu presupuesto</span>' : '<span class="pill bad"><i>✕</i>Excede tu ahorro o renta</span>'}</div>
+      <div class="chips">${estadoPill(top.p)} ${confPill(top.p)} ${planPill(top.plan)}</div>
       <p class="small ink2" style="margin:0">${esc(porQue(top))}</p>
       <div><button class="btn" data-sim="${top.key}">Simular esta unidad</button></div>
     </div>
@@ -1019,7 +1133,7 @@ function rResumen(el){
     <div class="kpi"><div class="k">Cap rate medio sur</div><div class="v">${pct(avg(surU, x => x.r.capRate))}</div><div class="d">Mercado: 4,5% (1D) · 4,7% (2D)</div></div>
     <div class="kpi"><div class="k">Mejor tasa hipotecaria</div><div class="v">${NF2.format(bancoTasa(best))}%</div><div class="d">${esc(best.n)} · promedio 4,06%</div></div>
     <div class="kpi"><div class="k">Con flujo positivo</div><div class="v">${rk.filter(x => x.r.flujo1 >= 0).length} de ${rk.length}</div><div class="d">con pie ${NF0.format(S.pie * 100)}% a ${S.plazo} años</div></div>
-    <div class="kpi"><div class="k">Dentro de tu presupuesto</div><div class="v">${rk.filter(presup).length} de ${rk.length}</div><div class="d">según ahorro y renta</div></div>
+    <div class="kpi"><div class="k">Puedes firmar hoy</div><div class="v">${hoySin} de ${rk.length}</div><div class="d">sin deuda de consumo · ${hoyCon} más con consumo</div></div>
   </div>
 
   ${perfilHTML()}
@@ -1035,6 +1149,7 @@ function rResumen(el){
     <div class="grid g3">${MERCADO.map(m => `<div class="fact"><div class="fv">${esc(m.v)}</div><div><b>${esc(m.t)}</b></div><div class="fd">${esc(m.d)}</div><a href="${esc(m.f)}" target="_blank" rel="noopener">Fuente</a></div>`).join('')}</div>
   </div>`;
   bindPerfil(el);
+  $$('[data-go]', el).forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
   $$('[data-sim]', el).forEach(b => b.addEventListener('click', () => { S.sim = b.dataset.sim; S.simOv = {}; save(); go('simulador'); }));
   $('#rsTop', el).innerHTML = barsHTML(rk.slice(0, 8).map((x, i) => ({l: '#' + x.rank + ' ' + x.p.n, s: x.u.t, v: x.score, em: i === 0,
     tip: `<div class="tv">${NF0.format(x.score)} puntos</div><div class="tl">${esc(unitLabel(x.p, x.u))}</div><div class="tl">TIR ${pct(x.r.tir)} · flujo ${clpS(x.r.flujo1 * S.uf)}</div>`})), v => NF0.format(v));
@@ -1160,7 +1275,7 @@ function rSimulador(el){
       <div class="kpis">
         <div class="kpi"><div class="k">Dividendo mensual</div><div class="v">${clp(r.div1 * S.uf)}</div><div class="d">${ufF(r.div1, 2)} · ${NF2.format(r.tasa)}% · ${val('plazo', S.plazo)} años</div></div>
         <div class="kpi"><div class="k">Pie a pagar</div><div class="v">${clpM(r.piePago * S.uf)}</div><div class="d">${ufF(r.piePago, 0)}${r.D > 0 && val('pieCuotas', S.pieCuotas) ? ' · ' + r.D + ' cuotas de ' + clp(r.piePago * S.uf / r.D) : ''}</div></div>
-        <div class="kpi"><div class="k">Renta exigida por el banco</div><div class="v">${clpM(r.sueldoReq)}</div><div class="d">${r.okRenta ? '<span class="pos">✓ Tu renta alcanza</span>' : '<span class="neg">✕ Supera tu renta</span>'}</div></div>
+        <div class="kpi"><div class="k">Renta exigida por el banco</div><div class="v">${clpM(r.sueldoReq)}</div><div class="d">${r.okRenta ? '<span class="pos">✓ Tu renta de ' + clpM(rentaComp()) + ' alcanza</span>' : '<span class="neg">✕ Supera tu renta de ' + clpM(rentaComp()) + '</span>'}</div></div>
         <div class="kpi"><div class="k">Flujo mensual</div><div class="v ${r.flujo1 >= 0 ? 'pos' : 'neg'}">${clpS(r.flujo1 * S.uf)}</div><div class="d">Arriendo de equilibrio ${clp(r.rentBEclp)}</div></div>
       </div>
       <div class="grid g2">
@@ -1244,8 +1359,8 @@ function rBancos(el){
     <tbody>${mat.map(m => `<tr><td><b>${esc(m.b.n)}</b>${m.b.est ? ' <span class="pill warn" title="Tasa estimada"><i>!</i>Estimada</span>' : ''}${m.b.ref ? ' <span class="pill"><i>+</i>Referencia</span>' : ''}</td><td class="n">${NF2.format(m.e[0].tasa)}%</td>${m.e.map((e, k) => { const minK = Math.min(...mat.map(mm => mm.e[k].div1)); return `<td class="n" style="${e.div1 === minK ? 'background:color-mix(in srgb,var(--s1) 12%,transparent);font-weight:600' : ''}">${clp(e.div1 * S.uf)}<div class="pinmo">renta ${clpM(e.sueldoReq)}</div></td>`; }).join('')}<td class="n">${clpM(m.e[3].div1 * 360 * S.uf)}</td></tr>`).join('')}</tbody></table></div></div>
   <div class="panel"><h2>Condiciones por banco</h2><p class="sub">Tasas fijas en UF recopiladas a ${esc(FECHA_DATOS)}. Puedes reemplazarlas por tu cotización.</p>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Banco</th><th class="n">Tasa estándar</th><th class="n">Con subsidio</th><th>Financiamiento</th><th>Detalle</th><th>Tu cotización %</th></tr></thead>
-    <tbody>${BANCOS.map(b => `<tr><td><b>${esc(b.n)}</b></td><td class="n">${NF2.format(b.tasa)}%</td><td class="n">${b.sub != null ? NF2.format(b.sub) + '%' : '<span class="muted">' + NF2.format(b.tasa - 0.6) + '%*</span>'}</td><td>${esc(b.fin)}</td><td class="small" style="min-width:280px">${esc(b.nota)} ${b.f.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener">fuente ${i + 1}</a>`).join(' ')}</td><td style="min-width:110px"><input type="number" step="0.01" min="0.5" max="15" data-bov="${b.id}" value="${S.bancosOv[b.id] != null ? S.bancosOv[b.id] : ''}" placeholder="${NF2.format(b.tasa).replace(',', '.')}" aria-label="Tu cotización ${esc(b.n)}"></td></tr>`).join('')}</tbody></table></div>
-    <p class="small muted" style="margin-top:8px">* Sin dato publicado: se aplica la rebaja legal de 60 puntos base. El subsidio y la garantía FOGAES están orientados a la primera vivienda; si este departamento es tu segunda propiedad, evalúa sin ellos.</p></div>`;
+    <tbody>${BANCOS.map(b => `<tr><td><b>${esc(b.n)}</b></td><td class="n">${NF2.format(b.tasa)}%</td><td class="n">${b.sub != null ? NF2.format(b.sub) + '%' : '<span class="muted">s/i*</span>'}</td><td>${esc(b.fin)}</td><td class="small" style="min-width:280px">${esc(b.nota)} ${b.f.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener">fuente ${i + 1}</a>`).join(' ')}</td><td style="min-width:110px"><input type="number" step="0.01" min="0.5" max="15" data-bov="${b.id}" value="${S.bancosOv[b.id] != null ? S.bancosOv[b.id] : ''}" placeholder="${NF2.format(b.tasa).replace(',', '.')}" aria-label="Tu cotización ${esc(b.n)}"></td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted" style="margin-top:8px">* Sin oferta publicada con subsidio: el modelo usa su tasa estándar. El subsidio y la garantía FOGAES están orientados a la primera vivienda; si este departamento es tu segunda propiedad, evalúa sin ellos.</p></div>`;
   $('#bkU', el).addEventListener('change', e => { S.sim = e.target.value; S.simOv = {}; save(); render(); });
   bindSegs(el, (k, v) => set('plazo', +v));
   $('#bkSub', el).addEventListener('change', e => set('subsidio', e.target.checked));
@@ -1263,15 +1378,15 @@ function rRanking(el){
   const sl = (k, l, h) => `<div class="field"><label for="w_${k}">${l} <output>${W[k]}</output></label><input id="w_${k}" type="range" min="0" max="50" step="5" value="${W[k]}" data-w="${k}"><span class="hint">${h}</span></div>`;
   el.innerHTML = `
   <div class="panel"><div class="panel-head"><div><h2>¿Qué te importa más?</h2><p class="sub">Pondera cada criterio. El puntaje se recalcula al instante.</p></div><div class="chips"><button class="btn ghost" id="wPre1" type="button">Rentabilidad</button><button class="btn ghost" id="wPre2" type="button">Flujo positivo</button><button class="btn ghost" id="wPre3" type="button">Plusvalía</button><button class="btn ghost" id="wPre4" type="button">Equilibrado</button></div></div>
-    <div class="frow">${sl('tir', 'TIR', 'Retorno total con venta')}${sl('flujo', 'Flujo mensual', 'Que el arriendo pague el dividendo')}${sl('cap', 'Cap rate', 'Renta neta sobre precio')}${sl('plus', 'Plusvalía', 'Potencial del sector')}${sl('acceso', 'Accesibilidad', 'Menos pie y renta exigida')}${sl('riesgo', 'Seguridad', 'Entrega pronta y dato confiable')}</div>
+    <div class="frow">${sl('tir', 'TIR', 'Retorno total con venta')}${sl('flujo', 'Flujo mensual', 'Que el arriendo pague el dividendo')}${sl('cap', 'Cap rate', 'Renta neta sobre precio')}${sl('plus', 'Plusvalía', 'Potencial del sector')}${sl('acceso', 'Accesibilidad', 'Cuándo puedes comprar con tu renta y ahorro')}${sl('riesgo', 'Seguridad', 'Entrega pronta y dato confiable')}</div>
     <div class="filters" style="margin-top:12px"><div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur','Sur de Copiapó'],['todas','Toda la ciudad'],['norte','Norte']], S.zona)}</div><div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.tip)}</div>
     <button class="btn ghost" id="rkCopy" type="button" style="align-self:flex-end">Copiar tabla</button></div>
   </div>
-  <div class="tbl-wrap"><table class="tbl" id="rkTbl"><thead><tr><th class="n">#</th><th>Unidad</th><th style="min-width:150px">Puntaje</th><th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">Cap rate</th><th class="n">Pie + gastos</th><th class="n">Dividendo</th><th class="n">Plusvalía</th><th>Presupuesto</th><th style="min-width:220px">Por qué</th></tr></thead>
+  <div class="tbl-wrap"><table class="tbl" id="rkTbl"><thead><tr><th class="n">#</th><th>Unidad</th><th style="min-width:150px">Puntaje</th><th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">Cap rate</th><th class="n">Pie + gastos</th><th class="n">Dividendo</th><th class="n">Plusvalía</th><th>Cuándo</th><th style="min-width:220px">Por qué</th></tr></thead>
   <tbody>${rk.map(x => `<tr class="click" data-k="${x.key}" tabindex="0"><td class="n"><b>${x.rank}</b></td><td><div class="pname">${esc(x.p.n)} · ${esc(x.u.t)}</div><div class="pinmo">${esc(x.p.inmo)} · ${esc(sect(x.p.sector).n)} · ${NF1.format(x.u.m2)} m² · ${ufF(x.u.uf, 0)}</div></td>
     <td><div class="bar-track" style="height:14px"><div class="bar-fill ${x.rank === 1 ? 'em' : ''}" style="width:${x.score.toFixed(1)}%"></div></div><div class="pinmo mono">${NF0.format(x.score)} / 100</div></td>
     <td class="n">${pct(x.r.tir)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td><td class="n">${pct(x.r.capRate)}</td><td class="n">${clpM(x.r.invIni * S.uf)}</td><td class="n">${clp(x.r.div1 * S.uf)}</td><td class="n">${NF1.format(sect(x.p.sector).plus)}%</td>
-    <td>${x.r.okAhorro && x.r.okRenta ? '<span class="pill good"><i>✓</i>Alcanza</span>' : !x.r.okAhorro ? '<span class="pill bad"><i>✕</i>Falta ahorro</span>' : '<span class="pill bad"><i>✕</i>Falta renta</span>'}</td>
+    <td>${planPill(x.plan)}<div class="pinmo">${esc(caminoCorto(x.plan.best))}</div></td>
     <td class="small ink2">${esc(porQue(x))}</td></tr>`).join('')}</tbody></table></div>
   <p class="small muted" style="margin:0">Cada criterio se escala de 0 a 100 entre las unidades visibles, así que el puntaje es relativo: compara opciones, no mide calidad absoluta. Toca una fila para simularla.</p>`;
   $$('[data-w]', el).forEach(i => { i.addEventListener('input', () => { i.previousElementSibling.querySelector('output').textContent = i.value; }); i.addEventListener('change', () => { S.w[i.dataset.w] = +i.value; save(); render(); }); });
@@ -1476,12 +1591,178 @@ function rEscenarios(el){
   }).join('') + '</div>';
 }
 
+/* ---------- Mi situación ---------- */
+function maxPrecio(pie, sub, R){
+  R = R != null ? R : rentaComp();
+  const t = bancoPara(Object.assign({}, S, {subsidio: sub}), sub ? 3000 : 99999).tasa;
+  const i = t / 100 / 12, n = S.plazo * 12;
+  const f = (1 - pie) * (i / (1 - Math.pow(1 + i, -n)) + S.desg) + 0.8 * S.inc;
+  const cap = Math.max(0, Math.min(R * S.divRenta, R * S.cargaMax - S.deudas));
+  return {P: cap / S.uf / f, tasa: t};
+}
+const necesitaUF = (P, pie) => P * pie + S.gastosFijos + P * S.cbr + P * (1 - pie) * S.ite;
+const mesesPara = (need, mes) => { mes = mes != null ? mes : S.ahorroMes; const f = need - S.ahorro; return f <= 0 ? 0 : mes > 0 ? Math.ceil(f / mes) : Infinity; };
+function rSituacion(el){
+  const R = rentaComp(), honLiq = S.honor * (1 - RET_HONOR);
+  const all = unidades().map(x => Object.assign(x, {pl: planes(x.p, x.u), r: evaluar(x.p, x.u)}));
+  const fog = !!S.primeraViv;
+  const mpA = maxPrecio(fog ? 0.10 : S.pie, fog), mpB = maxPrecio(S.pie, false);
+  const mpSinHon = maxPrecio(fog ? 0.10 : S.pie, fog, S.sueldo);
+  const ref = 2700, pieRef = fog ? 0.10 : S.pie;
+  const nRef = necesitaUF(ref, pieRef) * S.uf, mRef = mesesPara(nRef), mRef50 = mesesPara(nRef, S.ahorroMes + 50000);
+  const n20 = necesitaUF(ref, S.pie) * S.uf, m20 = mesesPara(n20);
+  const costo = o => o.llaves + (o.id === 'consumo' ? 12 : 0);
+  const conBest = all.filter(x => x.pl.best).sort((a, b) => costo(a.pl.best) - costo(b.pl.best) || (b.pl.best.r.tir || 0) - (a.pl.best.r.tir || 0));
+  const hoySin = all.filter(x => x.pl.sinDeuda && x.pl.sinDeuda.w === 0);
+  const hoyCons = all.filter(x => !(x.pl.sinDeuda && x.pl.sinDeuda.w === 0) && x.pl.consumo && x.pl.consumo.viable);
+  const pronto = all.filter(x => x.pl.sinDeuda && x.pl.sinDeuda.w > 0 && x.pl.sinDeuda.w <= 12);
+  const sinRenta = all.filter(x => x.pl.rentaFalta);
+  const nom = x => '<b>' + esc(x.p.n) + ' ' + esc(x.u.t) + '</b>';
+  const consOpts = all.filter(x => x.pl.consumo && x.pl.consumo.okDiv);
+  const cx = consOpts.find(x => x.key === S.sitSel) || consOpts.find(x => x.pl.consumo.viable) || consOpts[0];
+  const top = conBest[0];
+
+  el.innerHTML = `
+  <div class="grid g-side">
+    <div class="panel form" style="align-self:start">
+      <h2 class="sec-title">Tus números</h2>
+      <div class="field"><label for="siSueldo">Sueldo líquido mensual</label><input id="siSueldo" type="number" step="50000" min="0" value="${S.sueldo}" data-si="sueldo"></div>
+      <div class="field"><label for="siHonor">Boletas de honorarios (bruto mensual)</label><input id="siHonor" type="number" step="10000" min="0" value="${S.honor}" data-si="honor"><span class="hint">Líquido tras retención de 15,25%: ${clp(honLiq)}</span></div>
+      <div class="field"><span class="lbl">¿Cuánto de tus boletas cuenta el banco?</span>${segHTML('honorPct', [[1,'Todo'],[0.7,'70%'],[0,'Nada']], S.honorPct)}<span class="hint">Lo cuentan si las emites sin lagunas al menos 6 meses (ideal 12) y declaras renta.</span></div>
+      <div class="field"><label for="siAhorro">Ahorro actual</label><input id="siAhorro" type="number" step="100000" min="0" value="${S.ahorro}" data-si="ahorro"></div>
+      <div class="field"><label for="siMes">Ahorro mensual <output>${clp(S.ahorroMes)}</output></label><input id="siMes" type="range" min="0" max="800000" step="10000" value="${S.ahorroMes}"><span class="hint">Dijiste entre $300 mil y $400 mil: el modelo usa el valor de esta barra.</span></div>
+      <div class="field"><label for="siDeudas">Otras cuotas de deuda al mes</label><input id="siDeudas" type="number" step="10000" min="0" value="${S.deudas}" data-si="deudas"><span class="hint">Tarjetas, auto, otros créditos. El banco las suma a tu carga.</span></div>
+      <label class="toggle"><input id="siPrim" type="checkbox"${fog ? ' checked' : ''}><span>No tengo vivienda propia<br><span class="muted small">Calificas a FOGAES (pie 10%) y al subsidio a la tasa en viviendas nuevas de hasta 6.000 UF</span></span></label>
+      <div class="field"><span class="lbl">Dividendo máximo que acepta el banco</span>${segHTML('divRenta', [[0.25,'25% de la renta'],[0.30,'30%']], S.divRenta)}</div>
+      <h2 class="sec-title" style="margin-top:6px">Crédito de consumo</h2>
+      <div class="frow">
+        <div class="field"><label for="siCT">Tasa mensual %</label><input id="siCT" type="number" step="0.01" min="0.3" max="4" value="${+(S.consTasa * 100).toFixed(2)}"><span class="hint">CAE ${pct(Math.pow(1 + S.consTasa, 12) - 1)}</span></div>
+        <div class="field"><span class="lbl">Plazo</span>${segHTML('consPlazo', [[24,'24'],[36,'36'],[48,'48'],[60,'60']], S.consPlazo)}</div>
+      </div>
+      <span class="hint">Referencia: BancoEstado 1,49% mensual a 48 cuotas (CAE 20,3%); promedio del sistema 23,6% anual.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <div class="kpis">
+        <div class="kpi"><div class="k">Renta que ve el banco</div><div class="v">${clp(R)}</div><div class="d">sueldo ${clpM(S.sueldo)} + boletas ${clp(honLiq * S.honorPct)}</div></div>
+        <div class="kpi"><div class="k">Dividendo máximo</div><div class="v">${clp(Math.min(R * S.divRenta, R * S.cargaMax - S.deudas))}</div><div class="d">${pct(S.divRenta, 0)} de la renta · carga total ≤ ${pct(S.cargaMax, 0)}</div></div>
+        <div class="kpi"><div class="k">Precio máximo financiable</div><div class="v">${ufF(mpA.P, 0)}</div><div class="d">${fog ? 'pie 10% con FOGAES' : 'pie ' + pct(S.pie, 0)} · ${ufF(mpB.P, 0)} con pie ${pct(S.pie, 0)} sin subsidio</div></div>
+        <div class="kpi"><div class="k">Tu ahorro hoy</div><div class="v">${clpM(S.ahorro)}</div><div class="d">${ufF(S.ahorro / S.uf, 0)} · ${clpM(S.ahorro + S.ahorroMes * 12)} en 12 meses</div></div>
+      </div>
+      <div class="panel memo" style="max-width:none">
+        <h3>Tu diagnóstico</h3>
+        <p>El banco verá una renta de <b>${clp(R)}</b>: tu sueldo más ${clp(honLiq * S.honorPct)} líquidos de boletas. Con un dividendo de hasta ${pct(S.divRenta, 0)} te financian departamentos de hasta <b>${ufF(mpA.P, 0)}</b> ${fog ? 'con pie de 10% (FOGAES)' : 'con pie de ' + pct(S.pie, 0)}. ${mpA.P < 3195 ? 'Eso te deja en 1 dormitorio: los 2 dormitorios del sur parten en 3.195 UF.' : ''}</p>
+        <p>Tus ${clpM(S.ahorro)} equivalen a ${ufF(S.ahorro / S.uf, 0)}. Para el pie de ${pct(pieRef, 0)} más gastos de un 1D de 2.700 UF necesitas ${clpM(nRef)}: ahorrando ${clpM(S.ahorroMes)} al mes lo juntas en <b>${mesesTxt(mRef)}</b> (${fechaEn(mRef)}).${fog ? ' Con pie de ' + pct(S.pie, 0) + ' serían ' + mesesTxt(m20) + ' (' + fechaEn(m20) + ').' : ''}</p>
+        ${hoySin.length ? `<p>La buena noticia: <b>puedes firmar hoy sin crédito de consumo</b> en ${hoySin.map(nom).join(', ')}. Se venden en blanco o en verde, así que el pie se paga en cuotas hasta la entrega y tu ahorro mensual alcanza para cubrirlo.</p>` : '<p>Hoy no hay ninguna unidad que puedas firmar sin deuda de consumo.</p>'}
+        ${pronto.length ? `<p><b>En los próximos 12 meses, sólo ahorrando:</b> ${pronto.map(x => nom(x) + ' (' + fechaEn(x.pl.sinDeuda.w) + ')').join(', ')}.</p>` : ''}
+        ${hoyCons.length ? `<p><b>Hoy, sólo con crédito de consumo:</b> ${hoyCons.map(x => nom(x) + ' (' + clpM(x.pl.consumo.loan) + ')').join(', ')}. Revisa el análisis del consumo más abajo antes de decidir.</p>` : ''}
+        ${sinRenta.length ? `<p class="small muted">${sinRenta.length} de ${all.length} unidades quedan fuera de tu renta actual, casi todas de 2 dormitorios. Para ellas necesitarías complementar renta con otra persona o un banco que acepte 30%.</p>` : ''}
+        <p class="small muted">${fog ? 'Supuesto clave: no tienes vivienda propia, así que calificas a FOGAES y al subsidio a la tasa (−60 pb) en viviendas nuevas de primera venta de hasta 6.000 UF. Confirma con el banco si te permiten arrendarla.' : 'Marcaste que ya tienes vivienda: sin FOGAES el pie es de ' + pct(S.pie, 0) + ' y los plazos se alargan.'}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel"><div class="panel-head"><div><h2>Tu ruta hasta las llaves</h2><p class="sub">Mejor camino para cada unidad con tu ahorro actual. Ordenadas por cuándo recibes el departamento.</p></div>
+    <div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.tip)}</div></div>
+    <div class="legend"><span><i class="sq" style="background:var(--deemph)"></i>Ahorrando antes de firmar</span><span><i class="sq" style="background:var(--s2)"></i>Obra: pagas el pie en cuotas</span><span><i style="background:var(--s1)"></i>Recibes las llaves y empiezas a arrendar</span></div>
+    <div id="siRuta"></div></div>
+
+  <div class="panel"><h2>Qué puedes comprar y cómo</h2><p class="sub">Todas las unidades de tu zona. Carga total = dividendo + consumo + otras deudas sobre tu renta. Holgura = lo que te queda cada mes de tu ahorro después de dividendo, arriendo y consumo.</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th style="min-width:230px">Unidad</th><th>Estado</th><th class="n">Precio</th><th style="min-width:150px">Mejor camino</th><th class="n">Pie + gastos</th><th>Firmas</th><th>Llaves</th><th class="n">Dividendo</th><th class="n">Div./renta</th><th class="n">Carga total</th><th class="n">Flujo mensual</th><th class="n">Holgura</th></tr></thead>
+    <tbody>${all.slice().sort((a, b) => (a.pl.best ? costo(a.pl.best) : 999) - (b.pl.best ? costo(b.pl.best) : 999)).map(x => {
+      const o = x.pl.best || x.pl.lst.find(q => q.id === 'fogaes') || x.pl.lst[0];
+      const fl = o.r.flujo1 * S.uf - (o.loan > 0 && S.consPlazo > x.p.meses ? o.cuotaCons : 0);
+      return `<tr class="click" data-k="${x.key}" tabindex="0"><td><div class="pname">${esc(x.p.n)} · ${esc(x.u.t)}</div><div class="pinmo">${esc(sect(x.p.sector).n.split(' · ')[0])} · ${esc(ESTADO_TXT[x.p.estado])}</div></td>
+      <td>${planPill(x.pl)}</td><td class="n">${ufF(o.r.P, 0)}</td><td>${esc(caminoCorto(o))}${o.sub && x.p.fogaesDuda ? '<div class="pinmo">FOGAES exige primera venta: confirma</div>' : ''}</td><td class="n">${clpM(o.need)}</td><td style="white-space:nowrap">${x.pl.best ? (o.w === 0 ? 'Hoy' : fechaEn(o.w)) : '—'}</td><td style="white-space:nowrap">${x.pl.best ? fechaEn(o.llaves) : '—'}</td>
+      <td class="n">${clp(o.r.div1 * S.uf)}</td><td class="n ${o.okDiv ? '' : 'neg'}">${pct(o.divRatio)}</td><td class="n ${o.okCarga ? '' : 'neg'}">${pct(o.carga)}</td><td class="n">${flujoCell(fl)}</td><td class="n">${flujoCell(o.holgura)}</td></tr>`; }).join('')}</tbody></table></div>
+    <p class="small muted" style="margin:8px 0 0">Toca una fila para simularla. Supone que el pie en verde o en blanco se divide en cuotas iguales hasta la entrega y que el arriendo parte el mes siguiente a recibir.</p></div>
+
+  <div class="grid g2">
+    <div class="panel" id="siCons"></div>
+    <div class="panel"><h2>Tu plan de acción</h2><p class="sub">Ordenado por impacto en tu caso.</p>
+      <ol class="steps">
+        <li><div><b>Formaliza tus boletas.</b> Hoy suman ${clp(honLiq)} líquidos a tu renta. Si el banco no las cuenta, tu precio máximo baja de ${ufF(mpA.P, 0)} a ${ufF(mpSinHon.P, 0)}. Emítelas sin lagunas y presenta tu declaración de renta (F22).</div></li>
+        ${fog ? `<li><div><b>Usa tu ventaja de primera vivienda.</b> FOGAES te permite comprar con 10% de pie y el subsidio baja la tasa 0,6 puntos, en viviendas nuevas de hasta 6.000 UF, hasta mayo de 2028. Pregunta al banco si puedes arrendarla.</div></li>` : ''}
+        <li><div><b>Apunta a un 1 dormitorio de 2.300 a ${NF0.format(Math.min(3100, mpA.P))} UF.</b> ${top ? 'Tu mejor ruta hoy: ' + nom(top) + ' (' + esc(caminoCorto(top.pl.best)) + ', llaves en ' + fechaEn(top.pl.best.llaves) + ').' : ''}</div></li>
+        <li><div><b>Prefiere en blanco con pie en cuotas.</b> La obra funciona como ahorro forzado y capturas plusvalía mientras construyen, sin pedir crédito de consumo.</div></li>
+        <li><div><b>Sube tu ahorro si puedes.</b> Con ${clpM(S.ahorroMes + 50000)} al mes juntarías el pie de un 1D de 2.700 UF en ${mesesTxt(mRef50)} en vez de ${mesesTxt(mRef)}.</div></li>
+        <li><div><b>Si usas consumo, que sea chico y con holgura.</b> Mantén la carga total bajo ${pct(S.cargaMax, 0)} y al menos $100 mil libres al mes. Declara la deuda: el banco la ve en tu informe de deudas.</div></li>
+        <li><div><b>Arma un fondo de emergencia.</b> Antes de firmar, separa al menos 3 dividendos (${clpM(3 * Math.min(R * S.divRenta, 600000))}) para vacancia o reparaciones.</div></li>
+      </ol></div>
+  </div>`;
+
+  // Controles
+  $$('[data-si]', el).forEach(i => i.addEventListener('change', () => set(i.dataset.si, Math.max(0, +i.value || 0))));
+  const sm = $('#siMes', el);
+  sm.addEventListener('input', () => { sm.previousElementSibling.querySelector('output').textContent = clp(+sm.value); });
+  sm.addEventListener('change', () => set('ahorroMes', +sm.value));
+  $('#siPrim', el).addEventListener('change', e => set('primeraViv', e.target.checked));
+  $('#siCT', el).addEventListener('change', e => { const v = +e.target.value; if (v > 0) set('consTasa', v / 100); });
+  bindSegs(el, (k, v) => set(k, k === 'tip' ? v : +v));
+  $$('tr.click', el).forEach(tr => { const f = () => { S.sim = tr.dataset.k; S.simOv = {}; save(); go('simulador'); }; tr.addEventListener('click', f); tr.addEventListener('keydown', e => { if (e.key === 'Enter') f(); }); });
+
+  // Ruta hasta las llaves
+  const rows = conBest.slice(0, 12);
+  if (!rows.length){ $('#siRuta', el).innerHTML = '<p class="muted">Con tus números actuales ninguna unidad tiene un camino viable. Prueba subir el ahorro mensual o activar el dividendo de 30%.</p>'; }
+  else {
+    const maxM = Math.max(24, Math.ceil(Math.max(...rows.map(x => x.pl.best.llaves)) / 12) * 12);
+    const P = v => (v / maxM * 100).toFixed(2) + '%';
+    let h = '<div class="ruta"><div class="ruta-head"><div></div><div class="ruta-axis">';
+    for (let t = 0; t <= maxM; t += 12) h += `<span style="left:${P(t)}">${t === 0 ? 'hoy' : '+' + t / 12 + (t === 12 ? ' año' : ' años')}</span>`;
+    h += '</div><div></div></div>';
+    rows.forEach(x => {
+      const o = x.pl.best, D = x.p.meses || 0;
+      const tipTxt = `<div class="tv">Llaves en ${fechaEn(o.llaves)}</div><div class="tl">${esc(x.p.n)} ${esc(x.u.t)} · ${ufF(o.r.P, 0)}</div><div class="tl">${esc(o.n)}${o.loan > 0 ? ' · ' + clpM(o.loan) + ' a ' + S.consPlazo + ' meses' : ''}</div><div class="tl">Firmas ${o.w === 0 ? 'hoy' : 'en ' + fechaEn(o.w)}${D ? ' · obra de ' + D + ' meses' : ''}</div><div class="tl">Dividendo ${clp(o.r.div1 * S.uf)} · flujo ${clpS(o.r.flujo1 * S.uf)}</div>`;
+      h += `<div class="ruta-row" tabindex="0" data-tip="${esc(tipTxt)}"><div class="rl"><b>${esc(x.p.n)} · ${esc(x.u.t)}</b><span>${esc(caminoCorto(o))}</span></div><div class="ruta-track">`;
+      if (o.w > 0) h += `<div class="ruta-seg wait first" style="left:0;width:${P(o.w)}"></div>`;
+      if (D > 0) h += `<div class="ruta-seg obra${o.w > 0 ? '' : ' first'}" style="left:${P(o.w)};width:${P(D)}"></div>`;
+      h += `<div class="ruta-dot" style="left:${P(o.llaves)}"></div></div><div class="rv">${fechaEn(o.llaves)}</div></div>`;
+    });
+    h += '</div>';
+    $('#siRuta', el).innerHTML = h;
+    bindBarTips($('#siRuta', el));
+  }
+
+  // Crédito de consumo
+  const ce = $('#siCons', el);
+  if (!cx){ ce.innerHTML = '<h2>El crédito de consumo, en números</h2><p class="sub">Con tu ahorro actual ninguna unidad necesita crédito de consumo para completar el pie.</p>'; return; }
+  const c = cx.pl.consumo, alt = cx.pl.sinDeuda || cx.pl.lst.find(o => o.id === 'fogaes') || cx.pl.lst[0];
+  const wAlt = alt.w, interes = c.cuotaCons * S.consPlazo - c.loan, cae = Math.pow(1 + S.consTasa, 12) - 1;
+  const g = sect(cx.p.sector).plus / 100, Pclp = c.r.P * S.uf, fl = c.r.flujo1 * S.uf;
+  const alza = isFinite(wAlt) ? Pclp * (Math.pow(1 + g, wAlt / 12) - 1) : NaN;
+  const benef = isFinite(wAlt) ? alza + fl * wAlt : NaN;
+  const gBE = isFinite(wAlt) && wAlt > 0 ? Math.pow(Math.max(0.0001, 1 + (interes - fl * wAlt) / Pclp), 12 / wAlt) - 1 : NaN;
+  const cargaSin = c.divRatio + S.deudas / R;
+  const razones = [];
+  if (!c.okDiv) razones.push('el dividendo (' + pct(c.divRatio) + ' de tu renta) supera el ' + pct(S.divRenta, 0));
+  if (!c.okCarga) razones.push('con el consumo tu carga financiera sube a ' + pct(c.carga) + ', sobre el máximo de ' + pct(S.cargaMax, 0));
+  if (!c.okHolgura) razones.push('cada mes tendrías que poner ' + clp(-c.holgura) + ' más de lo que hoy ahorras');
+  let veredicto;
+  if (razones.length) veredicto = '<p><span class="pill bad"><i>✕</i>No es viable</span> Porque ' + razones.join('; ') + '.</p>';
+  else if (!isFinite(wAlt)) veredicto = '<p><span class="pill warn"><i>!</i>Única vía</span> Sin consumo no llegas a esta unidad con tu ahorro actual. Úsalo sólo si aceptas la holgura de ' + clp(c.holgura) + ' al mes.</p>';
+  else if (interes > benef) veredicto = `<p><span class="pill warn"><i>!</i>Esperar sale más barato</span> Los intereses (${clpM(interes)}) superan lo que ganarías comprando ${mesesTxt(wAlt)} antes (${clpM(benef)}: alza de precio evitada más arriendo). Sólo conviene si la plusvalía real supera ${pct(gBE)} al año.</p>`;
+  else veredicto = `<p><span class="pill good"><i>✓</i>Puede convenir</span> Comprar hoy te ahorra ${clpM(benef - interes)} frente a esperar ${mesesTxt(wAlt)}, si la plusvalía real es de al menos ${pct(gBE)} al año (el modelo estima ${pct(g)}). El costo: tu holgura mensual baja a ${clp(c.holgura)}.</p>`;
+  ce.innerHTML = `<div class="panel-head"><div><h2>El crédito de consumo, en números</h2><p class="sub">Para completar el pie de una unidad y comprar antes.</p></div>
+    <select id="siConsU" aria-label="Unidad a evaluar con consumo" style="max-width:280px">${consOpts.map(x => `<option value="${x.key}"${x.key === cx.key ? ' selected' : ''}>${esc(x.p.n)} · ${esc(x.u.t)}</option>`).join('')}</select></div>
+    <div class="facts">
+      <div class="kv"><div class="k">Monto a pedir</div><div class="v">${clpM(c.loan)}</div></div>
+      <div class="kv"><div class="k">Cuota mensual</div><div class="v">${clp(c.cuotaCons)}</div></div>
+      <div class="kv"><div class="k">Intereses totales</div><div class="v">${clpM(interes)}</div></div>
+      <div class="kv"><div class="k">CAE aproximada</div><div class="v">${pct(cae)}</div></div>
+      <div class="kv"><div class="k">Carga financiera</div><div class="v ${c.okCarga ? '' : 'neg'}">${pct(c.carga)}</div><div class="small muted">sin consumo: ${pct(cargaSin)}</div></div>
+      <div class="kv"><div class="k">Holgura mensual</div><div class="v ${c.holgura >= 0 ? 'pos' : 'neg'}">${clpS(c.holgura)}</div><div class="small muted">sin consumo: ${clpS(S.ahorroMes + fl)}</div></div>
+    </div>
+    <div style="margin-top:14px">${veredicto}</div>
+    <p class="small muted" style="margin:0">${(cx.p.meses || 0) > 0 ? 'En venta en blanco el consumo se pide al firmar y sus cuotas corren durante la obra, por eso el monto es mayor que lo que falta de pie. ' : ''}${cx.p.fogaesDuda && c.sub ? 'FOGAES exige que sea primera venta: confírmalo con el vendedor. ' : ''}Alternativa sin consumo: ${esc(caminoCorto(alt))}, firmas ${isFinite(wAlt) ? (wAlt === 0 ? 'hoy' : 'en ' + fechaEn(wAlt)) : 'sin fecha'}.</p>`;
+  $('#siConsU', ce).addEventListener('change', e => set('sitSel', e.target.value));
+}
+
 /* ---------- Asesoría ---------- */
 function rAsesoria(el){
   const rk = ranking();
   if (!rk.length){ el.innerHTML = '<div class="panel">No hay unidades con estos filtros.</div>'; return; }
   const by = (f, dir) => rk.slice().sort((a, b) => dir * (f(b) - f(a)))[0];
-  const pres = rk.filter(x => x.r.okAhorro && x.r.okRenta);
+  const pres = rk.filter(x => x.plan.best);
+  const cerca = rk.filter(x => x.plan.sinDeuda).sort((a, b) => a.plan.sinDeuda.w - b.plan.sinDeuda.w || a.plan.sinDeuda.llaves - b.plan.sinDeuda.llaves)[0];
   const top = rk[0];
   const flujo = by(x => x.r.flujo1, 1);
   const plus = by(x => sect(x.p.sector).plus * 10 + (isFinite(x.r.tir) ? x.r.tir : 0), 1);
@@ -1497,7 +1778,7 @@ function rAsesoria(el){
     <h3>Recomendación de hoy</h3>
     <p>Con pie de ${NF0.format(S.pie * 100)}%, crédito a ${S.plazo} años con ${S.banco === 'mejor' ? 'la mejor tasa disponible' : esc(BANCOS.find(b => b.id === S.banco).n)} y venta a ${S.horizonte} años, la mejor opción al sur de calle Copiapó es <b>${esc(top.p.n)} ${esc(top.u.t)}</b>. ${esc(porQue(top))}</p>
     <p>${pos} de ${rk.length} unidades se pagan solas desde el primer mes. En ${capVsTasa} de ${rk.length} el cap rate es menor que la tasa del crédito: ahí la ganancia viene de la plusvalía y de la deuda que amortiza el arrendatario, no del flujo.</p>
-    ${pres.length < rk.length ? `<p>Con tu ahorro de ${clpM(S.ahorro)} y renta de ${clpM(S.renta)}, ${pres.length} unidades quedan dentro de tu presupuesto${pres[0] ? '. La mejor de ellas es <b>' + esc(pres[0].p.n) + ' ' + esc(pres[0].u.t) + '</b> (#' + pres[0].rank + ')' : ''}.</p>` : '<p>Todas las unidades evaluadas caben en tu ahorro y renta actuales.</p>'}
+    <p>Tu realidad hoy: el banco ve una renta de ${clp(rentaComp())}, tienes ${clpM(S.ahorro)} y ahorras ${clpM(S.ahorroMes)} al mes. ${pres.length} de ${rk.length} unidades tienen un camino viable${cerca ? '. La que puedes concretar antes sin deuda de consumo es <b>' + esc(cerca.p.n) + ' ' + esc(cerca.u.t) + '</b>: ' + (cerca.plan.sinDeuda.w === 0 ? 'firmas hoy' : 'firmas en ' + fechaEn(cerca.plan.sinDeuda.w)) + ' y recibes en ' + fechaEn(cerca.plan.sinDeuda.llaves) + ' (' + esc(caminoCorto(cerca.plan.sinDeuda)) + ')' : ''}. El detalle está en Mi situación.</p>
     <div>${pick('Mejor opción global', top)}${pick('Mejor flujo mensual', flujo, flujo.r.flujo1 >= 0 ? 'El arriendo cubre el dividendo y todos los costos.' : 'Incluso la mejor requiere aportar cada mes.')}${pick('Mayor potencial de plusvalía', plus, 'Sector con ' + NF1.format(sect(plus.p.sector).plus) + '% real anual estimado.')}${pick('Menor capital inicial', barato, 'Inversión inicial de ' + clpM(barato.r.invIni * S.uf) + ' incluyendo gastos.')}${best1 && best1 !== top ? pick('Mejor 1 dormitorio', best1) : ''}${best2 && best2 !== top ? pick('Mejor 2 dormitorios', best2) : ''}</div>
     <h3>Entrega inmediata o en verde</h3>
     <p>${inm ? 'La mejor con entrega inmediata es <b>' + esc(inm.p.n) + ' ' + esc(inm.u.t) + '</b> (#' + inm.rank + '): arriendas desde el primer mes y ves el producto terminado.' : ''} ${verde ? 'La mejor en verde o en blanco es <b>' + esc(verde.p.n) + ' ' + esc(verde.u.t) + '</b> (#' + verde.rank + '): pagas el pie en cuotas y capturas plusvalía durante la obra, a cambio de riesgo de plazo y de no recibir arriendo hasta la entrega.' : ''}</p>
@@ -1558,6 +1839,7 @@ function rSupuestos(el){
       ${f('cbr', 'Conservador de Bienes Raíces (%)', S.cbr, 0.05, '', 100)}
       ${f('ite', 'Impuesto al mutuo (%)', S.ite, 0.1, 'Timbres y estampillas', 100)}
       ${f('divRenta', 'Dividendo máximo sobre renta (%)', S.divRenta, 1, 'Criterio bancario usual', 100)}
+      ${f('cargaMax', 'Carga financiera máxima (%)', S.cargaMax, 1, 'Dividendo + otras deudas', 100)}
       ${f('rentGrowth', 'Alza real del arriendo (% anual)', S.rentGrowth, 0.1, 'Sobre la UF', 100)}
     </div>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="supReset" type="button">Restablecer todos los supuestos</button></div></div>
@@ -1592,7 +1874,7 @@ function rSupuestos(el){
   </div>`;
   $$('[data-sup]', el).forEach(i => i.addEventListener('change', () => { const v = +i.value; if (!isFinite(v)) return; S[i.dataset.sup] = v / (+i.dataset.scale); save(); render(); }));
   $$('[data-sec]', el).forEach(i => i.addEventListener('change', () => { const v = +i.value; if (!isFinite(v)) return; S.sect[i.dataset.sec] = Object.assign({}, S.sect[i.dataset.sec] || {}, {[i.dataset.k]: v}); save(); render(); }));
-  $('#supReset', el).addEventListener('click', () => { const keep = {renta: S.renta, ahorro: S.ahorro}; S = Object.assign(JSON.parse(JSON.stringify(DEF)), keep); save(); render(); });
+  $('#supReset', el).addEventListener('click', () => { const keep = {sueldo: S.sueldo, honor: S.honor, honorPct: S.honorPct, ahorro: S.ahorro, ahorroMes: S.ahorroMes, deudas: S.deudas, primeraViv: S.primeraViv}; S = Object.assign(JSON.parse(JSON.stringify(DEF)), keep); save(); render(); });
 }
 
 /* =====================================================================
@@ -1602,6 +1884,6 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 const h0 = (location.hash || '').replace('#', '');
 go(VIEWS[h0] ? h0 : 'resumen', false);
 window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (VIEWS[h] && h !== current) go(h, false); });
-window.RadarSur = {evaluar, ranking, PROYECTOS, BANCOS, SECTORES, S: () => S};
+window.RadarSur = {evaluar, ranking, planes, rentaComp, PROYECTOS, BANCOS, SECTORES, S: () => S};
 })();
 </script>
