@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Radar Sur Antofagasta</title>
-<meta name="description" content="Proyectos inmobiliarios de Antofagasta al sur de calle Copiapó: dividendos por banco, rentabilidad, ranking, mapa de plusvalía y escenarios.">
+<title>Radar Inmobiliario Chile</title>
+<meta name="description" content="Proyectos de departamentos en Antofagasta, Iquique, Santiago y Coquimbo: dividendo por banco, rentabilidad, seguridad, ranking, mapa de plusvalía y escenarios.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -248,6 +248,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .ruta-axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 .ruta-head{display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr) minmax(92px,auto);gap:12px}
 @media (max-width:900px){.ruta-row,.ruta-head{grid-template-columns:minmax(100px,130px) minmax(0,1fr) auto}}
+.citybar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:14px}
+.citybar .seg button{font-size:13px;padding:7px 13px}
 /* Detalle de proyecto */
 .detail{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 18px}
@@ -304,10 +306,11 @@ ul.clean li{margin:3px 0}
   <nav class="nav" aria-label="Secciones">
     <div class="brand">
       <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#173150"/><path d="M8 25V14l6-4 6 4v11" fill="none" stroke="#e0884f" stroke-width="2.2" stroke-linejoin="round"/><path d="M20 25V9l6 3v13" fill="none" stroke="#f3f6f9" stroke-width="2.2" stroke-linejoin="round"/><path d="M5 27.5h24" stroke="#5aa0ea" stroke-width="2" stroke-linecap="round"/></svg>
-      <div><b>Radar Sur</b><small>Antofagasta</small></div>
+      <div><b>Radar Inmobiliario</b><small id="brandCity">Antofagasta</small></div>
     </div>
     <button data-v="resumen"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Resumen</button>
     <button data-v="situacion"><svg viewBox="0 0 24 24"><path d="M3 7h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7l12-4v4"/><circle cx="16.5" cy="14" r="1.2"/></svg>Mi situación</button>
+    <button data-v="ciudades"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>Comparar ciudades</button>
     <button data-v="proyectos"><svg viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>Proyectos</button>
     <button data-v="simulador"><svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/></svg>Simulador</button>
     <button data-v="bancos"><svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg>Bancos</button>
@@ -320,6 +323,7 @@ ul.clean li{margin:3px 0}
   </nav>
 
   <main>
+    <div class="citybar" id="cityBar"></div>
     <header class="topbar">
       <div>
         <div class="eyebrow" id="vEyebrow">Antofagasta · al sur de calle Copiapó</div>
@@ -336,6 +340,7 @@ ul.clean li{margin:3px 0}
     <section class="view" id="v-resumen" aria-labelledby="vTitle"></section>
     <!-- PROYECTOS -->
     <section class="view" id="v-situacion"></section>
+    <section class="view" id="v-ciudades"></section>
     <section class="view" id="v-proyectos"></section>
     <!-- SIMULADOR -->
     <section class="view" id="v-simulador"></section>
@@ -367,7 +372,7 @@ const UF_HOY = 41081.76;
 
 // Sectores: arriendo de referencia (CLP/mes, sin gastos comunes) para 1D1B ~38 m² y 2D2B ~60 m²,
 // gastos comunes CLP/m², plusvalía real anual estimada (% en UF). Editable en "Supuestos".
-const SECTORES = {
+const SECT_ANF = {
   'centro-sur':   {n:'Centro Sur · Parque Brasil', sur:true,  lat:-23.6605, lon:-70.3985, arr1:560000, arr2:760000, gc:1700, plus:1.6,
     d:'Barrio tradicional frente a Parque Brasil, a pasos del centro. Oferta premium en Av. Brasil (7.800–10.890 UF). Demanda de ejecutivos y profesionales, pero precios de entrada altos.'},
   'playa-paraiso':{n:'Playa Paraíso · Gran Vía', sur:true,  lat:-23.6685, lon:-70.4012, arr1:500000, arr2:650000, gc:1100, plus:1.4,
@@ -416,7 +421,7 @@ const BANCOS = [
 
 // Proyectos. estado: inmediata | verde | blanco. meses: meses estimados a la entrega desde oct-2026.
 // conf: confianza del dato (alta = ficha oficial/portal con precio y m²; media = precio "desde" o m² inferido; baja = dato parcial o contradictorio).
-const PROYECTOS = [
+const PROY_ANF = [
   {id:'indico', n:'Almagro Índico', inmo:'Almagro', dir:'Av. Jaime Guzmán Errázuriz 03850', sector:'jardines-sur', lat:-23.7000, lon:-70.4162,
    estado:'verde', entrega:'2º semestre 2026', meses:3, u:[{t:'2D2B',d:2,b:2,m2:73,uf:5520}],
    estac:{incl:true}, bodega:{incl:true},
@@ -554,7 +559,7 @@ const PROYECTOS = [
    f:['https://www.portalinmobiliario.com/departamento/proyectos/1-dormitorio/antofagasta']}
 ];
 
-const MERCADO = [
+const MERCADO_ANF = [
   {v:'4,06%', t:'Tasa hipotecaria promedio del sistema', d:'Septiembre 2026, la más baja desde diciembre 2021. TPM 4,5%.', f:'https://www.neatpagos.com/blog/articulo/mejor-tasa-credito-hipotecario'},
   {v:'+70,8%', t:'Transacciones inmobiliarias en Antofagasta, 1er semestre 2026', d:'El volumen en UF subió 338%. La minería y sus proveedores explican cerca del 70% de las operaciones.', f:'https://tierramarillano.cl/2026/08/01/ventas-inmobiliarias-en-antofagasta-crecen-70-en-el-primer-semestre/'},
   {v:'−22%', t:'Oferta de arriendo en un año', d:'Los departamentos disponibles bajaron 25% y el arriendo subió 6%: mercado estrecho, baja vacancia.', f:'https://www.coldwellbanker.cl/blog/blog-1/antofagasta-2025-departamentos-usados-218'},
@@ -563,27 +568,319 @@ const MERCADO = [
   {v:'−60 pb', t:'Subsidio a la tasa (Ley 21.836, agosto 2026)', d:'Viviendas nuevas de hasta 6.000 UF, 80.000 cupos, vigente hasta mayo 2028. Orientado a la primera vivienda.', f:'https://www.imagina.cl/blogs/ampliacion-subsidio-hipotecario-fogaes/'}
 ];
 
+/* ---------- Seguridad (seg), conectividad y servicios (con) y demanda de arriendo (dem), 0–100.
+   Estimación del modelo a partir de tasas de delitos, prensa local y oferta de arriendo; editable en Supuestos. */
+const SEG_ANF = {'centro-sur':[62,85,80], 'playa-paraiso':[55,75,65], 'playa-blanca':[65,70,70], 'coviefi':[68,75,85], 'jardines-sur':[75,65,80],
+  'llacolen':[75,60,70], 'centro':[45,90,85], 'norte-hospital':[40,65,60], 'nicolas-tirado':[45,60,55], 'la-chimba':[50,60,70], 'vistamar':[45,50,55]};
+Object.keys(SECT_ANF).forEach(id => { const v = SEG_ANF[id] || [55,60,60]; Object.assign(SECT_ANF[id], {city:'antofagasta', seg:v[0], con:v[1], dem:v[2]}); });
+
+/* ---------- IQUIQUE ---------- */
+const SECT_IQ = {
+  'iq-peninsula': {n:'Península de Cavancha', sur:true, lat:-20.2365, lon:-70.1575, arr1:600000, arr2:850000, gc:1700, plus:2.2, seg:72, con:75, dem:80,
+    d:'Primera línea del borde costero entre Cavancha y Playa Brava. Sector residencial de alto interés y plusvalía, con oferta premium (Dalí Península desde 7.431 UF).'},
+  'iq-playabrava': {n:'Playa Brava', sur:true, lat:-20.2480, lon:-70.1440, arr1:560000, arr2:780000, gc:1500, plus:2.3, seg:68, con:75, dem:85,
+    d:'Costanera Arturo Prat con la mayor concentración de proyectos nuevos. Considerada zona segura y turística; el 1D se arrienda cerca de $530 mil.'},
+  'iq-sur': {n:'Huayquique · sector sur', sur:true, lat:-20.2680, lon:-70.1370, arr1:560000, arr2:800000, gc:1500, plus:2.4, seg:72, con:65, dem:75,
+    d:'Sector sur en crecimiento, cerca de universidades, colegios y centros comerciales, con vista al mar. Stock con entrega inmediata en Costanera Huayquique.'},
+  'iq-bajomolle': {n:'Bajo Molle', sur:true, lat:-20.2900, lon:-70.1320, arr1:540000, arr2:790000, gc:1500, plus:2.3, seg:74, con:50, dem:65,
+    d:'Extremo sur residencial y tranquilo, frente al mar, más lejos del centro. Oferta de 2 y 3 dormitorios.'},
+  'iq-centro': {n:'Centro', sur:false, lat:-20.2140, lon:-70.1505, arr1:450000, arr2:600000, gc:1100, plus:1.0, seg:40, con:90, dem:70,
+    d:'Muchos servicios, pero con hurtos, robos y comercio ilegal frecuentes. La victimización del comercio bajó de 60,7% a 43,9% en 2026, aunque 4 de cada 10 comerciantes lo consideran inseguro.'},
+  'iq-hospital': {n:'Hospital Regional · centro oriente', sur:false, lat:-20.2245, lon:-70.1395, arr1:470000, arr2:620000, gc:1200, plus:1.3, seg:50, con:75, dem:70,
+    d:'Barrio consolidado cerca del Hospital Regional, con edificios nuevos de entrada.'},
+  'iq-hospicio': {n:'La Pampa · El Boro (Alto Hospicio)', sur:false, lat:-20.2680, lon:-70.1060, arr1:330000, arr2:420000, gc:900, plus:1.0, seg:25, con:45, dem:55,
+    d:'Reportes frecuentes de delitos violentos y tráfico. No recomendado para invertir; sin proyectos evaluados.'}
+};
+const PROY_IQ = [
+  {id:'iq-mpb3', n:'Mirador Playa Brava 3', inmo:'Renta Nacional', dir:'Manuel Plaza 3011', sector:'iq-playabrava', lat:-20.2470, lon:-70.1430,
+   estado:'verde', entrega:'En verde', meses:18, u:[{t:'1D1B',d:1,b:1,m2:35,uf:2762,m2est:true},{t:'2D2B',d:2,b:2,m2:53,uf:4100,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Venta en verde: pie en cuotas durante la obra (confirmar)','Studio, 1D y 2D de 30 a 65 m², de 2.762 a 5.904 UF'],
+   extra:'Tercera etapa del conjunto Mirador Playa Brava, a pasos del mar. 57 unidades disponibles. Precio del 2D estimado.', conf:'media',
+   f:['https://www.toctoc.com/propiedades/compranuevo/departamento/iquique/mirador-playa-brava-3/1651427','https://bancoestado.enlaceinmobiliario.cl/iquique/departamento/mirador-playa-brava-3/7972']},
+  {id:'iq-element', n:'Element de Barrio Parque', inmo:'Alterra', dir:'Av. Arturo Prat Chacón 3120', sector:'iq-playabrava', lat:-20.2495, lon:-70.1455,
+   estado:'verde', entrega:'1er semestre 2027', meses:8, u:[{t:'1D1B',d:1,b:1,m2:33.18,uf:2987},{t:'2D2B',d:2,b:2,m2:64.84,uf:5100,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega 1er semestre 2027: pie en cuotas hasta la entrega (confirmar)','Precios desde 2.987 UF (otra fuente: 3.400 UF)'],
+   extra:'Primera línea frente al mar. Cowork, sky bar, quincho panorámico. 2D2B de 65 y 67 m²; 3D de 95 m². Precio del 2D estimado.', conf:'media',
+   f:['https://alterra.cl/proyecto/barrio-parque-element','https://www.enlacenorte.cl/iquique/departamento/element-de-barrio-parque/6421']},
+  {id:'iq-vp', n:'VP Apartments', inmo:'Bravo Izquierdo', dir:'Av. Arturo Prat Chacón 3208', sector:'iq-playabrava', lat:-20.2510, lon:-70.1448,
+   estado:'blanco', entrega:'En blanco', meses:18, u:[{t:'1D1B',d:1,b:1,m2:35,uf:3790}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Venta en blanco','6 departamentos por piso, todos con vista al mar'],
+   extra:'1D y 2D de 35 a 58 m², chapas digitales y termopanel.', conf:'media',
+   f:['https://vpapartments.cl/']},
+  {id:'iq-cht3', n:'Costanera Huayquique Torre III', inmo:'Inmobiliaria Huayquique', dir:'Av. Arturo Prat, Huayquique', sector:'iq-sur', lat:-20.2665, lon:-70.1385,
+   estado:'verde', entrega:'En verde', meses:18, u:[{t:'1D1B',d:1,b:1,m2:44.02,uf:3521}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Venta en verde','1D a 3D de 44 a 107 m², de 3.521 a 8.581 UF'],
+   extra:'Sector sur con vista al mar.', conf:'alta',
+   f:['https://bancoestado.enlaceinmobiliario.cl/iquique/departamento/costanera-huayquique-torre-iii/9554']},
+  {id:'iq-ch2', n:'Costanera Huayquique II', inmo:'Idicsa', dir:'Av. Arturo Prat, Huayquique', sector:'iq-sur', lat:-20.2690, lon:-70.1385,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:44.25,uf:2981}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega inmediata','Publicado entre 2.500 y 3.271 UF según el portal: negocia'],
+   extra:'1D a 4D, 26 unidades disponibles, vista al mar.', conf:'media',
+   f:['https://edificio-huayquique.cl/','https://www.enlaceinmobiliario.cl/norte/iquique/departamento/costanera-huayquique-etapa-ii/6638/']},
+  {id:'iq-muelle', n:'Muelle', inmo:'Miramar', dir:'Bajo Molle', sector:'iq-bajomolle', lat:-20.2895, lon:-70.1330,
+   estado:'blanco', entrega:'En blanco', meses:24, u:[{t:'2D2B',d:2,b:2,m2:65,uf:3850,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Venta en blanco','2D y 3D desde 3.850 UF'],
+   extra:'Inmobiliaria con 26 años en el norte. m² estimado.', conf:'media',
+   f:['https://miramar.cl/']},
+  {id:'iq-dali', n:'Dalí Península', inmo:'s/i', dir:'Península de Cavancha', sector:'iq-peninsula', lat:-20.2360, lon:-70.1585,
+   estado:'verde', entrega:'En verde', meses:24, u:[{t:'2D2B',d:2,b:2,m2:90,uf:7431,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Venta en verde','2D a 4D desde 7.431 UF'],
+   extra:'Producto premium de borde costero. m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/iquique-tarapaca']},
+  {id:'iq-libertad', n:'Edificio Libertad', inmo:'RVC', dir:'Libertad 1310', sector:'iq-centro', lat:-20.2200, lon:-70.1460,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:34.16,uf:2342},{t:'2D1B',d:2,b:1,m2:48,uf:2889,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega inmediata','1D desde 2.342 UF y 2D desde 2.889 UF (portal: desde 2.108 UF)'],
+   extra:'Cowork, quinchos en la azotea, gimnasio y conserjería 24 h. Ubicación en el mapa aproximada.', conf:'media',
+   f:['https://www.rvc.cl/proyecto/edificio-libertad/']},
+  {id:'iq-serrano', n:'Edificio Nueva Serrano', inmo:'s/i', dir:'Serrano 1679', sector:'iq-hospital', lat:-20.2240, lon:-70.1410,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:35,uf:2399}],
+   estac:{incl:null}, bodega:{incl:null},
+   pago:['Entrega inmediata','1D a 3D de 35 a 66 m²'],
+   extra:'Torre de 23 pisos con 4 pisos de áreas comunes.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/iquique-tarapaca/10920-edificio-nueva-serrano-nva']}
+];
+const MERCADO_IQ = [
+  {v:'$530 · $750 mil', t:'Arriendo promedio de 1D y 2D', d:'El 1D va de $450 a $600 mil. Promedio general $695 mil y $8.451 por m².', f:'https://www.nestoria.cl/iquique/departamentos/arriendo'},
+  {v:'+1,2%', t:'Precio por m² en el borde costero', d:'Cerca de $2,25 millones por m², +1,2% frente a abril de 2026.', f:'https://www.portalinmobiliario.com/venta/departamento/tarapaca/iquique/playa-brava'},
+  {v:'43,9%', t:'Victimización del comercio, 1er semestre 2026', d:'Bajó desde 60,7%, pero 4 de cada 10 comerciantes aún consideran inseguro su sector.', f:'https://diariolongino.cl/iquique-rompe-la-curva-del-delito-victimizacion-del-comercio-cae-con-fuerza-pero-el-miedo-sigue-en-las-calles/'},
+  {v:'Zonas rojas', t:'La Pampa, El Boro y Alto Hospicio', d:'Reportes de delitos violentos y tráfico. Playa Brava y Cavancha se consideran zonas seguras; el centro tiene hurtos frecuentes.', f:'https://federalchile.cl/blogs/noticias/zonas-rojas-en-iquique'},
+  {v:'2.000–10.000 UF', t:'Rango de la oferta nueva', d:'1D desde 2.342 UF en el centro y desde 2.762 UF en Playa Brava.', f:'https://www.enlaceinmobiliario.cl/norte/listado/region-tarapaca/iquique/departamento/'},
+  {v:'−60 pb', t:'Subsidio a la tasa (Ley 21.836)', d:'Viviendas nuevas de hasta 6.000 UF, vigente hasta mayo 2028. Orientado a la primera vivienda.', f:'https://www.imagina.cl/blogs/ampliacion-subsidio-hipotecario-fogaes/'}
+];
+
+/* ---------- SANTIAGO ---------- */
+const SECT_STG = {
+  'stg-nunoa': {n:'Ñuñoa', sur:true, lat:-33.4560, lon:-70.6080, arr1:480000, arr2:650000, gc:2000, plus:3.0, seg:78, con:90, dem:90,
+    d:'Cero homicidios en 2023 y entre las comunas con menor percepción de inseguridad. Las líneas 3 y 6 del metro impulsaron su plusvalía. Cap rate de 2,9% a 4,3%.'},
+  'stg-macul': {n:'Macul', sur:true, lat:-33.4880, lon:-70.6010, arr1:440000, arr2:580000, gc:1800, plus:2.8, seg:70, con:80, dem:80,
+    d:'Tasa de homicidios de 0,7 por 100 mil (2023). Plusvalía de 6% a 9% en tres años. Líneas 4 y 5 del metro y Campus San Joaquín UC.'},
+  'stg-providencia': {n:'Providencia', sur:true, lat:-33.4290, lon:-70.6150, arr1:560000, arr2:760000, gc:2200, plus:2.4, seg:62, con:95, dem:90,
+    d:'Alta demanda y conectividad, pero cap rate cercano a 3% y 1D sobre 5.000 UF. Tasa alta de delitos por la población flotante. Sin proyectos dentro de tu presupuesto.'},
+  'stg-sanmiguel': {n:'San Miguel', sur:true, lat:-33.4930, lon:-70.6510, arr1:420000, arr2:560000, gc:1800, plus:2.5, seg:62, con:85, dem:85,
+    d:'Triplicó su valor por m² en una década. Líneas 2 y 6 del metro, cerca del centro. Hay mucha oferta nueva: negocia descuentos y bono pie.'},
+  'stg-laflorida': {n:'La Florida', sur:true, lat:-33.5150, lon:-70.6000, arr1:400000, arr2:530000, gc:1700, plus:2.2, seg:60, con:80, dem:80,
+    d:'Plusvalía constante respaldada por colegios, malls y las líneas 4 y 5 del metro. El 1D se arrienda entre $350 y $550 mil.'},
+  'stg-independencia': {n:'Independencia', sur:false, lat:-33.4150, lon:-70.6620, arr1:390000, arr2:520000, gc:1700, plus:2.6, seg:48, con:85, dem:85,
+    d:'Universidades y hospitales; la futura Línea 7 proyecta +10% a 15% hacia 2028. Seguridad más débil que en el sector oriente.'},
+  'stg-centro': {n:'Santiago Centro', sur:false, lat:-33.4450, lon:-70.6550, arr1:380000, arr2:500000, gc:1600, plus:1.2, seg:35, con:95, dem:85,
+    d:'Junto a Providencia, encabeza la tasa de delitos. Mucha competencia en arriendo y sobreoferta de estudios.'},
+  'stg-estacion': {n:'Estación Central', sur:false, lat:-33.4560, lon:-70.6850, arr1:350000, arr2:460000, gc:1500, plus:1.5, seg:32, con:80, dem:75,
+    d:'Alta rentabilidad bruta, pero está entre las 10 comunas que concentran la mitad de los homicidios del país.'}
+};
+const PROY_STG = [
+  {id:'stg-toribio', n:'Edificio Santo Toribio', inmo:'s/i', dir:'Seminario 677 · Metro Irarrázaval', sector:'stg-nunoa', lat:-33.4530, lon:-70.6235,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:35,uf:3030,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D y 2D desde 3.030 UF'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/metro-irarrazaval-nunoa-santiago-metropolitana']},
+  {id:'stg-vintage', n:'Edificio Vintage', inmo:'s/i', dir:'Irarrázaval 1115 · Metro Monseñor Eyzaguirre', sector:'stg-nunoa', lat:-33.4545, lon:-70.6150,
+   estado:'verde', entrega:'Por confirmar', meses:12, u:[{t:'1D1B',d:1,b:1,m2:30,uf:2656,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['1D desde 2.656 UF','Fecha de entrega por confirmar'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/1-dormitorio/nunoa-metropolitana']},
+  {id:'stg-ira1489', n:'Edificio Irarrázaval 1489', inmo:'s/i', dir:'San Eugenio 509 · Metro Ñuble', sector:'stg-nunoa', lat:-33.4605, lon:-70.6255,
+   estado:'verde', entrega:'Por confirmar', meses:12, u:[{t:'1D1B',d:1,b:1,m2:30,uf:2679,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Desde 2.679 UF','Junto al Parque San Eugenio'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/metro-irarrazaval-nunoa-santiago-metropolitana']},
+  {id:'stg-vm3826', n:'Edificio Vicuña Mackenna 3826', inmo:'s/i', dir:'Vicuña Mackenna 3826 · Metro Carlos Valdovinos', sector:'stg-macul', lat:-33.4815, lon:-70.6140,
+   estado:'inmediata', entrega:'Pronta entrega', meses:2, u:[{t:'1D1B',d:1,b:1,m2:30,uf:2411,m2est:true},{t:'2D2B',d:2,b:2,m2:55,uf:3700,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Pronta entrega','1D a 3D de 27 a 67 m²; 96 unidades: buen margen para negociar'], extra:'m² del 1D y precio del 2D estimados.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/1-dormitorio/macul-metropolitana/_DEVELOPMENT*STATUS_5002970']},
+  {id:'stg-missouri', n:'Edificio Missouri 3885', inmo:'s/i', dir:'Missouri 3885 · Metro Macul', sector:'stg-macul', lat:-33.4880, lon:-70.5985,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:29,uf:2668}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D y 2D de 29 a 43 m²'], extra:'', conf:'alta',
+   f:['https://www.portalpm.cl/departamentos-en-venta/macul-metropolitana/']},
+  {id:'stg-ramoncruz', n:'Jardines de Ramón Cruz', inmo:'s/i', dir:'Metro Quilín', sector:'stg-macul', lat:-33.4975, lon:-70.5935,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:44,uf:2880},{t:'2D2B',d:2,b:2,m2:60,uf:3700,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D a 3D de 44 a 77 m²; 12 unidades'], extra:'Precio del 2D estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/macul-metropolitana']},
+  {id:'stg-vitalis', n:'Condominio Vitalis', inmo:'s/i', dir:'Álvarez de Toledo 706 · El Llano', sector:'stg-sanmiguel', lat:-33.4820, lon:-70.6530,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:33,uf:2290},{t:'2D2B',d:2,b:2,m2:52,uf:3400,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D a 3D de 33 a 65 m²; 30 unidades'], extra:'Precio del 2D estimado.', conf:'alta',
+   f:['https://bancoestado.enlaceinmobiliario.cl/listado/region-metropolitana/san-miguel']},
+  {id:'stg-euclides', n:'Edificio Euclides 12once', inmo:'s/i', dir:'Euclides 1215 · El Llano', sector:'stg-sanmiguel', lat:-33.4840, lon:-70.6500,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:29,uf:2368}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D y 2D de 29 a 56 m²; 85 unidades: buen poder de negociación'], extra:'', conf:'alta',
+   f:['https://bancoestado.enlaceinmobiliario.cl/listado/region-metropolitana/san-miguel']},
+  {id:'stg-reyalberto', n:'Edificio Rey Alberto', inmo:'s/i', dir:'Rey Alberto 4560 · Lo Vial', sector:'stg-sanmiguel', lat:-33.5030, lon:-70.6470,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:34,uf:2390}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','13 unidades'], extra:'', conf:'alta',
+   f:['https://bancoestado.enlaceinmobiliario.cl/listado/region-metropolitana/san-miguel']},
+  {id:'stg-puertalf', n:'Puerta La Florida', inmo:'Lucval', dir:'Av. Vicuña Mackenna 5860', sector:'stg-laflorida', lat:-33.5085, lon:-70.6065,
+   estado:'inmediata', entrega:'Pronta entrega', meses:2, u:[{t:'1D1B',d:1,b:1,m2:27,uf:2256,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Hasta 15% de descuento reservando online','1D de 20 a 36 m²'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/la-florida-metropolitana']},
+  {id:'stg-aireslf2', n:'Aires La Florida 2', inmo:'s/i', dir:'Pichidegua 6422 · Metro Mirador', sector:'stg-laflorida', lat:-33.5130, lon:-70.6030,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:30,uf:2430,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D y 2D de 20 a 49 m²'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/rm-metropolitana/la-florida/metro-mirador']},
+  {id:'stg-ecoflorida', n:'Eco Florida I', inmo:'Fundamenta', dir:'Av. Vicuña Mackenna · La Florida', sector:'stg-laflorida', lat:-33.5160, lon:-70.6045,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:30,uf:2490,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','Eco Florida II desde 2.590 UF'], extra:'Dos torres de 23 pisos con estudio, 1D y 2D. m² estimado.', conf:'media',
+   f:['https://www.fundamenta.cl/proyectos-en-venta/departamento-en-la-florida/eco-florida/']},
+  {id:'stg-francia', n:'Edificio Francia 1345', inmo:'Convet', dir:'Francia 1345 · Plaza Chacabuco', sector:'stg-independencia', lat:-33.4140, lon:-70.6605,
+   estado:'verde', entrega:'Por confirmar', meses:12, u:[{t:'1D1B',d:1,b:1,m2:28,uf:2080,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Estudio a 3D desde 2.080 UF'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/independencia-metropolitana']},
+  {id:'stg-arellano', n:'Edificio David Arellano', inmo:'s/i', dir:'David Arellano 1810 · Plaza Chacabuco', sector:'stg-independencia', lat:-33.4110, lon:-70.6630,
+   estado:'verde', entrega:'Por confirmar', meses:12, u:[{t:'1D1B',d:1,b:1,m2:32,uf:2535,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['1D a 3D desde 2.535 UF'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/independencia-metropolitana']},
+  {id:'stg-vivaceta', n:'Vivaceta', inmo:'Vivaceta Inmobiliaria', dir:'Gamero 1710 · Metro Hospitales', sector:'stg-independencia', lat:-33.4190, lon:-70.6585,
+   estado:'verde', entrega:'En verde', meses:18, u:[{t:'1D1B',d:1,b:1,m2:32,uf:2972,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Venta en verde, 59 unidades','1D y 2D desde 2.972 UF'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalinmobiliario.com/venta/departamento/proyectos/independencia-metropolitana']}
+];
+const MERCADO_STG = [
+  {v:'2,9%–4,3%', t:'Cap rate en comunas consolidadas', d:'Ñuñoa 2,9%–4,3%, La Reina 4,25%, Las Condes 3,7%, Providencia 3,0%. Las comunas periféricas rinden hasta 7% con mucho más riesgo.', f:'https://www.24horas.cl/actualidad/economia/ranking-comunas-inversiones'},
+  {v:'0 homicidios', t:'Ñuñoa en 2023', d:'Macul registró 0,7 por 100 mil y La Reina y Vitacura 1. Santiago y Providencia lideran la tasa de delitos por su población flotante.', f:'https://www.latercera.com/la-tercera-sabado/noticia/delitos-de-mayor-connotacion-social-estas-son-las-comunas-mas-seguras-del-pais/RFHI5LSMZBEJDOICZXTQZ2CQCI/'},
+  {v:'+5,5% anual', t:'Alza del m² nuevo en Ñuñoa', d:'Últimos tres años, con las líneas 3 y 6. Macul subió 6%–9% en tres años y San Miguel triplicó su valor en una década (cifras nominales).', f:'https://www.imagina.cl/blogs/comunas-mayor-plusvalia-santiago-2026-2/'},
+  {v:'+10–15%', t:'Efecto proyectado de la Línea 7', d:'En Independencia, Quinta Normal y Conchalí hacia 2028.', f:'https://www.imagina.cl/blogs/comunas-mayor-plusvalia-santiago-2026-2/'},
+  {v:'$12.957/m²', t:'Arriendo en Ñuñoa', d:'Un 1D de 35 m² ronda $450 mil. En La Florida el 1D va de $350 a $550 mil.', f:'https://ufhouse.com/precio-metro-cuadrado/nunoa/arriendo/'},
+  {v:'−60 pb', t:'Subsidio a la tasa (Ley 21.836)', d:'Viviendas nuevas de hasta 6.000 UF, vigente hasta mayo 2028. Orientado a la primera vivienda.', f:'https://www.imagina.cl/blogs/ampliacion-subsidio-hipotecario-fogaes/'}
+];
+
+/* ---------- COQUIMBO ---------- */
+const SECT_COQ = {
+  'coq-penuelas': {n:'Peñuelas · Costanera', sur:true, lat:-29.9345, lon:-71.3020, arr1:450000, arr2:570000, gc:1400, plus:2.4, seg:70, con:70, dem:80,
+    d:'Borde costero en el límite con La Serena, con arriendo anual y de temporada (renta corta cercana a 6,5%). Proyectos Miraolas, Marina Pacífico y Costanera Coquimbo.'},
+  'coq-altopenuelas': {n:'Alto Peñuelas · El Rosario', sur:true, lat:-29.9465, lon:-71.2960, arr1:420000, arr2:540000, gc:1300, plus:2.2, seg:70, con:60, dem:65,
+    d:'Barrio nuevo en altura con grandes áreas verdes; primeros edificios de Inmobiliaria FG.'},
+  'coq-herradura': {n:'La Herradura', sur:true, lat:-29.9790, lon:-71.3520, arr1:440000, arr2:560000, gc:1300, plus:2.2, seg:68, con:60, dem:70,
+    d:'Bahía turística al sur de la península. 2D nuevos se arriendan entre $500 y $650 mil; sin proyectos nuevos de 1D o 2D identificados.'},
+  'coq-sindempart': {n:'Sindempart', sur:true, lat:-29.9580, lon:-71.3230, arr1:400000, arr2:500000, gc:1200, plus:1.8, seg:60, con:70, dem:65,
+    d:'Barrio residencial consolidado entre el centro y Peñuelas. Sin proyectos evaluados.'},
+  'coq-cantera': {n:'La Cantera', sur:false, lat:-29.9700, lon:-71.3100, arr1:360000, arr2:450000, gc:1000, plus:1.5, seg:52, con:55, dem:60,
+    d:'Sector en expansión con proyectos con subsidio DS1.'},
+  'coq-centro': {n:'Centro · Barrio Inglés', sur:false, lat:-29.9535, lon:-71.3395, arr1:380000, arr2:470000, gc:1100, plus:1.2, seg:40, con:85, dem:65,
+    d:'La zona con más delitos de la comuna: subieron 9,9% entre 2023 y 2024.'},
+  'coq-guayacan': {n:'Guayacán · Parte Alta', sur:false, lat:-29.9650, lon:-71.3480, arr1:340000, arr2:430000, gc:1000, plus:1.0, seg:38, con:55, dem:50,
+    d:'Guayacán registró un alza de 17,3% en delitos en 2024. Sin proyectos evaluados.'}
+};
+const PROY_COQ = [
+  {id:'coq-miraolas', n:'Miraolas', inmo:'Prohabit', dir:'Av. Costanera 2511, Peñuelas', sector:'coq-penuelas', lat:-29.9365, lon:-71.3030,
+   estado:'blanco', entrega:'Por confirmar', meses:18, u:[{t:'1D1B',d:1,b:1,m2:42.4,uf:2990}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Precios de 2.990 a 7.600 UF','Vista panorámica al mar'], extra:'Fecha de entrega por confirmar.', conf:'media',
+   f:['https://prohabit.cl/proyectos/miraolas-penuelas/','https://bancoestado.enlaceinmobiliario.cl/coquimbo/departamento/miraolas/6432']},
+  {id:'coq-marina', n:'Marina Pacífico', inmo:'Euro Inmobiliaria', dir:'Av. Mirador Sur con Gerónimo Méndez, Peñuelas', sector:'coq-penuelas', lat:-29.9415, lon:-71.2995,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'1D1B',d:1,b:1,m2:32.88,uf:2712},{t:'2D2B',d:2,b:2,m2:55,uf:3900,ufest:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Entrega inmediata','1D a 3D de 33 a 66 m²'], extra:'Precio del 2D estimado.', conf:'alta',
+   f:['https://www.portalpm.cl/departamentos-en-venta/coquimbo/']},
+  {id:'coq-costanera', n:'Condominio Costanera Coquimbo', inmo:'s/i', dir:'Av. Costanera 3200, Peñuelas', sector:'coq-penuelas', lat:-29.9315, lon:-71.2970,
+   estado:'verde', entrega:'Por confirmar', meses:12, u:[{t:'2D2B',d:2,b:2,m2:58,uf:3524,m2est:true}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['2D y 3D desde 3.524 UF'], extra:'m² estimado.', conf:'media',
+   f:['https://www.portalpm.cl/departamentos-en-venta/coquimbo/']},
+  {id:'coq-vrosario', n:'Edificios Vistas del Rosario', inmo:'Inmobiliaria FG', dir:'Av. Mirador Sur 3941, Alto Peñuelas', sector:'coq-altopenuelas', lat:-29.9475, lon:-71.2950,
+   estado:'verde', entrega:'En verde', meses:18, u:[{t:'1D1B',d:1,b:1,m2:41,uf:2568},{t:'2D2B',d:2,b:2,m2:59,uf:4134}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Precios de 2.568 a 5.337 UF (la ficha muestra 1D desde 2.400 UF)','Áreas recreativas de hasta 16.000 m²'],
+   extra:'12 modelos de 1D, 2D y 3D; urbanización subterránea.', conf:'alta',
+   f:['https://www.inmobiliariafg.cl/project-single/147/edificios-vistas-del-rosario']},
+  {id:'coq-baquedano', n:'Edificio Baquedano 302', inmo:'Inmobiliaria Proyección', dir:'Baquedano 302', sector:'coq-centro', lat:-29.9530, lon:-71.3410,
+   estado:'verde', entrega:'Por confirmar', meses:12, u:[{t:'1D1B',d:1,b:1,m2:36,uf:2335}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['1D de 36 m² desde 2.335 UF'], extra:'En el centro, la zona con más delitos de la comuna.', conf:'media',
+   f:['https://www.iproyeccion.cl/departamentos/coquimbo-baquedano-302']},
+  {id:'coq-talinay', n:'Condominio Talinay B', inmo:'Invica', dir:'Av. Cardenal Jorge Medina Estévez 3700', sector:'coq-cantera', lat:-29.9705, lon:-71.3105,
+   estado:'inmediata', entrega:'Inmediata', meses:0, u:[{t:'2D1B',d:2,b:1,m2:50.32,uf:1860}],
+   estac:{incl:null}, bodega:{incl:null}, pago:['Califica a subsidio DS1 tramo 3','Quedan 2 unidades'], extra:'Piscina, sala multiuso y conserjería 24/7.', conf:'alta',
+   f:['https://invica.cl/proyectos/condominio-talinay-b/']}
+];
+const MERCADO_COQ = [
+  {v:'4,2% · 3,9%', t:'Cap rate 1D y 2D en la conurbación', d:'Estudio Assetplan 2026 para La Serena: el 1D cuesta cerca de 2.648 UF y se arrienda en $440 mil.', f:'https://www.miradiols.cl/2026/05/21/la-serena-se-posiciona-entre-las-ciudades-mas-rentables-del-pais-para-invertir-en-departamentos/'},
+  {v:'6,5%', t:'Rentabilidad del arriendo vacacional', d:'Departamentos de temporada en La Serena y Coquimbo; exige amoblar y administrar.', f:'https://www.miradiols.cl/2026/05/21/la-serena-se-posiciona-entre-las-ciudades-mas-rentables-del-pais-para-invertir-en-departamentos/'},
+  {v:'23,4%', t:'Hogares víctimas de delitos en la región', d:'Bajó desde 27,6%: la Región de Coquimbo está entre las cuatro más seguras del país.', f:'https://www.davidnoticias.cl/lo-cree-region-coquimbo-se-proyecta-la-mas-segura-la-zona-norte/'},
+  {v:'+9,9%', t:'Alza de delitos en el centro y Barrio Inglés', d:'Entre 2023 y 2024. Guayacán subió 17,3%.', f:'https://clickhouse.cl/blogs/seguridad/zonas-mas-peligrosas-de-coquimbo'},
+  {v:'$490–690 mil', t:'Arriendo de 2D en Peñuelas y La Herradura', d:'El 1D parte en $450 mil.', f:'https://www.portalinmobiliario.com/arriendo/departamento/2-dormitorios/coquimbo-coquimbo'},
+  {v:'−60 pb', t:'Subsidio a la tasa (Ley 21.836)', d:'Viviendas nuevas de hasta 6.000 UF, vigente hasta mayo 2028. Orientado a la primera vivienda.', f:'https://www.imagina.cl/blogs/ampliacion-subsidio-hipotecario-fogaes/'}
+];
+Object.keys(SECT_IQ).forEach(id => SECT_IQ[id].city = 'iquique');
+Object.keys(SECT_STG).forEach(id => SECT_STG[id].city = 'santiago');
+Object.keys(SECT_COQ).forEach(id => SECT_COQ[id].city = 'coquimbo');
+
+/* ---------- Ciudades: etiquetas, riesgos, estrés y geometría del mapa ---------- */
+const RIESGO_REMOTO = ['Administración a distancia', 'Si no vives en la ciudad, una corredora cobra cerca de 8% + IVA del arriendo. El modelo ya lo descuenta si mantienes activada esa opción en Comparar ciudades.'];
+const CIUDADES = {
+  antofagasta: {n:'Antofagasta', pref:'Sur de Copiapó', otra:'Norte', prefEn:'al sur de calle Copiapó', prefCorto:'sur', capRef:'Mercado: 4,5% (1D) · 4,7% (2D)',
+    mercado: MERCADO_ANF,
+    estres: {id:'min', n:'Ciclo minero a la baja', d:'Como 2015–2016: arriendo −25%, vacancia 15%, plusvalía 0%', ov:{dArr:-0.25, vacOv:0.15, plusAbs:0}},
+    riesgos: [['Ciclo minero', 'Cerca del 70% de las operaciones viene de la minería y sus proveedores. En 2015–2016 los arriendos cayeron fuerte. Revisa el escenario "Ciclo minero a la baja".'],
+      ['Borde costero', 'Los edificios de primera línea en Av. Jaime Guzmán y Av. Grecia están en zona de evacuación por tsunami. Revisa la póliza de sismo y el plan de evacuación del edificio.'],
+      ['Salinidad y camanchaca', 'Frente al mar la mantención de fachadas, ventanas y equipos es más cara. Pregunta por el fondo de reserva del condominio.']],
+    map: {ext:{zona:{la:-23.6440, lb:-23.7240, oa:-70.4400, ob:-70.3740}, ciudad:{la:-23.5400, lb:-23.7280, oa:-70.4480, ob:-70.3560}},
+      costa:[[-23.515,-70.418],[-23.530,-70.412],[-23.545,-70.405],[-23.558,-70.400],[-23.572,-70.398],[-23.586,-70.397],[-23.600,-70.396],[-23.615,-70.398],[-23.630,-70.401],[-23.641,-70.404],[-23.645,-70.411],[-23.649,-70.412],[-23.653,-70.405],[-23.662,-70.406],[-23.671,-70.408],[-23.681,-70.411],[-23.691,-70.414],[-23.700,-70.419],[-23.710,-70.423],[-23.720,-70.428],[-23.730,-70.436],[-23.742,-70.446]],
+      cerros:[[-23.515,-70.392],[-23.540,-70.378],[-23.560,-70.369],[-23.600,-70.370],[-23.640,-70.377],[-23.670,-70.382],[-23.700,-70.393],[-23.725,-70.408],[-23.742,-70.424]],
+      limite:{lat:-23.6585, lon1:-70.412, lon2:-70.380, t:'Calle Copiapó'}, mar:{zona:[-23.690,-70.430], ciudad:[-23.640,-70.432]}}},
+  iquique: {n:'Iquique', pref:'Zonas seguras', otra:'Menos seguras', prefEn:'en zonas seguras de Iquique', prefCorto:'zonas seguras', capRef:'Arriendo medio 1D $530 mil',
+    mercado: MERCADO_IQ,
+    estres: {id:'min', n:'Baja de la minería y la ZOFRI', d:'Arriendo −20%, vacancia 12%, plusvalía 0%', ov:{dArr:-0.20, vacOv:0.12, plusAbs:0}},
+    riesgos: [['Tsunami', 'Todo el borde costero de Iquique está en zona de inundación por tsunami. Revisa la cota del edificio, la vía de evacuación y la póliza de sismo.'],
+      ['Seguridad fuera de la costa', 'El centro tiene hurtos y comercio ilegal frecuentes; evita La Pampa, El Boro y Alto Hospicio.'],
+      ['Demanda ligada a minería y puerto', 'El arriendo depende del empleo minero, portuario y de la ZOFRI. Revisa el escenario de estrés.'],
+      RIESGO_REMOTO],
+    map: {ext:{zona:{la:-20.2250, lb:-20.3000, oa:-70.1750, ob:-70.1150}, ciudad:{la:-20.1950, lb:-20.3050, oa:-70.1800, ob:-70.0950}},
+      costa:[[-20.180,-70.140],[-20.195,-70.150],[-20.205,-70.158],[-20.214,-70.157],[-20.222,-70.156],[-20.229,-70.158],[-20.233,-70.163],[-20.238,-70.162],[-20.241,-70.155],[-20.246,-70.149],[-20.255,-70.145],[-20.265,-70.141],[-20.275,-70.139],[-20.288,-70.136],[-20.300,-70.134],[-20.315,-70.133]],
+      cerros:[[-20.180,-70.128],[-20.210,-70.132],[-20.240,-70.130],[-20.270,-70.124],[-20.300,-70.121],[-20.315,-70.121]],
+      limite:null, mar:{zona:[-20.270,-70.168], ciudad:[-20.250,-70.172]}}},
+  santiago: {n:'Santiago', pref:'Comunas seguras', otra:'Menos seguras', prefEn:'en comunas seguras de Santiago', prefCorto:'comunas seguras', capRef:'Ñuñoa 2,9%–4,3%',
+    mercado: MERCADO_STG,
+    estres: {id:'min', n:'Sobreoferta y recesión', d:'Arriendo −12%, vacancia 12%, plusvalía 0,5%', ov:{dArr:-0.12, vacOv:0.12, plusAbs:0.005}},
+    riesgos: [['Sobreoferta de estudios y 1D', 'En San Miguel, La Florida e Independencia hay mucho stock: compite con descuentos y usados. Negocia y pregunta por la vacancia del edificio.'],
+      ['Seguridad por cuadra', 'Las tasas son comunales; dentro de cada comuna hay cuadras muy distintas. Visita de día y de noche y revisa el cuadrante en STOP de Carabineros.'],
+      ['Departamentos muy pequeños', 'Bajo 30 m² cuesta más arrendar a parejas y hay más rotación de arrendatarios.'],
+      RIESGO_REMOTO],
+    map: {ext:{zona:{la:-33.4000, lb:-33.5300, oa:-70.7000, ob:-70.5750}, ciudad:{la:-33.3900, lb:-33.5400, oa:-70.7100, ob:-70.5600}},
+      costa:null, cerros:null, limite:null, mar:null}},
+  coquimbo: {n:'Coquimbo', pref:'Zonas seguras', otra:'Menos seguras', prefEn:'en zonas seguras de Coquimbo', prefCorto:'zonas seguras', capRef:'La Serena: 4,2% (1D) · 3,9% (2D)',
+    mercado: MERCADO_COQ,
+    estres: {id:'min', n:'Temporada baja y recesión', d:'Arriendo −15%, vacancia 12%, plusvalía 0,5%', ov:{dArr:-0.15, vacOv:0.12, plusAbs:0.005}},
+    riesgos: [['Tsunami y marejadas', 'La costanera de Peñuelas y La Herradura está en zona de inundación (tsunami de 2015). Revisa la cota y la evacuación.'],
+      ['Estacionalidad', 'La demanda sube en verano y baja en invierno; en arriendo anual la vacancia puede ser algo mayor.'],
+      ['Seguridad del centro', 'Evita el centro, Barrio Inglés y Guayacán: los delitos subieron entre 2023 y 2024.'],
+      RIESGO_REMOTO],
+    map: {ext:{zona:{la:-29.9200, lb:-29.9900, oa:-71.3750, ob:-71.2850}, ciudad:{la:-29.9050, lb:-30.0000, oa:-71.3800, ob:-71.2650}},
+      costa:[[-29.900,-71.278],[-29.912,-71.289],[-29.925,-71.300],[-29.935,-71.312],[-29.943,-71.324],[-29.949,-71.334],[-29.947,-71.343],[-29.943,-71.352],[-29.946,-71.361],[-29.955,-71.368],[-29.965,-71.366],[-29.972,-71.360],[-29.978,-71.357],[-29.985,-71.359],[-29.990,-71.365],[-29.998,-71.374],[-30.005,-71.380]],
+      cerros:null, limite:null, mar:{zona:[-29.928,-71.345], ciudad:[-29.925,-71.350]}}}
+};
+const ALL_SECT = Object.assign({}, SECT_ANF, SECT_IQ, SECT_STG, SECT_COQ);
+const ALL_PROY = [].concat(PROY_ANF.map(p => Object.assign(p, {city:'antofagasta'})), PROY_IQ.map(p => Object.assign(p, {city:'iquique'})),
+  PROY_STG.map(p => Object.assign(p, {city:'santiago'})), PROY_COQ.map(p => Object.assign(p, {city:'coquimbo'})));
+let SECTORES = {}, PROYECTOS = [], MERCADO = [];
+
 /* =====================================================================
    2. ESTADO
    ===================================================================== */
 const DEF = {
-  uf:UF_HOY, sueldo:1800000, honor:250000, honorPct:1, ahorro:5000000, ahorroMes:350000, deudas:0, primeraViv:true,
+  uf:UF_HOY, city:'antofagasta', miCiudad:'antofagasta', adminRemota:true, sueldo:1800000, honor:250000, honorPct:1, ahorro:5000000, ahorroMes:350000, deudas:0, primeraViv:true,
   cargaMax:0.40, consTasa:0.0149, consPlazo:48, sitSel:null, banco:'mejor', plazo:30, pie:0.20, bono:0, horizonte:10,
   zona:'sur', tip:'todas', subsidio:false, pieCuotas:true, comprarExtras:true, admin:'propia',
   vac:0.05, mant:0.05, corr:0.02, desc:0.05, desg:0.000195, inc:0.00026, costoVenta:0.02,
   gastosFijos:13, cbr:0.003, ite:0.008, contribExento:60000000, contribTasa:0.0098, divRenta:0.25, rentGrowth:0,
-  w:{tir:30, flujo:20, cap:15, plus:10, acceso:15, riesgo:10},
+  w:{tir:20, flujo:15, cap:10, plus:15, acceso:15, riesgo:5, seguridad:15, entorno:5},
   sim:null, simOv:{}, escSel:[], escFocus:null, escCustom:{dTasa:0, dArr:0, vac:null, dPlus:0},
   mapLayer:'plus', mapExt:'sur', provZona:'sur', provTip:'todas', provEstado:'todos', provQ:'', provSel:null,
   sect:{}, bancosOv:{}
 };
 let S = load();
+const C = () => CIUDADES[S.city] || CIUDADES.antofagasta;
+function setCity(id){
+  if (!CIUDADES[id]) id = 'antofagasta';
+  S.city = id;
+  SECTORES = {}; Object.keys(ALL_SECT).forEach(k => { if (ALL_SECT[k].city === id) SECTORES[k] = ALL_SECT[k]; });
+  PROYECTOS = ALL_PROY.filter(p => p.city === id);
+  MERCADO = C().mercado;
+}
+setCity(S.city);
 function load(){
   let s = JSON.parse(JSON.stringify(DEF));
-  try { const raw = localStorage.getItem('radarSur.v2'); if (raw) { const o = JSON.parse(raw); s = Object.assign(s, o); s.w = Object.assign({}, DEF.w, o.w||{}); s.escCustom = Object.assign({}, DEF.escCustom, o.escCustom||{}); } } catch(e) {}
+  try { const raw = localStorage.getItem('radarSur.v3'); if (raw) { const o = JSON.parse(raw); s = Object.assign(s, o); s.w = Object.assign({}, DEF.w, o.w||{}); s.escCustom = Object.assign({}, DEF.escCustom, o.escCustom||{}); } } catch(e) {}
   return s;
 }
-function save(){ try { localStorage.setItem('radarSur.v2', JSON.stringify(S)); } catch(e) {} }
+function save(){ try { localStorage.setItem('radarSur.v3', JSON.stringify(S)); } catch(e) {} }
 
 /* =====================================================================
    3. UTILIDADES
@@ -604,8 +901,8 @@ const pct = (v, d=1) => isFinite(v) ? sgn(v) + (d===2?NF2:d===0?NF0:NF1).format(
 const pctS = (v, d=1) => isFinite(v) ? (v>0?'+':sgn(v)) + (d===2?NF2:NF1).format(Math.abs(v*100)) + '%' : '—';
 const num = (v, d=0) => isFinite(v) ? sgn(v) + (d===2?NF2:d===1?NF1:NF0).format(Math.abs(v)) : '—';
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const sect = id => Object.assign({}, SECTORES[id], S.sect[id] || {});
-const projById = id => PROYECTOS.find(p => p.id === id);
+const sect = id => Object.assign({}, ALL_SECT[id], S.sect[id] || {});
+const projById = id => ALL_PROY.find(p => p.id === id);
 const bancoTasa = b => (S.bancosOv[b.id] != null ? S.bancosOv[b.id] : b.tasa);
 const ESTADO_TXT = {inmediata:'Entrega inmediata', verde:'En verde', blanco:'En blanco'};
 const CONF_TXT = {alta:'Dato confiable', media:'Verificar', baja:'Dato parcial'};
@@ -677,7 +974,7 @@ function evaluar(p, u, ov){
   const gcCLP = u.m2 * s.gc;
   const rentUF = rent / UFv;
   const vac = c.vacOv != null ? c.vacOv : c.vac;
-  const adminPct = c.admin === 'corredor' ? 0.08 * 1.19 : 0;
+  const adminPct = (c.admin === 'corredor' || (c.adminRemota && p.city && p.city !== c.miCiudad)) ? 0.08 * 1.19 : 0;
   const opexPct = c.mant + c.corr + adminPct;
   const gcOwnerUF = gcCLP * vac / UFv;
   const contribAnual = Math.max(0, (P * UFv * 0.55 - c.contribExento)) * c.contribTasa * 0.5; // DFL2 (≤140 m²): 50% de exención
@@ -747,7 +1044,7 @@ function evaluar(p, u, ov){
 function unidades(filtro){
   const f = Object.assign({zona: S.zona, tip: S.tip}, filtro || {});
   const out = [];
-  PROYECTOS.forEach(p => {
+  (f.city === 'all' ? ALL_PROY : PROYECTOS).forEach(p => {
     const s = sect(p.sector);
     if (f.zona === 'sur' && !s.sur) return;
     if (f.zona === 'norte' && s.sur) return;
@@ -768,7 +1065,7 @@ const riesgoBase = (p) => clamp(100 - (p.meses || 0) / 36 * 45 - ({alta:0, media
    en blanco el pie se paga en cuotas hasta la entrega, así que tu ahorro mensual también cuenta. */
 const planCache = new Map(); let planSig = '';
 function planes(p, u){
-  const sig = JSON.stringify([S.sueldo, S.honor, S.honorPct, S.ahorro, S.ahorroMes, S.deudas, S.primeraViv, S.cargaMax, S.consTasa, S.consPlazo, S.divRenta, S.banco, S.plazo, S.pie, S.uf, S.sect, S.bancosOv, S.vac, S.mant, S.corr, S.horizonte, S.desg, S.inc, S.gastosFijos, S.cbr, S.ite, S.comprarExtras]);
+  const sig = JSON.stringify([S.sueldo, S.honor, S.honorPct, S.ahorro, S.ahorroMes, S.deudas, S.primeraViv, S.cargaMax, S.consTasa, S.consPlazo, S.divRenta, S.banco, S.plazo, S.pie, S.uf, S.sect, S.bancosOv, S.vac, S.mant, S.corr, S.horizonte, S.desg, S.inc, S.gastosFijos, S.cbr, S.ite, S.comprarExtras, S.miCiudad, S.adminRemota]);
   if (sig !== planSig){ planCache.clear(); planSig = sig; }
   const key = p.id + ':' + p.u.indexOf(u);
   if (planCache.has(key)) return planCache.get(key);
@@ -839,7 +1136,9 @@ function ranking(filtro){
     cap: x => x.r.capRate,
     plus: x => sect(x.p.sector).plus,
     acceso: x => x.plan.best ? -(x.plan.best.llaves + (x.plan.best.id === 'consumo' ? 12 : 0)) : -150,
-    riesgo: x => riesgoBase(x.p)
+    riesgo: x => riesgoBase(x.p),
+    seguridad: x => sect(x.p.sector).seg,
+    entorno: x => (sect(x.p.sector).con + sect(x.p.sector).dem) / 2
   };
   const norm = {};
   Object.keys(comp).forEach(k => {
@@ -858,7 +1157,7 @@ function ranking(filtro){
   list.forEach((x, i) => x.rank = i + 1);
   return list;
 }
-const COMP_TXT = {tir:'TIR', flujo:'flujo mensual', cap:'cap rate', plus:'plusvalía del sector', acceso:'tiempo para poder comprar con tu renta y ahorro', riesgo:'riesgo de entrega y dato'};
+const COMP_TXT = {tir:'TIR', flujo:'flujo mensual', cap:'cap rate', plus:'plusvalía del sector', acceso:'tiempo para poder comprar con tu renta y ahorro', riesgo:'riesgo de entrega y dato', seguridad:'seguridad del sector', entorno:'conectividad y demanda de arriendo'};
 function porQue(x){
   const ks = Object.keys(x.c).filter(k => (S.w[k]||0) > 0).sort((a, b) => x.c[b] - x.c[a]);
   const fuertes = ks.slice(0, 2).map(k => COMP_TXT[k]);
@@ -1000,9 +1299,10 @@ function divColor(v, center, span){
    6. NAVEGACIÓN
    ===================================================================== */
 const VIEWS = {
-  resumen:{t:'Resumen', e:'Antofagasta · al sur de calle Copiapó'},
+  resumen:{t:'Resumen', e:() => C().n + ' · ' + C().prefEn.replace(/ de (Iquique|Santiago|Coquimbo)$/, '')},
+  ciudades:{t:'Comparar ciudades', e:'Antofagasta, Iquique, Santiago y Coquimbo con tu perfil'},
   situacion:{t:'Mi situación hoy', e:'Qué puedes comprar con tu renta y tu ahorro'},
-  proyectos:{t:'Proyectos mapeados', e:'Catálogo · ' + PROYECTOS.length + ' proyectos de ' + new Set(PROYECTOS.map(p => p.inmo)).size + ' inmobiliarias'},
+  proyectos:{t:'Proyectos mapeados', e:() => C().n + ' · ' + PROYECTOS.length + ' proyectos de ' + new Set(PROYECTOS.map(p => p.inmo)).size + ' inmobiliarias'},
   simulador:{t:'Simulador de inversión', e:'Dividendo, flujo y rentabilidad'},
   bancos:{t:'Comparador de bancos', e:'Dividendo por banco y plazo'},
   ranking:{t:'Ranking de conveniencia', e:'Lo que más te conviene hoy'},
@@ -1018,7 +1318,7 @@ function go(v, push){
   $$('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'));
   $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v));
   $('#vTitle').textContent = VIEWS[v].t;
-  $('#vEyebrow').textContent = VIEWS[v].e;
+  $('#vEyebrow').textContent = typeof VIEWS[v].e === 'function' ? VIEWS[v].e() : VIEWS[v].e;
   if (push !== false){ try { history.replaceState(null, '', '#' + v); } catch(e) {} }
   render();
   window.scrollTo({top: 0});
@@ -1028,12 +1328,21 @@ $$('.nav button').forEach(b => b.addEventListener('click', () => go(b.dataset.v)
 function render(){
   hideTip();
   $('#chipUf').textContent = '$' + NF2.format(S.uf);
+  $('#brandCity').textContent = C().n;
+  const cb = $('#cityBar');
+  cb.innerHTML = '<span class="label">Ciudad</span>' + segHTML('city', Object.keys(CIUDADES).map(id => [id, CIUDADES[id].n]), S.city) + (current === 'ciudades' ? '' : '<button class="btn ghost" type="button" id="cbCmp">Comparar las 4 ciudades</button>');
+  bindSegs(cb, (k, v) => cambiarCiudad(v));
+  const cmp = $('#cbCmp'); if (cmp) cmp.addEventListener('click', () => go('ciudades'));
   $('#navUf').textContent = '$' + NF2.format(S.uf);
   $('#chipPerfil').textContent = 'Pie ' + NF0.format(S.pie * 100) + '% · ' + S.plazo + ' años · ' + (S.banco === 'mejor' ? 'mejor tasa' : BANCOS.find(b => b.id === S.banco).n);
-  const fn = {resumen:rResumen, situacion:rSituacion, proyectos:rProyectos, simulador:rSimulador, bancos:rBancos, ranking:rRanking, mapa:rMapa, escenarios:rEscenarios, asesoria:rAsesoria, supuestos:rSupuestos}[current];
+  const fn = {resumen:rResumen, situacion:rSituacion, ciudades:rCiudades, proyectos:rProyectos, simulador:rSimulador, bancos:rBancos, ranking:rRanking, mapa:rMapa, escenarios:rEscenarios, asesoria:rAsesoria, supuestos:rSupuestos}[current];
   fn($('#v-' + current));
 }
 function set(k, v){ S[k] = v; save(); render(); }
+function cambiarCiudad(id, vista){
+  if (id !== S.city){ setCity(id); S.sim = null; S.simOv = {}; S.escSel = []; S.escFocus = null; S.provSel = null; S.sitSel = null; save(); }
+  go(vista || current);
+}
 
 /* Controles compartidos */
 function segHTML(id, opts, val){
@@ -1076,7 +1385,7 @@ function perfilHTML(){
     <div class="field"><label for="pfBanco">Banco</label><select id="pfBanco">${bancoOptions(S.banco, true)}</select></div>
   </div>
   <div class="filters" style="margin-top:12px">
-    <div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur','Sur de Copiapó'],['todas','Toda la ciudad'],['norte','Sólo norte']], S.zona)}</div>
+    <div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur', C().pref],['todas','Toda la ciudad'],['norte', C().otra]], S.zona)}</div>
     <div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1 dormitorio'],['2D','2 dormitorios']], S.tip)}</div>
     <label class="toggle" style="align-self:center"><input id="pfSub" type="checkbox"${S.subsidio ? ' checked' : ''}><span>Aplicar subsidio a la tasa / FOGAES<br><span class="muted small">Sólo si será tu primera vivienda (nueva, ≤ 6.000 UF)</span></span></label>
   </div></div>`;
@@ -1136,9 +1445,9 @@ function rResumen(el){
   </div>
 
   <div class="kpis">
-    <div class="kpi"><div class="k">Proyectos mapeados</div><div class="v">${PROYECTOS.length}</div><div class="d">${sur.length} al sur de Copiapó</div></div>
-    <div class="kpi"><div class="k">Precio medio sur</div><div class="v">${NF1.format(avg(surU, x => x.u.uf / x.u.m2))} UF/m²</div><div class="d">${surU.length} unidades 1D y 2D</div></div>
-    <div class="kpi"><div class="k">Cap rate medio sur</div><div class="v">${pct(avg(surU, x => x.r.capRate))}</div><div class="d">Mercado: 4,5% (1D) · 4,7% (2D)</div></div>
+    <div class="kpi"><div class="k">Proyectos mapeados</div><div class="v">${PROYECTOS.length}</div><div class="d">${sur.length} ${esc(C().prefEn)}</div></div>
+    <div class="kpi"><div class="k">Precio medio ${esc(C().prefCorto)}</div><div class="v">${NF1.format(avg(surU, x => x.u.uf / x.u.m2))} UF/m²</div><div class="d">${surU.length} unidades 1D y 2D</div></div>
+    <div class="kpi"><div class="k">Cap rate medio ${esc(C().prefCorto)}</div><div class="v">${pct(avg(surU, x => x.r.capRate))}</div><div class="d">${esc(C().capRef)}</div></div>
     <div class="kpi"><div class="k">Mejor tasa hipotecaria</div><div class="v">${NF2.format(bancoTasa(best))}%</div><div class="d">${esc(best.n)} · promedio 4,06%</div></div>
     <div class="kpi"><div class="k">Con flujo positivo</div><div class="v">${rk.filter(x => x.r.flujo1 >= 0).length} de ${rk.length}</div><div class="d">con pie ${NF0.format(S.pie * 100)}% a ${S.plazo} años</div></div>
     <div class="kpi"><div class="k">Puedes firmar hoy</div><div class="v">${hoySin} de ${rk.length}</div><div class="d">sin deuda de consumo · ${hoyCon} más con consumo</div></div>
@@ -1149,7 +1458,7 @@ function rResumen(el){
   <div class="grid g2">
     <div class="panel"><h2>Top 8 del ranking</h2><p class="sub">Puntaje 0–100 con tus ponderaciones actuales. Cambia los pesos en Ranking.</p><div id="rsTop"></div></div>
     <div class="panel"><h2>Flujo mensual frente a la inversión inicial</h2><p class="sub">Cada punto es una unidad. Arriba a la izquierda: menos capital y mejor flujo.</p>
-      <div class="legend"><span><i style="background:var(--s2)"></i>Sur de Copiapó</span><span><i style="background:var(--deemph)"></i>Norte (referencia)</span></div>
+      <div class="legend"><span><i style="background:var(--s2)"></i>${esc(C().pref)}</span><span><i style="background:var(--deemph)"></i>${esc(C().otra)} (referencia)</span></div>
       <div class="chart" id="rsScatter"></div></div>
   </div>
 
@@ -1185,7 +1494,7 @@ function rProyectos(el){
   const sel = S.provSel ? projById(S.provSel) : null;
   el.innerHTML = `
   <div class="filters">
-    <div class="field"><span class="lbl">Zona</span>${segHTML('provZona', [['sur','Sur de Copiapó'],['todas','Todas'],['norte','Norte']], S.provZona)}</div>
+    <div class="field"><span class="lbl">Zona</span>${segHTML('provZona', [['sur', C().pref],['todas','Todas'],['norte', C().otra]], S.provZona)}</div>
     <div class="field"><span class="lbl">Tipología</span>${segHTML('provTip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.provTip)}</div>
     <div class="field"><span class="lbl">Estado</span>${segHTML('provEstado', [['todos','Todos'],['inmediata','Inmediata'],['verde','En verde'],['blanco','En blanco']], S.provEstado)}</div>
     <div class="field" style="flex:1;min-width:180px"><label for="provQ">Buscar</label><input id="provQ" type="text" placeholder="Proyecto, inmobiliaria o calle" value="${esc(S.provQ)}"></div>
@@ -1195,7 +1504,7 @@ function rProyectos(el){
     <thead><tr><th>Proyecto</th><th>Sector</th><th>Tipo</th><th class="n">m²</th><th class="n">Precio</th><th class="n">UF/m²</th><th>Estac.</th><th>Bodega</th><th>Entrega</th><th class="n">Arriendo est.</th><th class="n">GC est.</th><th class="n">Cap rate</th><th class="n">Dividendo</th><th class="n">Flujo/mes</th><th>Dato</th></tr></thead>
     <tbody>${rows.map(x => `<tr class="click${sel && sel.id === x.p.id ? ' sel' : ''}" data-p="${x.p.id}" tabindex="0">
       <td><div class="pname">${esc(x.p.n)}</div><div class="pinmo">${esc(x.p.inmo)} · ${esc(x.p.dir)}</div></td>
-      <td>${esc(sect(x.p.sector).n)}${sect(x.p.sector).sur ? '' : ' <span class="pill"><i>↑</i>Norte</span>'}</td>
+      <td>${esc(sect(x.p.sector).n)}${sect(x.p.sector).sur ? '' : ' <span class="pill"><i>·</i>' + esc(C().otra) + '</span>'}</td>
       <td>${esc(x.u.t)}</td>
       <td class="n">${NF1.format(x.u.m2)}${x.u.m2est ? '*' : ''}</td>
       <td class="n">${ufF(x.u.uf, 0)}${x.u.ufest || x.u.dudoso ? '*' : ''}<div class="pinmo">${clpM(x.u.uf * S.uf)}</div></td>
@@ -1205,7 +1514,7 @@ function rProyectos(el){
       <td class="n">${clp(x.r.rent)}</td><td class="n">${clp(x.r.gcCLP)}</td>
       <td class="n">${pct(x.r.capRate)}</td><td class="n">${clp(x.r.div1 * S.uf)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td>
       <td>${confPill(x.p)}</td></tr>`).join('')}</tbody></table></div>
-  <p class="small muted" style="margin:0">* m² o precio estimado a partir de rangos publicados. Arriendo estimado sin gastos comunes (GC): en Antofagasta casi todos los avisos cobran los GC aparte, así que los paga el arrendatario y tú sólo los cubres en meses vacíos.</p>
+  <p class="small muted" style="margin:0">* m² o precio estimado a partir de rangos publicados. Arriendo estimado sin gastos comunes (GC): en Chile casi todos los avisos cobran los GC aparte, así que los paga el arrendatario y tú sólo los cubres en meses vacíos.</p>
   <div id="provDetail"></div>`;
   bindSegs(el, (k, v) => set(k, v));
   const qi = $('#provQ', el);
@@ -1252,13 +1561,14 @@ function renderDetalle(el, p){
 
 function simUnit(){
   let x = S.sim ? unitByKey(S.sim) : null;
+  if (x && x.p.city !== S.city) x = null;
   if (!x){ const rk = ranking(); x = rk[0] ? {p: rk[0].p, u: rk[0].u, key: rk[0].key} : unitByKey(PROYECTOS[0].id + ':0'); S.sim = x.key; }
   return x;
 }
 function rSimulador(el){
   const x = simUnit(), o = S.simOv;
   const r = evaluar(x.p, x.u, o);
-  const opts = PROYECTOS.map(p => `<optgroup label="${esc(p.n)}${sect(p.sector).sur ? '' : ' (norte)'}">` + p.u.map((u, k) => `<option value="${p.id}:${k}"${x.key === p.id + ':' + k ? ' selected' : ''}>${esc(u.t)} · ${NF1.format(u.m2)} m² · ${ufF(u.uf, 0)}</option>`).join('') + '</optgroup>').join('');
+  const opts = PROYECTOS.map(p => `<optgroup label="${esc(p.n)}${sect(p.sector).sur ? '' : ' (' + esc(C().otra.toLowerCase()) + ')'}">` + p.u.map((u, k) => `<option value="${p.id}:${k}"${x.key === p.id + ':' + k ? ' selected' : ''}>${esc(u.t)} · ${NF1.format(u.m2)} m² · ${ufF(u.uf, 0)}</option>`).join('') + '</optgroup>').join('');
   const val = (k, d) => o[k] != null ? o[k] : d;
   const estacAparte = x.p.estac && x.p.estac.incl === false, bodAparte = x.p.bodega && x.p.bodega.incl === false;
   el.innerHTML = `<div class="grid g-side">
@@ -1385,20 +1695,20 @@ function rRanking(el){
   const W = S.w;
   const sl = (k, l, h) => `<div class="field"><label for="w_${k}">${l} <output>${W[k]}</output></label><input id="w_${k}" type="range" min="0" max="50" step="5" value="${W[k]}" data-w="${k}"><span class="hint">${h}</span></div>`;
   el.innerHTML = `
-  <div class="panel"><div class="panel-head"><div><h2>¿Qué te importa más?</h2><p class="sub">Pondera cada criterio. El puntaje se recalcula al instante.</p></div><div class="chips"><button class="btn ghost" id="wPre1" type="button">Rentabilidad</button><button class="btn ghost" id="wPre2" type="button">Flujo positivo</button><button class="btn ghost" id="wPre3" type="button">Plusvalía</button><button class="btn ghost" id="wPre4" type="button">Equilibrado</button></div></div>
-    <div class="frow">${sl('tir', 'TIR', 'Retorno total con venta')}${sl('flujo', 'Flujo mensual', 'Que el arriendo pague el dividendo')}${sl('cap', 'Cap rate', 'Renta neta sobre precio')}${sl('plus', 'Plusvalía', 'Potencial del sector')}${sl('acceso', 'Accesibilidad', 'Cuándo puedes comprar con tu renta y ahorro')}${sl('riesgo', 'Seguridad', 'Entrega pronta y dato confiable')}</div>
-    <div class="filters" style="margin-top:12px"><div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur','Sur de Copiapó'],['todas','Toda la ciudad'],['norte','Norte']], S.zona)}</div><div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.tip)}</div>
+  <div class="panel"><div class="panel-head"><div><h2>¿Qué te importa más?</h2><p class="sub">Pondera cada criterio. El puntaje se recalcula al instante.</p></div><div class="chips"><button class="btn ghost" id="wPre1" type="button">Rentabilidad</button><button class="btn ghost" id="wPre2" type="button">Flujo positivo</button><button class="btn ghost" id="wPre3" type="button">Plusvalía</button><button class="btn ghost" id="wPre5" type="button">Seguridad</button><button class="btn ghost" id="wPre4" type="button">Equilibrado</button></div></div>
+    <div class="frow">${sl('tir', 'TIR', 'Retorno total con venta')}${sl('flujo', 'Flujo mensual', 'Que el arriendo pague el dividendo')}${sl('cap', 'Cap rate', 'Renta neta sobre precio')}${sl('plus', 'Plusvalía', 'Potencial del sector')}${sl('acceso', 'Accesibilidad', 'Cuándo puedes comprar con tu renta y ahorro')}${sl('riesgo', 'Certeza', 'Entrega pronta y dato confiable')}${sl('seguridad', 'Seguridad', 'Delitos y percepción del sector')}${sl('entorno', 'Entorno', 'Metro, servicios y demanda de arriendo')}</div>
+    <div class="filters" style="margin-top:12px"><div class="field"><span class="lbl">Zona</span>${segHTML('zona', [['sur', C().pref],['todas','Toda la ciudad'],['norte', C().otra]], S.zona)}</div><div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.tip)}</div>
     <button class="btn ghost" id="rkCopy" type="button" style="align-self:flex-end">Copiar tabla</button></div>
   </div>
-  <div class="tbl-wrap"><table class="tbl" id="rkTbl"><thead><tr><th class="n">#</th><th>Unidad</th><th style="min-width:150px">Puntaje</th><th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">Cap rate</th><th class="n">Pie + gastos</th><th class="n">Dividendo</th><th class="n">Plusvalía</th><th>Cuándo</th><th style="min-width:220px">Por qué</th></tr></thead>
+  <div class="tbl-wrap"><table class="tbl" id="rkTbl"><thead><tr><th class="n">#</th><th>Unidad</th><th style="min-width:150px">Puntaje</th><th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">Cap rate</th><th class="n">Pie + gastos</th><th class="n">Dividendo</th><th class="n">Plusvalía</th><th class="n">Seguridad</th><th>Cuándo</th><th style="min-width:220px">Por qué</th></tr></thead>
   <tbody>${rk.map(x => `<tr class="click" data-k="${x.key}" tabindex="0"><td class="n"><b>${x.rank}</b></td><td><div class="pname">${esc(x.p.n)} · ${esc(x.u.t)}</div><div class="pinmo">${esc(x.p.inmo)} · ${esc(sect(x.p.sector).n)} · ${NF1.format(x.u.m2)} m² · ${ufF(x.u.uf, 0)}</div></td>
     <td><div class="bar-track" style="height:14px"><div class="bar-fill ${x.rank === 1 ? 'em' : ''}" style="width:${x.score.toFixed(1)}%"></div></div><div class="pinmo mono">${NF0.format(x.score)} / 100</div></td>
-    <td class="n">${pct(x.r.tir)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td><td class="n">${pct(x.r.capRate)}</td><td class="n">${clpM(x.r.invIni * S.uf)}</td><td class="n">${clp(x.r.div1 * S.uf)}</td><td class="n">${NF1.format(sect(x.p.sector).plus)}%</td>
+    <td class="n">${pct(x.r.tir)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td><td class="n">${pct(x.r.capRate)}</td><td class="n">${clpM(x.r.invIni * S.uf)}</td><td class="n">${clp(x.r.div1 * S.uf)}</td><td class="n">${NF1.format(sect(x.p.sector).plus)}%</td><td class="n">${NF0.format(sect(x.p.sector).seg)}</td>
     <td>${planPill(x.plan)}<div class="pinmo">${esc(caminoCorto(x.plan.best))}</div></td>
     <td class="small ink2">${esc(porQue(x))}</td></tr>`).join('')}</tbody></table></div>
   <p class="small muted" style="margin:0">Cada criterio se escala de 0 a 100 entre las unidades visibles, así que el puntaje es relativo: compara opciones, no mide calidad absoluta. Toca una fila para simularla.</p>`;
   $$('[data-w]', el).forEach(i => { i.addEventListener('input', () => { i.previousElementSibling.querySelector('output').textContent = i.value; }); i.addEventListener('change', () => { S.w[i.dataset.w] = +i.value; save(); render(); }); });
-  const pre = {wPre1:{tir:45, flujo:10, cap:15, plus:15, acceso:5, riesgo:10}, wPre2:{tir:10, flujo:45, cap:20, plus:5, acceso:10, riesgo:10}, wPre3:{tir:20, flujo:5, cap:5, plus:45, acceso:10, riesgo:15}, wPre4:Object.assign({}, DEF.w)};
+  const pre = {wPre1:{tir:40, flujo:10, cap:15, plus:10, acceso:5, riesgo:5, seguridad:10, entorno:5}, wPre2:{tir:10, flujo:40, cap:20, plus:5, acceso:10, riesgo:5, seguridad:5, entorno:5}, wPre3:{tir:15, flujo:5, cap:5, plus:40, acceso:10, riesgo:5, seguridad:10, entorno:10}, wPre5:{tir:15, flujo:10, cap:5, plus:10, acceso:10, riesgo:10, seguridad:35, entorno:5}, wPre4:Object.assign({}, DEF.w)};
   Object.keys(pre).forEach(id => $('#' + id, el).addEventListener('click', () => { S.w = Object.assign({}, pre[id]); save(); render(); }));
   bindSegs(el, (k, v) => set(k, v));
   $$('tr.click', el).forEach(tr => { const f = () => { S.sim = tr.dataset.k; S.simOv = {}; save(); go('simulador'); }; tr.addEventListener('click', f); tr.addEventListener('keydown', e => { if (e.key === 'Enter') f(); }); });
@@ -1413,11 +1723,9 @@ function rRanking(el){
 function selectNode(n){ try { const r = document.createRange(); r.selectNodeContents(n); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(e) {} }
 
 /* ---------- Mapa ---------- */
-const COSTA = [[-23.515,-70.418],[-23.530,-70.412],[-23.545,-70.405],[-23.558,-70.400],[-23.572,-70.398],[-23.586,-70.397],[-23.600,-70.396],[-23.615,-70.398],[-23.630,-70.401],[-23.641,-70.404],[-23.645,-70.411],[-23.649,-70.412],[-23.653,-70.405],[-23.662,-70.406],[-23.671,-70.408],[-23.681,-70.411],[-23.691,-70.414],[-23.700,-70.419],[-23.710,-70.423],[-23.720,-70.428],[-23.730,-70.436],[-23.742,-70.446]];
-const CERROS = [[-23.515,-70.392],[-23.540,-70.378],[-23.560,-70.369],[-23.600,-70.370],[-23.640,-70.377],[-23.670,-70.382],[-23.700,-70.393],[-23.725,-70.408],[-23.742,-70.424]];
 function rMapa(el){
-  const ext = S.mapExt === 'sur' ? {la:-23.6440, lb:-23.7240, oa:-70.4400, ob:-70.3740} : {la:-23.5400, lb:-23.7280, oa:-70.4480, ob:-70.3560};
-  const kx = Math.cos(23.65 * Math.PI / 180);
+  const G = C().map, ext = G.ext[S.mapExt === 'sur' ? 'zona' : 'ciudad'];
+  const kx = Math.cos(Math.abs((ext.la + ext.lb) / 2) * Math.PI / 180);
   const aspect = ((ext.ob - ext.oa) * kx) / (ext.la - ext.lb);
   const all = ranking({zona:'todas', tip:'todas'});
   const scoreBy = {}; all.forEach(x => { if (!scoreBy[x.p.id] || scoreBy[x.p.id].score < x.score) scoreBy[x.p.id] = x; });
@@ -1426,18 +1734,18 @@ function rMapa(el){
   el.innerHTML = `
   <div class="filters">
     <div class="field"><span class="lbl">Capa de calor</span>${segHTML('mapLayer', layers, S.mapLayer)}</div>
-    <div class="field"><span class="lbl">Encuadre</span>${segHTML('mapExt', [['sur','Zona sur'],['ciudad','Ciudad completa']], S.mapExt)}</div>
+    <div class="field"><span class="lbl">Encuadre</span>${segHTML('mapExt', [['sur', C().pref],['ciudad','Ciudad completa']], S.mapExt)}</div>
   </div>
   <div class="grid g-wide">
-    <div class="panel"><div class="map-wrap" id="mapBox" style="aspect-ratio:${aspect.toFixed(3)};${S.mapExt === 'ciudad' ? 'max-width:420px;margin:0 auto' : ''}"></div>
+    <div class="panel"><div class="map-wrap" id="mapBox" style="aspect-ratio:${aspect.toFixed(3)};${aspect < 0.8 ? 'max-width:' + Math.round(560 * aspect + 40) + 'px;margin:0 auto' : ''}"></div>
       <div class="map-legend"><span>Bajo</span><span class="ramp" id="mapRamp"></span><span>Alto</span><span class="muted">· ${esc(layers.find(l => l[0] === S.mapLayer)[1])}</span>
-      <span style="margin-left:auto;display:inline-flex;gap:12px"><span style="display:inline-flex;gap:6px;align-items:center"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/></svg>Proyecto al sur</span><span style="display:inline-flex;gap:6px;align-items:center"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--deemph)" stroke="var(--surface)" stroke-width="2"/></svg>Norte</span></span></div>
-      <p class="small muted" style="margin:8px 0 0">Mapa esquemático: costa y ubicaciones aproximadas, sin calles. La línea punteada marca calle Copiapó, el límite norte de tu zona.</p></div>
+      <span style="margin-left:auto;display:inline-flex;gap:12px"><span style="display:inline-flex;gap:6px;align-items:center"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/></svg>${esc(C().pref)}</span><span style="display:inline-flex;gap:6px;align-items:center"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--deemph)" stroke="var(--surface)" stroke-width="2"/></svg>${esc(C().otra)}</span></span></div>
+      <p class="small muted" style="margin:8px 0 0">Mapa esquemático: ${G.costa ? 'costa y ' : ''}ubicaciones aproximadas, sin calles.${G.limite ? ' La línea punteada marca ' + esc(G.limite.t.toLowerCase()) + ', el límite de tu zona.' : ' Los puntos grises están en sectores menos seguros.'}</p></div>
     <div class="panel"><h2>Sectores ordenados por plusvalía</h2><p class="sub">Supuestos editables en Supuestos y fuentes.</p>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sector</th><th class="n">Plusvalía</th><th class="n">Arriendo 2D</th><th class="n">Proyectos</th></tr></thead>
-      <tbody>${secIds.map(id => ({id, s: sect(id)})).sort((a, b) => b.s.plus - a.s.plus).map(o => `<tr><td><b>${esc(o.s.n)}</b>${o.s.sur ? '' : ' <span class="pill"><i>↑</i>Norte</span>'}</td><td class="n">${NF1.format(o.s.plus)}%</td><td class="n">${clpM(o.s.arr2)}</td><td class="n">${PROYECTOS.filter(p => p.sector === o.id).length}</td></tr>`).join('')}</tbody></table></div></div>
+      <tbody>${secIds.map(id => ({id, s: sect(id)})).sort((a, b) => b.s.plus - a.s.plus).map(o => `<tr><td><b>${esc(o.s.n)}</b>${o.s.sur ? '' : ' <span class="pill"><i>·</i>' + esc(C().otra) + '</span>'}</td><td class="n">${NF1.format(o.s.plus)}%</td><td class="n">${clpM(o.s.arr2)}</td><td class="n">${PROYECTOS.filter(p => p.sector === o.id).length}</td></tr>`).join('')}</tbody></table></div></div>
   </div>
-  <div class="panel"><h2>Qué mueve la plusvalía en tu zona</h2><p class="sub">Sectores al sur de calle Copiapó, de mayor a menor potencial estimado.</p>
+  <div class="panel"><h2>Qué mueve la plusvalía en tu zona</h2><p class="sub">Sectores ${esc(C().prefEn)}, de mayor a menor potencial estimado.</p>
     <div class="grid g3">${secIds.map(id => ({id, s: sect(id)})).filter(o => o.s.sur).sort((a, b) => b.s.plus - a.s.plus).map(o => `<div class="fact"><div class="fv">${NF1.format(o.s.plus)}% <span class="small muted" style="font-weight:500">real anual</span></div><div><b>${esc(o.s.n)}</b></div><div class="fd">${esc(o.s.d)}</div></div>`).join('')}</div></div>`;
   bindSegs(el, (k, v) => set(k, v));
   const box = $('#mapBox', el);
@@ -1446,23 +1754,28 @@ function rMapa(el){
   const Y = lat => (ext.la - lat) / (ext.la - ext.lb) * H;
   const pxPerKm = W / ((ext.ob - ext.oa) * 111.32 * kx);
   // Capa base (SVG)
-  const land = COSTA.map(p => [X(p[1]), Y(p[0])]).concat(CERROS.slice().reverse().map(p => [X(p[1]), Y(p[0])]));
-  const hills = CERROS.map(p => [X(p[1]), Y(p[0])]).concat([[W + 50, Y(CERROS[CERROS.length - 1][0])], [W + 50, Y(CERROS[0][0]) - 50]]);
-  const yCop = Y(-23.6585);
+  const land = G.costa ? G.costa.map(p => [X(p[1]), Y(p[0])]).concat([[W + 60, Y(G.costa[G.costa.length - 1][0]) + 60], [W + 60, Y(G.costa[0][0]) - 60]]) : [[-10, -10], [W + 10, -10], [W + 10, H + 10], [-10, H + 10]];
+  const hills = G.cerros ? G.cerros.map(p => [X(p[1]), Y(p[0])]).concat([[W + 60, Y(G.cerros[G.cerros.length - 1][0]) + 60], [W + 60, Y(G.cerros[0][0]) - 60]]) : null;
+  const yCop = G.limite ? Y(G.limite.lat) : -1;
   let base = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">
     <rect width="${W}" height="${H}" fill="var(--sea)"/>
-    <polygon points="${hills.map(p => p.join(',')).join(' ')}" fill="var(--hill)"/>
     <polygon points="${land.map(p => p.join(',')).join(' ')}" fill="var(--land)" stroke="var(--line-strong)" stroke-width="1"/>
-    <rect x="0" y="0" width="${W}" height="${Math.max(0, yCop)}" fill="var(--north-veil)"/>
+    ${hills ? `<polygon points="${hills.map(p => p.join(',')).join(' ')}" fill="var(--hill)"/>` : ''}
+    ${yCop > 0 ? `<rect x="0" y="0" width="${W}" height="${Math.min(H, yCop)}" fill="var(--north-veil)"/>` : ''}
   </svg>`;
   // Overlay (SVG) con límite, etiquetas y marcadores
-  let ov = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Mapa esquemático de Antofagasta con proyectos y focos de ${esc(layers.find(l => l[0] === S.mapLayer)[1].toLowerCase())}">`;
-  if (yCop > 0 && yCop < H) ov += `<line x1="${X(-70.412)}" x2="${X(-70.380)}" y1="${yCop}" y2="${yCop}" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5"/><text class="map-label" x="${X(-70.381)}" y="${yCop - 7}" text-anchor="end" style="fill:var(--accent-text)">Calle Copiapó</text>`;
-  ov += `<text class="map-label" x="${X(-70.430)}" y="${Y(S.mapExt === 'sur' ? -23.690 : -23.640)}" style="fill:var(--muted);stroke:var(--sea);font-style:italic">Océano Pacífico</text>`;
+  let ov = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Mapa esquemático de ${esc(C().n)} con proyectos y focos de ${esc(layers.find(l => l[0] === S.mapLayer)[1].toLowerCase())}">`;
+  if (G.limite && yCop > 0 && yCop < H) ov += `<line x1="${X(G.limite.lon1)}" x2="${X(G.limite.lon2)}" y1="${yCop}" y2="${yCop}" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5"/><text class="map-label" x="${X(G.limite.lon2) - 1}" y="${yCop - 7}" text-anchor="end" style="fill:var(--accent-text)">${esc(G.limite.t)}</text>`;
+  if (G.mar){ const mp = G.mar[S.mapExt === 'sur' ? 'zona' : 'ciudad']; ov += `<text class="map-label" x="${X(mp[1])}" y="${Y(mp[0])}" style="fill:var(--muted);stroke:var(--sea);font-style:italic">Océano Pacífico</text>`; }
   // etiquetas de sector a la derecha de la costa, sin pisarse
-  const lbls = secIds.map(id => ({s: sect(id), y: Y(sect(id).lat)})).filter(o => o.y > 10 && o.y < H - 10).sort((a, b) => a.y - b.y);
-  for (let k = 1; k < lbls.length; k++) if (lbls[k].y - lbls[k - 1].y < 15) lbls[k].y = lbls[k - 1].y + 15;
-  lbls.forEach(o => { ov += `<text class="map-label" x="${W - 8}" y="${o.y + 4}" text-anchor="end">${esc(o.s.n.split(' · ')[0])}</text>`; });
+  const lbls = secIds.map(id => ({s: sect(id), x: X(sect(id).lon), y: Y(sect(id).lat)})).filter(o => o.y > 10 && o.y < H - 10 && o.x > 0 && o.x < W).sort((a, b) => a.y - b.y);
+  let lblSvg = '';
+  if (G.costa){
+    for (let k = 1; k < lbls.length; k++) if (lbls[k].y - lbls[k - 1].y < 15) lbls[k].y = lbls[k - 1].y + 15;
+    lbls.forEach(o => { lblSvg += `<text class="map-label" x="${W - 8}" y="${o.y + 4}" text-anchor="end" style="pointer-events:none">${esc(o.s.n.split(' · ')[0])}</text>`; });
+  } else {
+    lbls.forEach(o => { lblSvg += `<text class="map-label big" x="${Math.max(40, Math.min(W - 40, o.x))}" y="${o.y - 22}" text-anchor="middle" style="pointer-events:none">${esc(o.s.n.split(' · ')[0])}</text>`; });
+  }
   const visibles = PROYECTOS.filter(p => { const y = Y(p.lat), x = X(p.lon); return y > 0 && y < H && x > 0 && x < W; });
   const top5 = all.filter(x => sect(x.p.sector).sur).slice(0, 5).map(x => x.p.id);
   visibles.forEach(p => {
@@ -1471,7 +1784,7 @@ function rMapa(el){
     const r = 5 + (best ? best.score / 100 * 4 : 0);
     ov += `<g class="map-mk" tabindex="0" data-p="${p.id}"><circle cx="${x}" cy="${y}" r="16" fill="transparent"/><circle class="ring" cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${sur ? 'var(--s2)' : 'var(--deemph)'}" stroke="var(--surface)" stroke-width="2"/>${rnk >= 0 ? `<text x="${x - r - 4}" y="${y + 4}" text-anchor="end" class="map-label big">${rnk + 1}</text>` : ''}</g>`;
   });
-  ov += '</svg>';
+  ov += lblSvg + '</svg>';
   box.innerHTML = base + '<canvas></canvas>' + ov;
   // Calor
   const cv = box.querySelector('canvas');
@@ -1538,9 +1851,9 @@ function rEscenarios(el){
   const focus = (S.escFocus && unitByKey(S.escFocus)) || sel[0];
   if (!focus){ el.innerHTML = '<div class="panel">No hay unidades con estos filtros.</div>'; return; }
   const opts = (cur) => PROYECTOS.map(p => `<optgroup label="${esc(p.n)}">` + p.u.map((u, k) => `<option value="${p.id}:${k}"${cur === p.id + ':' + k ? ' selected' : ''}>${esc(u.t)} · ${ufF(u.uf, 0)}</option>`).join('') + '</optgroup>').join('');
-  const C = S.escCustom;
-  const custom = {dTasa: C.dTasa, dArr: C.dArr, dPlus: C.dPlus}; if (C.vac != null) custom.vacOv = C.vac;
-  const escs = ESCENARIOS.concat([{id:'cus', n:'Tu escenario', d:'Definido con los controles de abajo', ov: custom}]);
+  const EC = S.escCustom;
+  const custom = {dTasa: EC.dTasa, dArr: EC.dArr, dPlus: EC.dPlus}; if (EC.vac != null) custom.vacOv = EC.vac;
+  const escs = ESCENARIOS.slice(0, 3).concat([C().estres, {id:'cus', n:'Tu escenario', d:'Definido con los controles de abajo', ov: custom}]);
   el.innerHTML = `
   <div class="panel"><div class="panel-head"><div><h2>Compara hasta 3 unidades</h2><p class="sub">Por defecto, las 3 primeras del ranking. TIR y VAN reales a ${S.horizonte} años.</p></div></div>
     <div class="frow">${[0, 1, 2].map(i => `<div class="field"><label for="es${i}">Unidad ${i + 1}</label><select id="es${i}" data-es="${i}"><option value="">—</option>${opts(sel[i] ? sel[i].key : '')}</select></div>`).join('')}</div></div>
@@ -1548,10 +1861,10 @@ function rEscenarios(el){
   <tbody>${escs.map(e => `<tr${e.id === 'base' ? ' style="font-weight:600"' : ''}><td><b>${esc(e.n)}</b><div class="pinmo">${esc(e.d)}</div></td>${sel.map(x => { const r = evalEsc(x, e.ov); return `<td class="n">${pct(r.tir)}</td><td class="n">${flujoCell(r.flujo1 * S.uf)}</td><td class="n ${r.van >= 0 ? 'pos' : 'neg'}">${clpM(r.van * S.uf)}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>
   <div class="panel"><h2>Tu escenario</h2><p class="sub">Mueve las variables y mira la última fila de la tabla.</p>
     <div class="frow">
-      <div class="field"><label for="ecT">Cambio de tasa <output>${(C.dTasa >= 0 ? '+' : MINUS) + NF2.format(Math.abs(C.dTasa))} pp</output></label><input id="ecT" type="range" min="-1" max="2" step="0.1" value="${C.dTasa}" data-ec="dTasa"></div>
-      <div class="field"><label for="ecA">Cambio de arriendo <output>${pctS(C.dArr, 0)}</output></label><input id="ecA" type="range" min="-0.3" max="0.2" step="0.01" value="${C.dArr}" data-ec="dArr"></div>
-      <div class="field"><label for="ecV">Vacancia <output>${pct(C.vac != null ? C.vac : S.vac, 0)}</output></label><input id="ecV" type="range" min="0" max="0.25" step="0.01" value="${C.vac != null ? C.vac : S.vac}" data-ec="vac"></div>
-      <div class="field"><label for="ecP">Cambio de plusvalía <output>${(C.dPlus >= 0 ? '+' : MINUS) + NF1.format(Math.abs(C.dPlus * 100))} pp</output></label><input id="ecP" type="range" min="-0.03" max="0.03" step="0.005" value="${C.dPlus}" data-ec="dPlus"></div>
+      <div class="field"><label for="ecT">Cambio de tasa <output>${(EC.dTasa >= 0 ? '+' : MINUS) + NF2.format(Math.abs(EC.dTasa))} pp</output></label><input id="ecT" type="range" min="-1" max="2" step="0.1" value="${EC.dTasa}" data-ec="dTasa"></div>
+      <div class="field"><label for="ecA">Cambio de arriendo <output>${pctS(EC.dArr, 0)}</output></label><input id="ecA" type="range" min="-0.3" max="0.2" step="0.01" value="${EC.dArr}" data-ec="dArr"></div>
+      <div class="field"><label for="ecV">Vacancia <output>${pct(EC.vac != null ? EC.vac : S.vac, 0)}</output></label><input id="ecV" type="range" min="0" max="0.25" step="0.01" value="${EC.vac != null ? EC.vac : S.vac}" data-ec="vac"></div>
+      <div class="field"><label for="ecP">Cambio de plusvalía <output>${(EC.dPlus >= 0 ? '+' : MINUS) + NF1.format(Math.abs(EC.dPlus * 100))} pp</output></label><input id="ecP" type="range" min="-0.03" max="0.03" step="0.005" value="${EC.dPlus}" data-ec="dPlus"></div>
     </div></div>
   <div class="grid g2">
     <div class="panel"><div class="panel-head"><div><h2>TIR según tasa y plusvalía</h2><p class="sub">Azul: supera tu tasa de descuento (${NF0.format(S.desc * 100)}% real). Rojo: no la alcanza.</p></div>
@@ -1658,7 +1971,7 @@ function rSituacion(el){
       </div>
       <div class="panel memo" style="max-width:none">
         <h3>Tu diagnóstico</h3>
-        <p>El banco verá una renta de <b>${clp(R)}</b>: tu sueldo más ${clp(honLiq * S.honorPct)} líquidos de boletas. Con un dividendo de hasta ${pct(S.divRenta, 0)} te financian departamentos de hasta <b>${ufF(mpA.P, 0)}</b> ${fog ? 'con pie de 10% (FOGAES)' : 'con pie de ' + pct(S.pie, 0)}. ${mpA.P < 3195 ? 'Eso te deja en 1 dormitorio: los 2 dormitorios del sur parten en 3.195 UF.' : ''}</p>
+        <p>El banco verá una renta de <b>${clp(R)}</b>: tu sueldo más ${clp(honLiq * S.honorPct)} líquidos de boletas. Con un dividendo de hasta ${pct(S.divRenta, 0)} te financian departamentos de hasta <b>${ufF(mpA.P, 0)}</b> ${fog ? 'con pie de 10% (FOGAES)' : 'con pie de ' + pct(S.pie, 0)}. ${(() => { const dos = unidades({tip: '2D'}).map(x => x.u.uf); const m2 = dos.length ? Math.min(...dos) : Infinity; return mpA.P < m2 && isFinite(m2) ? 'Eso te deja en 1 dormitorio: los 2 dormitorios de tu zona parten en ' + ufF(m2, 0) + '.' : ''; })()}</p>
         <p>Tus ${clpM(S.ahorro)} equivalen a ${ufF(S.ahorro / S.uf, 0)}. Para el pie de ${pct(pieRef, 0)} más gastos de un 1D de 2.700 UF necesitas ${clpM(nRef)}: ahorrando ${clpM(S.ahorroMes)} al mes lo juntas en <b>${mesesTxt(mRef)}</b> (${fechaEn(mRef)}).${fog ? ' Con pie de ' + pct(S.pie, 0) + ' serían ' + mesesTxt(m20) + ' (' + fechaEn(m20) + ').' : ''}</p>
         ${hoySin.length ? `<p>La buena noticia: <b>puedes firmar hoy sin crédito de consumo</b> en ${hoySin.map(nom).join(', ')}. Se venden en blanco o en verde, así que el pie se paga en cuotas hasta la entrega y tu ahorro mensual alcanza para cubrirlo.</p>` : '<p>Hoy no hay ninguna unidad que puedas firmar sin deuda de consumo.</p>'}
         ${pronto.length ? `<p><b>En los próximos 12 meses, sólo ahorrando:</b> ${pronto.map(x => nom(x) + ' (' + fechaEn(x.pl.sinDeuda.w) + ')').join(', ')}.</p>` : ''}
@@ -1764,6 +2077,75 @@ function rSituacion(el){
   $('#siConsU', ce).addEventListener('change', e => set('sitSel', e.target.value));
 }
 
+/* ---------- Comparar ciudades ---------- */
+function rCiudades(el){
+  const ids = Object.keys(CIUDADES);
+  const glob = ranking({city: 'all', zona: 'sur', tip: S.tip});
+  const avg = (a, f) => a.length ? a.reduce((t, x) => t + f(x), 0) / a.length : NaN;
+  const filas = ids.map(id => {
+    const us = glob.filter(x => x.p.city === id);
+    const secs = Object.keys(ALL_SECT).filter(k => ALL_SECT[k].city === id && ALL_SECT[k].sur).map(sect);
+    return {id, c: CIUDADES[id], us, proys: new Set(us.map(x => x.p.id)).size,
+      ufm2: avg(us, x => x.u.uf / x.u.m2), cap: avg(us, x => x.r.capRate), tir: avg(us, x => isFinite(x.r.tir) ? x.r.tir : 0),
+      flujo: avg(us, x => x.r.flujo1 * S.uf), plus: avg(secs, s => s.plus), seg: avg(secs, s => s.seg), arr1: avg(secs, s => s.arr1),
+      hoy: us.filter(x => x.plan.sinDeuda && x.plan.sinDeuda.w === 0).length, best: us[0]};
+  });
+  const top = glob[0];
+  const segura = glob.find(x => sect(x.p.sector).seg >= 72);
+  const flujo = glob.slice().sort((a, b) => b.r.flujo1 - a.r.flujo1)[0];
+  const hoy = glob.filter(x => x.plan.sinDeuda && x.plan.sinDeuda.w === 0);
+  const ciudadDe = x => CIUDADES[x.p.city].n;
+  const pick = (tag, x, extra) => x ? `<div class="pick"><div class="tag">${esc(tag)}</div><div class="pn">${esc(x.p.n)} · ${esc(x.u.t)} <span class="muted" style="font-weight:600">· ${esc(ciudadDe(x))}</span></div><div class="small muted" style="text-align:right">#${x.rank} · ${NF0.format(x.score)} pts</div>
+    <div class="small ink2" style="grid-column:1/-1">${esc(sect(x.p.sector).n)}, seguridad ${NF0.format(sect(x.p.sector).seg)}/100. ${NF1.format(x.u.m2)} m² en ${ufF(x.u.uf, 0)}. TIR ${pct(x.r.tir)}, flujo ${clpS(x.r.flujo1 * S.uf)} al mes, cap rate ${pct(x.r.capRate)}. ${extra || ''}</div></div>` : '';
+  const viveOpts = ids.map(id => `<option value="${id}"${S.miCiudad === id ? ' selected' : ''}>${esc(CIUDADES[id].n)}</option>`).join('');
+  el.innerHTML = `
+  <div class="panel"><div class="panel-head"><div><h2>Cómo se comparan</h2><p class="sub">Sólo unidades en las zonas preferidas de cada ciudad (sur de Copiapó en Antofagasta; sectores y comunas seguras en las demás), evaluadas con tu renta, tu ahorro y tus ponderaciones del Ranking.</p></div></div>
+    <div class="filters">
+      <div class="field"><span class="lbl">Tipología</span>${segHTML('tip', [['todas','1D y 2D'],['1D','1D'],['2D','2D']], S.tip)}</div>
+      <div class="field" style="min-width:170px"><label for="cmpVive">Vivo en</label><select id="cmpVive">${viveOpts}</select></div>
+      <label class="toggle" style="align-self:center"><input id="cmpAdm" type="checkbox"${S.adminRemota ? ' checked' : ''}><span>Pagar administración (8% + IVA) donde no vivo<br><span class="muted small">Recomendado si vas a arrendar a distancia</span></span></label>
+    </div></div>
+
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ciudad</th><th class="n">Proyectos</th><th class="n">UF/m²</th><th class="n">Arriendo 1D ref.</th><th class="n">Cap rate</th><th class="n">TIR media</th><th class="n">Flujo medio</th><th class="n">Plusvalía</th><th class="n">Seguridad</th><th class="n">Firmas hoy</th><th style="min-width:200px">Mejor unidad</th></tr></thead>
+    <tbody>${filas.map(f => `<tr class="click" data-city="${f.id}" tabindex="0"><td><b>${esc(f.c.n)}</b>${f.id === S.miCiudad ? ' <span class="pill acc"><i>◆</i>Vives aquí</span>' : ''}<div class="pinmo">${esc(f.c.pref)}</div></td>
+      <td class="n">${f.proys}<div class="pinmo">${f.us.length} unid.</div></td><td class="n">${NF1.format(f.ufm2)}</td><td class="n">${clp(f.arr1)}</td><td class="n">${pct(f.cap)}</td><td class="n">${pct(f.tir)}</td><td class="n">${flujoCell(f.flujo)}</td><td class="n">${NF1.format(f.plus)}%</td><td class="n">${NF0.format(f.seg)}</td><td class="n">${f.hoy}</td>
+      <td>${f.best ? `<div class="pname">${esc(f.best.p.n)} · ${esc(f.best.u.t)}</div><div class="pinmo">${NF0.format(f.best.score)} pts · TIR ${pct(f.best.r.tir)} · ${esc(estadoPlan(f.best.plan).t)}</div>` : '<span class="muted">Sin unidades con este filtro</span>'}</td></tr>`).join('')}</tbody></table></div>
+  <p class="small muted" style="margin:0">Toca una ciudad para abrir su resumen. Seguridad: índice 0–100 estimado por sector a partir de tasas de delitos y prensa local. "Firmas hoy" cuenta unidades que puedes comprar hoy sin crédito de consumo.</p>
+
+  <div class="grid g-wide">
+    <div class="panel memo" style="max-width:none">
+      <h3>Dónde está la mejor oportunidad hoy</h3>
+      <p>Con tus ponderaciones, la mejor unidad de las cuatro ciudades es <b>${top ? esc(top.p.n) + ' ' + esc(top.u.t) + ' en ' + esc(ciudadDe(top)) : '—'}</b>. ${top ? esc(porQue(top)) : ''}</p>
+      ${hoy.length ? `<p>Puedes firmar hoy sin crédito de consumo en ${hoy.length === 1 ? '1 unidad' : hoy.length + ' unidades'}: ${hoy.slice(0, 6).map(x => '<b>' + esc(x.p.n) + ' ' + esc(x.u.t) + '</b> (' + esc(ciudadDe(x)) + ')').join(', ')}${hoy.length > 6 ? ' y otras' : ''}.</p>` : '<p>Con tu ahorro actual ninguna unidad de las cuatro ciudades se puede firmar hoy sin deuda de consumo.</p>'}
+      <div>${pick('Mejor oportunidad global', top)}${segura && segura !== top ? pick('La mejor en un sector muy seguro', segura, 'Seguridad de 72 o más sobre 100.') : ''}${flujo && flujo !== top ? pick('Mejor flujo mensual', flujo, flujo.r.flujo1 >= 0 ? 'El arriendo cubre dividendo y costos.' : 'Aun así requiere aportar cada mes.') : ''}</div>
+      <h3>Cómo leer la comparación</h3>
+      <ul class="clean small">
+        <li><b>Santiago</b> tiene más liquidez y demanda estable, pero cap rates más bajos y mucha oferta de departamentos pequeños.</li>
+        <li><b>Antofagasta e Iquique</b> pagan más arriendo por UF invertida, a cambio de depender del ciclo minero y portuario.</li>
+        <li><b>Coquimbo</b> combina la región más segura del norte con arriendo de temporada, pero con arriendos anuales más bajos.</li>
+        <li>Fuera de tu ciudad, la administración a distancia ${S.adminRemota ? 'ya está descontada (8% + IVA del arriendo)' : 'no está descontada: actívala si no podrás gestionar tú el arriendo'}.</li>
+      </ul>
+    </div>
+    <div class="panel"><h2>Mejor puntaje por ciudad</h2><p class="sub">Puntaje 0–100 de la mejor unidad, normalizado entre las cuatro ciudades.</p><div id="cmpBars"></div></div>
+  </div>
+
+  <div class="panel"><h2>Ranking nacional</h2><p class="sub">Las 15 mejores unidades de las cuatro ciudades. Es distinto del Ranking por ciudad porque aquí cada criterio se compara contra todas.</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Unidad</th><th>Ciudad</th><th style="min-width:130px">Puntaje</th><th class="n">Precio</th><th class="n">Seguridad</th><th class="n">TIR</th><th class="n">Flujo/mes</th><th class="n">Cap rate</th><th>Cuándo</th></tr></thead>
+    <tbody>${glob.slice(0, 15).map(x => `<tr class="click" data-k="${x.key}" data-c="${x.p.city}" tabindex="0"><td class="n"><b>${x.rank}</b></td><td><div class="pname">${esc(x.p.n)} · ${esc(x.u.t)}</div><div class="pinmo">${esc(x.p.inmo)} · ${esc(sect(x.p.sector).n)}</div></td><td>${esc(ciudadDe(x))}</td>
+      <td><div class="bar-track" style="height:14px"><div class="bar-fill ${x.rank === 1 ? 'em' : ''}" style="width:${x.score.toFixed(1)}%"></div></div><div class="pinmo mono">${NF0.format(x.score)} / 100</div></td>
+      <td class="n">${ufF(x.u.uf, 0)}</td><td class="n">${NF0.format(sect(x.p.sector).seg)}</td><td class="n">${pct(x.r.tir)}</td><td class="n">${flujoCell(x.r.flujo1 * S.uf)}</td><td class="n">${pct(x.r.capRate)}</td><td>${planPill(x.plan)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted" style="margin:8px 0 0">Toca una fila para simularla en su ciudad.</p></div>`;
+  bindSegs(el, (k, v) => set(k, v));
+  $('#cmpVive', el).addEventListener('change', e => set('miCiudad', e.target.value));
+  $('#cmpAdm', el).addEventListener('change', e => set('adminRemota', e.target.checked));
+  $$('tr[data-city]', el).forEach(tr => { const f = () => cambiarCiudad(tr.dataset.city, 'resumen'); tr.addEventListener('click', f); tr.addEventListener('keydown', e => { if (e.key === 'Enter') f(); }); });
+  $$('tr[data-k]', el).forEach(tr => { const f = () => { setCity(tr.dataset.c); S.provSel = null; S.escSel = []; S.escFocus = null; S.sitSel = null; S.sim = tr.dataset.k; S.simOv = {}; save(); go('simulador'); }; tr.addEventListener('click', f); tr.addEventListener('keydown', e => { if (e.key === 'Enter') f(); }); });
+  const rows = filas.filter(f => f.best).sort((a, b) => b.best.score - a.best.score).map((f, i) => ({l: f.c.n, s: f.best.p.n + ' ' + f.best.u.t, v: f.best.score, em: i === 0,
+    tip: `<div class="tv">${NF0.format(f.best.score)} puntos</div><div class="tl">${esc(f.best.p.n)} ${esc(f.best.u.t)} · ${esc(f.c.n)}</div><div class="tl">TIR ${pct(f.best.r.tir)} · seguridad ${NF0.format(sect(f.best.p.sector).seg)}</div>`}));
+  $('#cmpBars', el).innerHTML = rows.length ? barsHTML(rows, v => NF0.format(v)) : '<p class="muted">Sin unidades con este filtro.</p>';
+  bindBarTips($('#cmpBars', el));
+}
+
 /* ---------- Asesoría ---------- */
 function rAsesoria(el){
   const rk = ranking();
@@ -1784,7 +2166,7 @@ function rAsesoria(el){
   el.innerHTML = `<div class="grid g-wide">
   <div class="panel memo">
     <h3>Recomendación de hoy</h3>
-    <p>Con pie de ${NF0.format(S.pie * 100)}%, crédito a ${S.plazo} años con ${S.banco === 'mejor' ? 'la mejor tasa disponible' : esc(BANCOS.find(b => b.id === S.banco).n)} y venta a ${S.horizonte} años, la mejor opción al sur de calle Copiapó es <b>${esc(top.p.n)} ${esc(top.u.t)}</b>. ${esc(porQue(top))}</p>
+    <p>Con pie de ${NF0.format(S.pie * 100)}%, crédito a ${S.plazo} años con ${S.banco === 'mejor' ? 'la mejor tasa disponible' : esc(BANCOS.find(b => b.id === S.banco).n)} y venta a ${S.horizonte} años, la mejor opción ${esc(C().prefEn)} es <b>${esc(top.p.n)} ${esc(top.u.t)}</b>. ${esc(porQue(top))}</p>
     <p>${pos} de ${rk.length} unidades se pagan solas desde el primer mes. En ${capVsTasa} de ${rk.length} el cap rate es menor que la tasa del crédito: ahí la ganancia viene de la plusvalía y de la deuda que amortiza el arrendatario, no del flujo.</p>
     <p>Tu realidad hoy: el banco ve una renta de ${clp(rentaComp())}, tienes ${clpM(S.ahorro)} y ahorras ${clpM(S.ahorroMes)} al mes. ${pres.length} de ${rk.length} unidades tienen un camino viable${cerca ? '. La que puedes concretar antes sin deuda de consumo es <b>' + esc(cerca.p.n) + ' ' + esc(cerca.u.t) + '</b>: ' + (cerca.plan.sinDeuda.w === 0 ? 'firmas hoy' : 'firmas en ' + fechaEn(cerca.plan.sinDeuda.w)) + ' y recibes en ' + fechaEn(cerca.plan.sinDeuda.llaves) + ' (' + esc(caminoCorto(cerca.plan.sinDeuda)) + ')' : ''}. El detalle está en Mi situación.</p>
     <div>${pick('Mejor opción global', top)}${pick('Mejor flujo mensual', flujo, flujo.r.flujo1 >= 0 ? 'El arriendo cubre el dividendo y todos los costos.' : 'Incluso la mejor requiere aportar cada mes.')}${pick('Mayor potencial de plusvalía', plus, 'Sector con ' + NF1.format(sect(plus.p.sector).plus) + '% real anual estimado.')}${pick('Menor capital inicial', barato, 'Inversión inicial de ' + clpM(barato.r.invIni * S.uf) + ' incluyendo gastos.')}${best1 && best1 !== top ? pick('Mejor 1 dormitorio', best1) : ''}${best2 && best2 !== top ? pick('Mejor 2 dormitorios', best2) : ''}</div>
@@ -1793,25 +2175,23 @@ function rAsesoria(el){
     <h3>Plan de acción</h3>
     <ol class="steps">
       <li><div><b>Preaprueba tu crédito en tres bancos.</b> Pide cotización formal con CAE a BancoEstado, Santander y BCI (o Itaú). Entrega la misma información a todos y compara dividendo y seguros.</div></li>
-      <li><div><b>Confirma qué incluye el precio.</b> Pregunta por estacionamiento, bodega, terminaciones y gastos comunes reales del edificio. En Trilogía Sur y Vista Llacolén el estacionamiento se paga aparte.</div></li>
-      <li><div><b>Negocia.</b> Biaggini publica descuentos de 12% a 17%, hay bonos pie y el stock final de edificios terminados suele tener margen. Pide el descuento por escrito en la cotización.</div></li>
+      <li><div><b>Confirma qué incluye el precio.</b> Pregunta por estacionamiento, bodega, terminaciones y gastos comunes reales del edificio. ${(() => { const ap = PROYECTOS.filter(q => q.estac && q.estac.incl === false).map(q => esc(q.n)); return ap.length ? 'En ' + ap.join(' y ') + ' el estacionamiento se paga aparte.' : ''; })()}</div></li>
+      <li><div><b>Negocia.</b> Hay inmobiliarias con descuentos de lanzamiento de 12% a 17% y bonos pie, y el stock final de edificios terminados suele tener margen. Pide el descuento por escrito en la cotización.</div></li>
       <li><div><b>Valida el arriendo.</b> Busca 5 avisos de departamentos similares en el mismo edificio o cuadra. Si el arriendo real es 10% menor que el estimado, revisa el escenario pesimista.</div></li>
       <li><div><b>Protege la compra en verde.</b> Exige que el pie quede respaldado por póliza de seguro o boleta de garantía, revisa la fecha de recepción municipal y la trayectoria de la inmobiliaria.</div></li>
       <li><div><b>Arma un fondo de reserva.</b> Guarda al menos 6 dividendos para vacancia, reparaciones o un alza de gastos comunes.</div></li>
     </ol>
     <h3>Riesgos que no se ven en la planilla</h3>
     <ul class="clean">
-      <li><b>Ciclo minero.</b> Cerca del 70% de las operaciones viene de la minería y sus proveedores. En 2015–2016 los arriendos cayeron fuerte. Revisa el escenario "Ciclo minero a la baja".</li>
-      <li><b>Borde costero.</b> Los edificios de primera línea en Av. Jaime Guzmán y Av. Grecia están en zona de evacuación por tsunami. Revisa la póliza de sismo y el plan de evacuación del edificio.</li>
-      <li><b>Salinidad y camanchaca.</b> Frente al mar la mantención de fachadas, ventanas y equipos es más cara. Pregunta por el fondo de reserva del condominio.</li>
+      ${C().riesgos.map(r => '<li><b>' + esc(r[0]) + '.</b> ' + esc(r[1]) + '</li>').join('')}
       <li><b>Subsidios.</b> El subsidio a la tasa y FOGAES son para la primera vivienda. Si compras con subsidio DS19, rigen prohibiciones de venta; para un departamento de inversión evalúa sin subsidio.</li>
       <li><b>Datos de este informe.</b> Precios "desde" de portales a ${esc(FECHA_DATOS)}. Las unidades marcadas como Verificar o Dato parcial necesitan confirmación en sala de ventas.</li>
     </ul>
   </div>
   <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-    <div class="panel"><h2>Estudio de mercado</h2><p class="sub">Antofagasta, ${esc(FECHA_DATOS)}.</p>
+    <div class="panel"><h2>Estudio de mercado</h2><p class="sub">${esc(C().n)}, ${esc(FECHA_DATOS)}.</p>
       ${MERCADO.map(m => `<div class="fact"><div class="fv">${esc(m.v)}</div><div><b>${esc(m.t)}</b></div><div class="fd">${esc(m.d)}</div><a href="${esc(m.f)}" target="_blank" rel="noopener">Fuente</a></div>`).join('')}
-      <div class="fact"><div class="fv">2.100–3.100 · 4.800–6.350 · 7.500–11.900 UF</div><div><b>Rangos de precio por subzona</b></div><div class="fd">Inversión (Antilhue, Coviefi Alto) · medio (Cerro Paranal, Llacolén) · premium (Av. Brasil, Jardines del Sur).</div></div>
+      ${S.city !== 'antofagasta' ? '' : `<div class="fact"><div class="fv">2.100–3.100 · 4.800–6.350 · 7.500–11.900 UF</div><div><b>Rangos de precio por subzona</b></div><div class="fd">Inversión (Antilhue, Coviefi Alto) · medio (Cerro Paranal, Llacolén) · premium (Av. Brasil, Jardines del Sur).</div></div>`}
     </div>
     <div class="panel"><h2>Indicadores, en simple</h2>
       <ul class="clean small">
@@ -1851,9 +2231,9 @@ function rSupuestos(el){
       ${f('rentGrowth', 'Alza real del arriendo (% anual)', S.rentGrowth, 0.1, 'Sobre la UF', 100)}
     </div>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="supReset" type="button">Restablecer todos los supuestos</button></div></div>
-  <div class="panel"><h2>Supuestos por sector</h2><p class="sub">Arriendo de referencia sin gastos comunes para un 1D1B de 38 m² y un 2D2B de 60 m². Se ajusta por superficie con elasticidad 0,45 (un depto 20% más grande arrienda cerca de 9% más).</p>
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sector</th><th>Zona</th><th class="n">Arriendo 1D $</th><th class="n">Arriendo 2D $</th><th class="n">GC $/m²</th><th class="n">Plusvalía % real</th></tr></thead>
-    <tbody>${secIds.map(id => { const s = sect(id); return `<tr><td><b>${esc(s.n)}</b></td><td>${s.sur ? 'Sur' : 'Norte'}</td>${['arr1', 'arr2', 'gc', 'plus'].map(k => `<td class="n" style="min-width:120px"><input type="number" step="${k === 'plus' ? 0.1 : k === 'gc' ? 50 : 10000}" value="${s[k]}" data-sec="${id}" data-k="${k}" aria-label="${esc(s.n)} ${k}"></td>`).join('')}</tr>`; }).join('')}</tbody></table></div></div>
+  <div class="panel"><h2>Supuestos por sector · ${esc(C().n)}</h2><p class="sub">Arriendo de referencia sin gastos comunes para un 1D1B de 38 m² y un 2D2B de 60 m². Se ajusta por superficie con elasticidad 0,45 (un depto 20% más grande arrienda cerca de 9% más).</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sector</th><th>Zona</th><th class="n">Arriendo 1D $</th><th class="n">Arriendo 2D $</th><th class="n">GC $/m²</th><th class="n">Plusvalía % real</th><th class="n">Seguridad 0–100</th></tr></thead>
+    <tbody>${secIds.map(id => { const s = sect(id); return `<tr><td><b>${esc(s.n)}</b></td><td>${s.sur ? esc(C().pref) : esc(C().otra)}</td>${['arr1', 'arr2', 'gc', 'plus', 'seg'].map(k => `<td class="n" style="min-width:110px"><input type="number" step="${k === 'plus' ? 0.1 : k === 'seg' ? 1 : k === 'gc' ? 50 : 10000}" value="${s[k]}" data-sec="${id}" data-k="${k}" aria-label="${esc(s.n)} ${k}"></td>`).join('')}</tr>`; }).join('')}</tbody></table></div></div>
   <div class="grid g2">
     <div class="panel"><h2>Cómo se calcula</h2>
       <ul class="clean small">
@@ -1892,7 +2272,7 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 const h0 = (location.hash || '').replace('#', '');
 go(VIEWS[h0] ? h0 : 'resumen', false);
 window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (VIEWS[h] && h !== current) go(h, false); });
-window.RadarSur = {evaluar, ranking, planes, rentaComp, PROYECTOS, BANCOS, SECTORES, S: () => S};
+window.RadarSur = {evaluar, ranking, planes, rentaComp, ALL_PROY, ALL_SECT, CIUDADES, BANCOS, setCity, S: () => S};
 })();
 </script>
 
