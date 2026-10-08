@@ -11,13 +11,13 @@
   "DFTX",
   "DY",
   "FRVO",
+  "GRML",
   "IONQ",
   "IREN",
   "MDCX",
   "META",
   "MRVL",
   "MSFT",
-  "MSTR",
   "MU",
   "NKTX",
   "NVDA",
@@ -810,7 +810,8 @@
   "ALM",
   "LNC",
   "CNK",
-  "FRSH"
+  "FRSH",
+  "GRML"
  ],
  "etfs": [
   "SPY",
