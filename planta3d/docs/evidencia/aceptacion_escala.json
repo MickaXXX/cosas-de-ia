@@ -1,0 +1,603 @@
+{
+ "project": "22bcffab-08de-480e-901f-98e9df8c22a0",
+ "sector": "a880c7dd-28f8-42cd-a798-77ba02af937c",
+ "job": "5d439b53-f4ab-4e1b-94aa-1363725e52c8",
+ "model": "d6177fe7-2d6d-4b5a-bbd8-b17d1214ff2e",
+ "job_seconds": 910.6209888458252,
+ "camera_registration": {
+  "pairs": 48,
+  "scale": 0.9830752090016657,
+  "rms_m": 0.0003154107638174888
+ },
+ "segments": [
+  {
+   "role": "ref",
+   "label": "Ancho del skid (caras ±X)",
+   "true_m": 2.0,
+   "status": "registrada"
+  },
+  {
+   "role": "check",
+   "label": "Fondo del skid (caras ±Z)",
+   "true_m": 1.2,
+   "status": "registrada"
+  },
+  {
+   "role": "check",
+   "label": "Techo del skid a piso",
+   "true_m": 1.6401219466856725,
+   "status": "registrada"
+  },
+  {
+   "role": "check",
+   "label": "Ancho del motor (caras ±X)",
+   "true_m": 0.7999999999999998,
+   "status": "registrada"
+  },
+  {
+   "role": "check",
+   "label": "Skid (cara +X) a motor (cara −X)",
+   "true_m": 1.118033988749895,
+   "status": "registrada"
+  },
+  {
+   "role": "check",
+   "label": "Tapa del estanque a piso",
+   "true_m": 1.9313207915827966,
+   "status": "registrada"
+  },
+  {
+   "role": "check",
+   "label": "Muro posterior a cara −Z del skid",
+   "true_m": 4.026164427839479,
+   "status": "registrada"
+  }
+ ],
+ "calibration": {
+  "scale_state": "calibrated_unverified",
+  "scale_factor": 0.9830225541017781,
+  "method": "Factor uniforme con una referencia (D/d)",
+  "references": [
+   {
+    "id": "b815e617-a4c9-4960-938e-aa2954a59032",
+    "label": "Ancho del skid (caras ±X)",
+    "point_a": [
+     -1.7819633039781384,
+     1.3140852359040562,
+     -0.923489297446324
+    ],
+    "point_b": [
+     0.0010751111779302436,
+     1.2659801899291943,
+     0.055192610784450064
+    ],
+    "real_distance": 2.0,
+    "unit": "m",
+    "real_distance_m": 2.0,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (-2.0, 0.5, 0.0) y (0.0, 0.5, 0.0)",
+    "created_at": "2026-10-09T03:17:02.713800Z",
+    "model_distance": 2.0345413151048906,
+    "scaled_distance_m": 2.0,
+    "abs_error_m": 0.0,
+    "rel_error": 0.0,
+    "within_tolerance": null
+   }
+  ],
+  "checks": [
+   {
+    "id": "2d4cf137-d87e-46ab-bedc-55d83dc80e97",
+    "label": "Fondo del skid (caras ±Z)",
+    "point_a": [
+     -1.1842224738291698,
+     1.263551320470896,
+     0.10019323082502024
+    ],
+    "point_b": [
+     -0.5963749130878649,
+     1.3164993388518287,
+     -0.968190385348346
+    ],
+    "real_distance": 1.2,
+    "unit": "m",
+    "real_distance_m": 1.2,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (-1.0, 0.5, -0.6) y (-1.0, 0.5, 0.6)",
+    "created_at": "2026-10-09T03:17:03.126180Z",
+    "model_distance": 1.2205784688530468,
+    "scaled_distance_m": 1.1998561639335596,
+    "abs_error_m": -0.000143836066440306,
+    "rel_error": -0.00011986338870025501,
+    "within_tolerance": true
+   },
+   {
+    "id": "e7f64d62-69e0-4572-8ef7-4fe0abf15754",
+    "label": "Techo del skid a piso",
+    "point_a": [
+     -0.8901821150785233,
+     0.7817622876707062,
+     -0.4591935670993367
+    ],
+    "point_b": [
+     -0.25347898017844,
+     1.8551957567364283,
+     -1.5664262369621411
+    ],
+    "real_distance": 1.6401219466856725,
+    "unit": "m",
+    "real_distance_m": 1.6401219466856725,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (-1.0, 1.0, 0.0) y (-1.0, 0.0, 1.3)",
+    "created_at": "2026-10-09T03:17:03.481070Z",
+    "model_distance": 1.6684167584010832,
+    "scaled_distance_m": 1.640091303149642,
+    "abs_error_m": -3.064353603043912e-05,
+    "rel_error": -1.8683693668244e-05,
+    "within_tolerance": true
+   },
+   {
+    "id": "6c403e46-ff52-4c75-a160-e60ec603c0bf",
+    "label": "Ancho del motor (caras ±X)",
+    "point_a": [
+     1.3737016943824192,
+     1.4780164548284476,
+     -0.10874816277183025
+    ],
+    "point_b": [
+     2.0867717958666616,
+     1.4587783555684288,
+     0.2826448670647289
+    ],
+    "real_distance": 0.7999999999999998,
+    "unit": "m",
+    "real_distance_m": 0.7999999999999998,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (1.1, 0.3, 0.8) y (1.9, 0.3, 0.8)",
+    "created_at": "2026-10-09T03:17:03.824201Z",
+    "model_distance": 0.8136507714606604,
+    "scaled_distance_m": 0.7998370595081405,
+    "abs_error_m": -0.00016294049185927584,
+    "rel_error": -0.00020367561482409485,
+    "within_tolerance": true
+   },
+   {
+    "id": "6c860369-1c98-4c21-99ad-5e10f5e7ebc3",
+    "label": "Skid (cara +X) a motor (cara −X)",
+    "point_a": [
+     0.27028945584073655,
+     1.4934498041886675,
+     -0.42457384878297516
+    ],
+    "point_b": [
+     1.3491803089762895,
+     1.4758108456108683,
+     -0.06424355985929231
+    ],
+    "real_distance": 1.118033988749895,
+    "unit": "m",
+    "real_distance_m": 1.118033988749895,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (0.0, 0.3, 0.55) y (1.1, 0.3, 0.75)",
+    "created_at": "2026-10-09T03:17:04.192426Z",
+    "model_distance": 1.1376091257347998,
+    "scaled_distance_m": 1.1182954283493136,
+    "abs_error_m": 0.0002614395994187113,
+    "rel_error": 0.0002338386865242212,
+    "within_tolerance": true
+   },
+   {
+    "id": "f4ec4ff8-10c0-4a1f-83ee-577ba1193942",
+    "label": "Tapa del estanque a piso",
+    "point_a": [
+     0.1893582839021048,
+     -0.12748133152472668,
+     2.1815511818716335
+    ],
+    "point_b": [
+     0.5319850962127549,
+     1.6966503040734824,
+     1.6469884932004302
+    ],
+    "real_distance": 1.9313207915827966,
+    "unit": "m",
+    "real_distance_m": 1.9313207915827966,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (1.2, 1.8, -1.8) y (1.2, 0.0, -1.1)",
+    "created_at": "2026-10-09T03:17:04.544345Z",
+    "model_distance": 1.9314778343599341,
+    "scaled_distance_m": 1.8986862739234736,
+    "abs_error_m": -0.032634517659323015,
+    "rel_error": -0.016897512728881094,
+    "within_tolerance": false
+   },
+   {
+    "id": "e9038d95-d7bb-4d57-8c89-60c0581a6483",
+    "label": "Muro posterior a cara −Z del skid",
+    "point_a": [
+     -3.095228237572483,
+     0.07543546125950686,
+     3.5234120439372516
+    ],
+    "point_b": [
+     -1.1842224738291698,
+     1.263551320470896,
+     0.10019323082502024
+    ],
+    "real_distance": 4.026164427839479,
+    "unit": "m",
+    "real_distance_m": 4.026164427839479,
+    "source": "Verdad de la escena sintética (dimensión exacta del render)",
+    "endpoints_description": "Intersección del rayo normal con la malla en (-1.0, 1.5, -4.5) y (-1.0, 0.5, -0.6)",
+    "created_at": "2026-10-09T03:17:04.889508Z",
+    "model_distance": 4.096582644890164,
+    "scaled_distance_m": 4.0270331346689465,
+    "abs_error_m": 0.0008687068294674916,
+    "rel_error": 0.00021576536304893467,
+    "within_tolerance": true
+   }
+  ],
+  "n_checks": 6,
+  "min_checks_required": 3,
+  "tolerance_abs_m": 0.03,
+  "tolerance_rel": 0.03,
+  "tolerance_purpose": "Ensayo controlado sintético (no es terreno)",
+  "max_abs_error_m": 0.032634517659323015,
+  "max_rel_error": 0.016897512728881094,
+  "rms_error_m": 0.013328434032302083,
+  "notice": "Calibrado sin verificar: las medidas en metros son estimaciones (hay comprobaciones fuera de tolerancia)."
+ },
+ "job_report": {
+  "generated_at": "2026-10-09T03:16:58.203628+00:00",
+  "photos": {
+   "sector_received": 48,
+   "sector_rejected": 0,
+   "sector_duplicates": 0,
+   "sector_excluded": 0,
+   "job_input": 48,
+   "registered_presented": 48,
+   "unregistered": [],
+   "in_other_components": []
+  },
+  "components": [
+   {
+    "index": 0,
+    "registered_images": 48,
+    "points3D": 57432,
+    "mean_reprojection_error_px": 0.28232492646166724
+   }
+  ],
+  "presented_component": 0,
+  "reprojection_error_px": 0.28232492646166724,
+  "working_resolution_max_side": 1600,
+  "profile": "rapido",
+  "intrinsics_assumptions": [],
+  "dense_points": 1200470,
+  "mesh_master": {
+   "master_vertices": 519107,
+   "master_faces": 1037994
+  },
+  "web_model": {
+   "triangles": 599996,
+   "vertices": 398128,
+   "bytes": 23448900,
+   "textures": [
+    {
+     "size": [
+      4096,
+      4096
+     ],
+     "mime": "image/jpeg"
+    },
+    {
+     "size": [
+      2816,
+      2816
+     ],
+     "mime": "image/jpeg"
+    }
+   ],
+   "decimate_ratio": 0.5780380233411754,
+   "budget": {
+    "max_triangles": 600000,
+    "target_mb": 50.0,
+    "note": "Objetivos de ensayo; medir en el dispositivo objetivo."
+   }
+  },
+  "texture_check": {
+   "status": "concluyente",
+   "samples": 3000,
+   "median_abs_diff_v_origin_top": 55.0,
+   "median_abs_diff_v_origin_bottom": 10.0,
+   "flip_v": true,
+   "ratio": 5.5,
+   "method": "color atlas (centroide UV) vs. foto más frontal (proyección COLMAP sin distorsión), mediana"
+  },
+  "unobserved_area_fraction": 0.0001149222172188927,
+  "unobserved_area_method": "Área de caras con el color de relleno de TextureMesh (sin vista asignada). No es una medida de cobertura del sector.",
+  "coverage": "No calculada: esta versión no dispone de un método validado de cobertura del sector.",
+  "stages": [
+   {
+    "name": "preprocess",
+    "label": "Preprocesamiento y perfil",
+    "status": "done",
+    "started_at": "2026-10-09T03:01:54.898840+00:00",
+    "seconds": 1.65,
+    "commands": [],
+    "max_rss_mb": null,
+    "finished_at": "2026-10-09T03:01:56.606773+00:00"
+   },
+   {
+    "name": "features",
+    "label": "Extracción de características",
+    "status": "done",
+    "started_at": "2026-10-09T03:01:56.620979+00:00",
+    "seconds": 42.3,
+    "commands": [
+     {
+      "args": [
+       "/home/user/cosas-de-ia/planta3d/backend/.venv/bin/python",
+       "-m",
+       "app.engine.colmap_stage",
+       "features",
+       "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/summaries/features.config.json"
+      ],
+      "exit_code": 0,
+      "seconds": 42.3,
+      "max_rss_mb": 2306.0,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/features.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/features.stderr.log"
+     }
+    ],
+    "max_rss_mb": 2306.0,
+    "finished_at": "2026-10-09T03:02:39.014494+00:00"
+   },
+   {
+    "name": "matching",
+    "label": "Correspondencia de características",
+    "status": "done",
+    "started_at": "2026-10-09T03:02:39.024098+00:00",
+    "seconds": 89.0,
+    "commands": [
+     {
+      "args": [
+       "/home/user/cosas-de-ia/planta3d/backend/.venv/bin/python",
+       "-m",
+       "app.engine.colmap_stage",
+       "matching",
+       "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/summaries/matching.config.json"
+      ],
+      "exit_code": 0,
+      "seconds": 88.95,
+      "max_rss_mb": 396.7,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/matching.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/matching.stderr.log"
+     }
+    ],
+    "max_rss_mb": 396.7,
+    "finished_at": "2026-10-09T03:04:08.127458+00:00"
+   },
+   {
+    "name": "sfm",
+    "label": "SfM: cámaras y puntos",
+    "status": "done",
+    "started_at": "2026-10-09T03:04:08.136369+00:00",
+    "seconds": 74.12,
+    "commands": [
+     {
+      "args": [
+       "/home/user/cosas-de-ia/planta3d/backend/.venv/bin/python",
+       "-m",
+       "app.engine.colmap_stage",
+       "mapping",
+       "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/summaries/mapping.config.json"
+      ],
+      "exit_code": 0,
+      "seconds": 74.07,
+      "max_rss_mb": 374.6,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/mapping.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/mapping.stderr.log"
+     }
+    ],
+    "max_rss_mb": 374.6,
+    "finished_at": "2026-10-09T03:05:22.279094+00:00"
+   },
+   {
+    "name": "review",
+    "label": "Revisión de registro y componentes",
+    "status": "done",
+    "started_at": "2026-10-09T03:05:22.289969+00:00",
+    "seconds": 0.0,
+    "commands": [],
+    "max_rss_mb": null,
+    "finished_at": "2026-10-09T03:05:22.295526+00:00"
+   },
+   {
+    "name": "undistort",
+    "label": "Preparación para reconstrucción densa",
+    "status": "done",
+    "started_at": "2026-10-09T03:05:22.302667+00:00",
+    "seconds": 4.03,
+    "commands": [
+     {
+      "args": [
+       "/home/user/cosas-de-ia/planta3d/backend/.venv/bin/python",
+       "-m",
+       "app.engine.colmap_stage",
+       "undistort",
+       "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/summaries/undistort.config.json"
+      ],
+      "exit_code": 0,
+      "seconds": 4.03,
+      "max_rss_mb": 159.1,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/undistort.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/undistort.stderr.log"
+     }
+    ],
+    "max_rss_mb": 159.1,
+    "finished_at": "2026-10-09T03:05:26.453751+00:00"
+   },
+   {
+    "name": "densify",
+    "label": "Profundidad multivista y fusión",
+    "status": "done",
+    "started_at": "2026-10-09T03:05:26.462600+00:00",
+    "seconds": 493.23,
+    "commands": [
+     {
+      "args": [
+       "/opt/openmvs/bin/OpenMVS/InterfaceCOLMAP",
+       "-i",
+       ".",
+       "-o",
+       "scene.mvs",
+       "--image-folder",
+       "images",
+       "--process-priority",
+       "-1"
+      ],
+      "exit_code": 0,
+      "seconds": 0.27,
+      "max_rss_mb": 120.3,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/openmvs_import.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/openmvs_import.stderr.log"
+     },
+     {
+      "args": [
+       "/opt/openmvs/bin/OpenMVS/DensifyPointCloud",
+       "-i",
+       "scene.mvs",
+       "--resolution-level",
+       "1",
+       "--max-resolution",
+       "1600",
+       "--min-resolution",
+       "640",
+       "--process-priority",
+       "-1"
+      ],
+      "exit_code": 0,
+      "seconds": 475.22,
+      "max_rss_mb": 868.2,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/densify.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/densify.stderr.log"
+     }
+    ],
+    "max_rss_mb": 868.2,
+    "finished_at": "2026-10-09T03:13:39.787426+00:00"
+   },
+   {
+    "name": "mesh",
+    "label": "Construcción de malla",
+    "status": "done",
+    "started_at": "2026-10-09T03:13:39.804869+00:00",
+    "seconds": 111.61,
+    "commands": [
+     {
+      "args": [
+       "/opt/openmvs/bin/OpenMVS/ReconstructMesh",
+       "-i",
+       "scene_dense.mvs",
+       "-o",
+       "mesh_master.ply",
+       "--close-holes",
+       "0",
+       "--process-priority",
+       "-1"
+      ],
+      "exit_code": 0,
+      "seconds": 109.31,
+      "max_rss_mb": 1856.7,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/mesh.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/mesh.stderr.log"
+     }
+    ],
+    "max_rss_mb": 1856.7,
+    "finished_at": "2026-10-09T03:15:31.439652+00:00"
+   },
+   {
+    "name": "texture",
+    "label": "Simplificación y texturizado",
+    "status": "done",
+    "started_at": "2026-10-09T03:15:31.446832+00:00",
+    "seconds": 71.28,
+    "commands": [
+     {
+      "args": [
+       "/opt/openmvs/bin/OpenMVS/TextureMesh",
+       "-i",
+       "scene_dense.mvs",
+       "-m",
+       "mesh_master.ply",
+       "-o",
+       "textured.mvs",
+       "--export-type",
+       "ply",
+       "--decimate",
+       "0.578038",
+       "--close-holes",
+       "0",
+       "--resolution-level",
+       "0",
+       "--global-seam-leveling",
+       "0",
+       "--local-seam-leveling",
+       "0",
+       "--texture-size-multiple",
+       "256",
+       "--max-texture-size",
+       "4096",
+       "--process-priority",
+       "-1"
+      ],
+      "exit_code": 0,
+      "seconds": 71.28,
+      "max_rss_mb": 1309.3,
+      "stdout": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/texture.stdout.log",
+      "stderr": "/home/user/work/p3d-data/jobs/5d439b53-f4ab-4e1b-94aa-1363725e52c8/logs/texture.stderr.log"
+     }
+    ],
+    "max_rss_mb": 1309.3,
+    "finished_at": "2026-10-09T03:16:42.754009+00:00"
+   },
+   {
+    "name": "convert",
+    "label": "Verificación UV y conversión a GLB",
+    "status": "done",
+    "started_at": "2026-10-09T03:16:42.766221+00:00",
+    "seconds": 12.87,
+    "commands": [],
+    "max_rss_mb": null,
+    "finished_at": "2026-10-09T03:16:55.658190+00:00"
+   }
+  ],
+  "hardware": {
+   "os": "Linux 6.18.44-fc-v80",
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "cpu_count": 4,
+   "ram_gb": 15.7,
+   "gpu": "ninguna detectada",
+   "python": "3.13.16"
+  },
+  "engine": {
+   "colmap": {
+    "version": "4.2.1",
+    "binding": "pycolmap",
+    "cuda": false
+   },
+   "openmvs": {
+    "bin_dir": "/opt/openmvs/bin/OpenMVS",
+    "version": "OpenMVS 2.4.0",
+    "cuda": false
+   },
+   "matching": "exhaustiva",
+   "seed": 1
+  },
+  "alignment": {
+   "up_consistency": 0.9442032972238784,
+   "source": "Estimada: «arriba» desde la orientación de las cámaras; ejes horizontales por PCA; suelo en el percentil 1 de altura. Ajustable por la persona."
+  },
+  "calibration": "Sin calibrar: la escala del modelo es arbitraria hasta registrar una referencia.",
+  "warnings": [],
+  "camera_poses": 48
+ }
+}

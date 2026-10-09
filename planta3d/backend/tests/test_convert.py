@@ -5,8 +5,8 @@ import struct
 import numpy as np
 import pytest
 from PIL import Image
-from plyfile import PlyData, PlyElement
 
+from app.engine.ply import write_ply
 from app.engine.convert import (
     ConversionError,
     _accessor_array,
@@ -33,20 +33,15 @@ def _atlas(path):
 
 def _ply(tmp):
     _atlas(tmp / "tex0.png")
-    verts = np.array([(0, 0, 0), (2, 0, 0), (2, 3, 0), (0, 3, 0), (5, -1, 7)],
-                     dtype=[("x", "f4"), ("y", "f4"), ("z", "f4")])
+    V = np.array([(0, 0, 0), (2, 0, 0), (2, 3, 0), (0, 3, 0), (5, -1, 7)], np.float32)
+    verts = np.zeros(len(V), dtype=[("x", "f4"), ("y", "f4"), ("z", "f4")])
+    verts["x"], verts["y"], verts["z"] = V[:, 0], V[:, 1], V[:, 2]
     # Cada cara se mapea entera a un cuadrante (UV en convención abajo-izquierda).
     q = {"abajo_izq": (0.25, 0.25), "abajo_der": (0.75, 0.25), "arriba_izq": (0.25, 0.75), "arriba_der": (0.75, 0.75)}
     faces_def = [((0, 1, 2), "abajo_izq"), ((0, 2, 3), "arriba_der"), ((1, 4, 2), "abajo_der"), ((3, 2, 4), "arriba_izq")]
-    faces = np.empty(len(faces_def), dtype=[("vertex_indices", "O"), ("texcoord", "O")])
-    for i, (idx, quad) in enumerate(faces_def):
-        u, v = q[quad]
-        faces[i] = (np.array(idx, np.int32), np.array([u - .1, v - .1, u + .1, v - .1, u, v + .1], np.float32))
-    el_v = PlyElement.describe(verts, "vertex")
-    el_f = PlyElement.describe(faces, "face", val_types={"vertex_indices": "u4", "texcoord": "f4"},
-                               len_types={"vertex_indices": "u1", "texcoord": "u1"})
-    ply = PlyData([el_v, el_f], text=False, comments=["TextureFile tex0.png"])
-    ply.write(str(tmp / "m.ply"))
+    F = np.array([f for f, _ in faces_def])
+    UV = np.array([[q[k][0] - .1, q[k][1] - .1, q[k][0] + .1, q[k][1] - .1, q[k][0], q[k][1] + .1] for _, k in faces_def])
+    write_ply(tmp / "m.ply", V, F, UV, comments=["TextureFile tex0.png"])
     return tmp / "m.ply", faces_def, verts
 
 

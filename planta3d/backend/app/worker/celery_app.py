@@ -20,6 +20,19 @@ celery.conf.update(
 
 @worker_ready.connect
 def _recover(**_):
+    import threading
+    import time
+
+    from ..engine.capabilities import WORKER_CAPS_TTL, publish_worker_capabilities
     from .tasks import recover_orphans
 
+    def beat():
+        while True:
+            try:
+                publish_worker_capabilities()
+            except Exception:  # noqa: BLE001
+                pass
+            time.sleep(WORKER_CAPS_TTL / 3)
+
+    threading.Thread(target=beat, daemon=True, name="planta3d-caps").start()
     recover_orphans()

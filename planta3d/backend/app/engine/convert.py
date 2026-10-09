@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
-from plyfile import PlyData
+from .ply import PlyError, read_ply
 
 GLB_MAGIC = 0x46546C67
 CHUNK_JSON = 0x4E4F534A
@@ -41,26 +41,28 @@ class TexturedMesh:
 
 
 def read_textured_ply(path: Path) -> TexturedMesh:
-    ply = PlyData.read(str(path))
-    textures = [path.parent / c.split(" ", 1)[1].strip() for c in ply.comments if c.startswith("TextureFile ")]
-    v = ply["vertex"].data
+    try:
+        h, data = read_ply(path)
+    except PlyError as e:
+        raise ConversionError(f"PLY inválido: {e}")
+    textures = [path.parent / c.split(" ", 1)[1].strip() for c in h.comments if c.startswith("TextureFile ")]
+    v = data.get("vertex")
+    f = data.get("face")
+    if v is None or f is None:
+        raise ConversionError("El PLY no contiene vértices y caras")
     positions = np.stack([v["x"], v["y"], v["z"]], axis=1).astype(np.float32)
-    fdata = ply["face"].data
-    names = fdata.dtype.names
-    idx_name = "vertex_indices" if "vertex_indices" in names else "vertex_index"
-    faces_list = fdata[idx_name]
-    lens = np.fromiter((len(f) for f in faces_list), dtype=np.int64, count=len(faces_list))
-    if len(lens) and not np.all(lens == 3):
+    idx_name = "vertex_indices" if "vertex_indices" in f else "vertex_index"
+    faces = np.asarray(f[idx_name])
+    if faces.ndim != 2 or (len(faces) and faces.shape[1] != 3):
         raise ConversionError("La malla contiene caras no triangulares; se esperaba triangulación del motor")
-    faces = np.vstack(faces_list).astype(np.int64) if len(faces_list) else np.zeros((0, 3), np.int64)
+    faces = faces.astype(np.int64).reshape(-1, 3)
     face_uvs = face_tex = None
-    if "texcoord" in names:
-        tc = fdata["texcoord"]
-        tl = np.fromiter((len(t) for t in tc), dtype=np.int64, count=len(tc))
-        if not np.all(tl == 6):
+    if "texcoord" in f:
+        tc = np.asarray(f["texcoord"])
+        if tc.ndim != 2 or tc.shape[1] != 6:
             raise ConversionError("texcoord por cara debe tener 6 valores (3 esquinas × UV)")
-        face_uvs = np.vstack(tc).astype(np.float32).reshape(-1, 3, 2)
-        face_tex = (np.asarray(fdata["texnumber"]).astype(np.int64) if "texnumber" in names
+        face_uvs = tc.astype(np.float32).reshape(-1, 3, 2)
+        face_tex = (np.asarray(f["texnumber"]).astype(np.int64) if "texnumber" in f
                     else np.zeros(len(faces), np.int64))
     if faces.size and (faces.min() < 0 or faces.max() >= len(positions)):
         raise ConversionError("Índices de cara fuera de rango")

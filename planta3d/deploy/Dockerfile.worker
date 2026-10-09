@@ -1,0 +1,39 @@
+# Trabajador de reconstrucción: COLMAP 4.2.1 (pycolmap) + OpenMVS v2.4.0 compilado desde fuente.
+# Perfil CPU por defecto. Para GPU: BASE_IMAGE=nvidia/cuda:12.6.3-devel-ubuntu24.04 y OPENMVS_CUDA=ON (no probado).
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE} AS base
+ENV DEBIAN_FRONTEND=noninteractive
+COPY deploy/certs/ /usr/local/share/ca-certificates/
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git build-essential cmake pkg-config \
+      libpng-dev libjpeg-dev libtiff-dev libjxl-dev libeigen3-dev libnanoflann-dev libopencv-dev libgmp-dev libmpfr-dev zlib1g-dev \
+      libboost-iostreams-dev libboost-program-options-dev libboost-system-dev libboost-serialization-dev libboost-thread-dev \
+      python3 python3-venv libgomp1 \
+    && update-ca-certificates && rm -rf /var/lib/apt/lists/*
+
+FROM base AS openmvs
+ARG OPENMVS_CUDA=OFF
+ARG OPENMVS_REF=v2.4.0
+ARG CGAL_REF=v6.0.1
+WORKDIR /src
+RUN git clone --depth 1 --branch ${CGAL_REF} https://github.com/CGAL/cgal.git cgal \
+    && cmake -S cgal -B cgal-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/cgal6 && cmake --install cgal-build \
+    && git clone https://github.com/cdcseacave/VCG.git vcglib \
+    && git clone --depth 1 --branch ${OPENMVS_REF} https://github.com/cdcseacave/openMVS.git openMVS
+COPY deploy/openmvs/opencv46-jpegxl-compat.patch /src/
+RUN cd openMVS && git apply /src/opencv46-jpegxl-compat.patch \
+    && cmake -S /src/openMVS -B /src/build -DCMAKE_BUILD_TYPE=Release -DVCG_ROOT=/src/vcglib \
+       -DCGAL_DIR=/opt/cgal6/lib/cmake/CGAL -DOpenMVS_USE_CUDA=${OPENMVS_CUDA} -DOpenMVS_BUILD_VIEWER=OFF \
+       -DOpenMVS_USE_PYTHON=OFF -DOpenMVS_USE_BREAKPAD=OFF -DCMAKE_INSTALL_PREFIX=/opt/openmvs \
+    && cmake --build /src/build -j"$(nproc)" && cmake --install /src/build
+
+FROM base
+COPY --from=openmvs /opt/openmvs /opt/openmvs
+ENV PYTHONUNBUFFERED=1 REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+WORKDIR /app/backend
+COPY backend/requirements.lock ./
+RUN python3 -m venv /venv && /venv/bin/pip install --no-cache-dir -r requirements.lock
+COPY backend/ ./
+RUN useradd -r -u 10001 planta3d && mkdir -p /data && chown planta3d /data
+USER planta3d
+ENV PATH=/venv/bin:$PATH P3D_DATA_DIR=/data P3D_OPENMVS_BIN_DIR=/opt/openmvs/bin/OpenMVS
+CMD ["celery", "-A", "app.worker.celery_app", "worker", "--concurrency", "1", "-Q", "reconstruction", "--loglevel", "INFO"]

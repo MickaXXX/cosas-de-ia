@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Escena sintética</title></head>
+<body style="margin:0">
+<script type="importmap">{"imports":{"three":"/frontend/node_modules/three/build/three.module.js"}}</script>
+<script type="module">
+// Escena de control con dimensiones EXACTAS (metros, Y arriba). Materiales sin iluminación con texturas
+// procedimentales ricas en detalle (necesarias para la correspondencia de características).
+import * as THREE from "three";
+const W = 1600, H = 1200, VFOV = 60;
+export const TRUTH = {
+  skid: { center: [-1.0, 0.5, 0.0], size: [2.0, 1.0, 1.2] },
+  motor: { center: [1.5, 0.3, 0.8], size: [0.8, 0.6, 0.6] },
+  tank: { center: [1.2, 0.9, -1.8], radius: 0.5, height: 1.8 },
+};
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function tex(seed, base) {
+  const c = document.createElement("canvas"); c.width = c.height = 1024;
+  const g = c.getContext("2d"), r = rng(seed);
+  g.fillStyle = base; g.fillRect(0, 0, 1024, 1024);
+  for (let i = 0; i < 900; i++) {
+    g.fillStyle = `hsl(${Math.floor(r() * 360)},${40 + r() * 50}%,${20 + r() * 60}%)`;
+    const x = r() * 1024, y = r() * 1024, s = 4 + r() * 46;
+    if (r() < 0.5) g.fillRect(x, y, s, s * (0.3 + r())); else { g.beginPath(); g.arc(x, y, s / 2, 0, 7); g.fill(); }
+  }
+  g.strokeStyle = "rgba(0,0,0,.6)"; g.lineWidth = 3;
+  for (let i = 0; i < 120; i++) { g.beginPath(); g.moveTo(r() * 1024, r() * 1024); g.lineTo(r() * 1024, r() * 1024); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x9aa4ad);
+const mat = (seed, base, rep = 1) => { const t = tex(seed, base); t.repeat.set(rep, rep); return new THREE.MeshBasicMaterial({ map: t }); };
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), mat(1, "#6b6f73", 3)); floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const back = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.2), mat(2, "#8a7d6b", 2)); back.position.set(0, 1.6, -4.5); scene.add(back);
+const left = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.2), mat(3, "#6b7d8a", 2)); left.rotation.y = Math.PI / 2; left.position.set(-4.5, 1.6, 0); scene.add(left);
+const right = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.2), mat(7, "#7d6b8a", 2)); right.rotation.y = -Math.PI / 2; right.position.set(4.5, 1.6, 0); scene.add(right);
+const boxMats = (s) => [0, 1, 2, 3, 4, 5].map((i) => mat(s * 10 + i, "#556"));
+const skid = new THREE.Mesh(new THREE.BoxGeometry(...TRUTH.skid.size), boxMats(4)); skid.position.set(...TRUTH.skid.center); scene.add(skid);
+const motor = new THREE.Mesh(new THREE.BoxGeometry(...TRUTH.motor.size), boxMats(5)); motor.position.set(...TRUTH.motor.center); scene.add(motor);
+const tank = new THREE.Mesh(new THREE.CylinderGeometry(TRUTH.tank.radius, TRUTH.tank.radius, TRUTH.tank.height, 64), [mat(61, "#465", 1), mat(62, "#465"), mat(63, "#465")]);
+tank.position.set(...TRUTH.tank.center); scene.add(tank);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const cam = new THREE.PerspectiveCamera(VFOV, W / H, 0.05, 100);
+// Recorrido: anillos a distintas alturas/radios mirando a puntos del sector, con desplazamiento real entre tomas.
+const poses = [];
+const r = rng(42);
+for (const [radius, h, n] of [[3.6, 1.0, 16], [3.9, 1.7, 16], [3.0, 2.5, 16]]) {
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + r() * 0.1;
+    const pos = [Math.cos(a) * radius, h + (r() - 0.5) * 0.2, Math.sin(a) * radius];
+    const look = [(r() - 0.5) * 1.5, 0.5 + r() * 0.5, (r() - 0.5) * 1.5];
+    poses.push({ pos, look });
+  }
+}
+window.renderAll = () => poses.map((p, i) => {
+  cam.position.set(...p.pos); cam.lookAt(...p.look); cam.updateMatrixWorld();
+  renderer.render(scene, cam);
+  return { name: `sint_${String(i).padStart(3, "0")}.jpg`, center: p.pos, data: renderer.domElement.toDataURL("image/jpeg", 0.95) };
+});
+window.TRUTH = TRUTH;
+window.FOCAL_PX = (H / 2) / Math.tan(THREE.MathUtils.degToRad(VFOV / 2));
+window.ready = true;
+</script></body></html>

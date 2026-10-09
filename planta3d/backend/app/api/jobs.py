@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import get_db
-from ..engine.capabilities import capabilities
+from ..engine.capabilities import worker_capabilities
 from ..jobstate import lock_is_free, log, transition
 from ..models import ACTIVE_JOB_STATUSES, JobEvent, JobStatus, PhotoStatus, ProcessingJob, Role, SourcePhoto, User
 from ..schemas import JobEventOut, JobIn, JobOut
@@ -32,7 +32,7 @@ def _job(db: Session, user: User, job_id: uuid.UUID, role: Role = Role.viewer) -
 
 @router.get("/system/capabilities", tags=["sistema"])
 def system_capabilities(user: User = Depends(current_user)):
-    return capabilities()
+    return worker_capabilities()
 
 
 @router.post("/sectors/{sector_id}/jobs", response_model=JobOut, status_code=201,
@@ -45,7 +45,7 @@ def create_job(sector_id: uuid.UUID, body: JobIn, response: Response, user: User
     if existing:
         response.status_code = 200
         return _out(existing)
-    caps = capabilities()
+    caps = worker_capabilities()
     if not caps["reconstruction_available"]:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
                             "Reconstrucción no disponible en este equipo: " + "; ".join(caps["reasons"]) +

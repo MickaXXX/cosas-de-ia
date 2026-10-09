@@ -10,11 +10,11 @@ dependencies = [
   "psycopg[binary]>=3.2",
   "alembic>=1.13",
   "celery[redis]>=5.4",
+  "redis>=5.0",
   "pydantic-settings>=2.4",
   "python-multipart>=0.0.9",
   "pillow>=10.4",
   "numpy>=2.0",
-  "plyfile>=1.0",
   "pycolmap==4.2.1",
 ]
 

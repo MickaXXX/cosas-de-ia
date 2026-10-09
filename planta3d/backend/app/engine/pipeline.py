@@ -50,6 +50,7 @@ from ..storage import get_storage, sha256_file
 from . import runner
 from .capabilities import capabilities, hardware
 from .convert import ConversionError, mesh_to_glb, read_textured_ply, verify_glb
+from .ply import read_header, read_ply
 from .texcheck import _load, check_texture_orientation, empty_color_area_fraction
 
 PROFILES = {
@@ -449,9 +450,7 @@ class JobRunner:
         self._openmvs("densify", "DensifyPointCloud", [
             "-i", "scene.mvs", "--resolution-level", prof["dens_level"], "--max-resolution", prof["dens_max_res"],
             "--min-resolution", 640], cwd=dense)
-        from plyfile import PlyData
-
-        n = PlyData.read(str(dense / "scene_dense.ply"))["vertex"].count
+        n = read_header(dense / "scene_dense.ply").element("vertex").count
         if n < 1000:
             raise StageFailed("denso_insuficiente", f"La nube densa solo tiene {n} puntos: superficies sin textura, "
                               "reflejos o poca superposición.")
@@ -462,10 +461,8 @@ class JobRunner:
     def _mesh(self, dense: Path) -> dict:
         self._openmvs("mesh", "ReconstructMesh", ["-i", "scene_dense.mvs", "-o", "mesh_master.ply",
                                                   "--close-holes", 0], cwd=dense)
-        from plyfile import PlyData
-
-        ply = PlyData.read(str(dense / "mesh_master.ply"))
-        return {"master_vertices": ply["vertex"].count, "master_faces": ply["face"].count}
+        h = read_header(dense / "mesh_master.ply")
+        return {"master_vertices": h.element("vertex").count, "master_faces": h.element("face").count}
 
     def _texture(self, dense: Path, mesh: dict, prof: dict) -> dict:
         faces = mesh["master_faces"]
@@ -507,7 +504,6 @@ class JobRunner:
         """Orientación de visualización estimada (no reescribe el modelo): 'arriba' a partir del eje Y de
         las cámaras (fotos orientadas en vertical), ejes horizontales por PCA y suelo en y≈0."""
         import pycolmap
-        from plyfile import PlyData
 
         rec = pycolmap.Reconstruction(rec_dir)
         downs = []
@@ -518,7 +514,7 @@ class JobRunner:
         down = np.mean(downs, axis=0)
         consistency = float(np.linalg.norm(down))  # 1 = todas las cámaras coinciden en «abajo»
         up = -down / max(np.linalg.norm(down), 1e-12)
-        v = PlyData.read(str(mesh_path))["vertex"].data
+        v = read_ply(mesh_path)[1]["vertex"]
         P = np.stack([v["x"], v["y"], v["z"]], 1).astype(np.float64)
         if len(P) > 200000:
             P = P[np.random.default_rng(0).choice(len(P), 200000, replace=False)]

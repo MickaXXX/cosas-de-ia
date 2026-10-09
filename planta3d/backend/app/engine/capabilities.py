@@ -80,3 +80,39 @@ def capabilities() -> dict:
         "Sin GPU el procesamiento es más lento; los tiempos reales quedan en el informe de cada trabajo.",
     ]
     return out
+
+
+WORKER_CAPS_KEY = "planta3d:worker_capabilities"
+WORKER_CAPS_TTL = 180
+
+
+def publish_worker_capabilities() -> None:
+    """Lo llama el trabajador al iniciar y periódicamente: la API no tiene el motor instalado."""
+    import json
+    import socket
+
+    import redis
+
+    caps = dict(capabilities())
+    caps["worker_host"] = socket.gethostname()
+    redis.Redis.from_url(get_settings().redis_url).set(WORKER_CAPS_KEY, json.dumps(caps), ex=WORKER_CAPS_TTL)
+
+
+def worker_capabilities() -> dict:
+    """Capacidades del trabajador activo (vistas desde la API). Sin trabajador → no hay reconstrucción."""
+    import json
+
+    import redis
+
+    try:
+        raw = redis.Redis.from_url(get_settings().redis_url, socket_timeout=2).get(WORKER_CAPS_KEY)
+    except Exception as e:  # noqa: BLE001
+        raw = None
+        err = f"No se pudo consultar la cola ({type(e).__name__})"
+    else:
+        err = "No hay un trabajador de reconstrucción activo (inicia el servicio «worker»)"
+    if raw:
+        return json.loads(raw)
+    return {"engine": "COLMAP (SfM) + OpenMVS (densificación, malla y textura)", "hardware": hardware(),
+            "colmap": None, "openmvs": None, "reconstruction_available": False, "reasons": [err],
+            "notes": ["Puedes importar modelos GLB y usar el visor sin trabajador."]}

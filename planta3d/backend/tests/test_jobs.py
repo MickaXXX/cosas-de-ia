@@ -25,17 +25,17 @@ def _photos(client, admin, sid, n):
 def engine_ok(monkeypatch):
     import app.api.jobs as jobs_api
 
-    monkeypatch.setattr(jobs_api, "capabilities", lambda: {"reconstruction_available": True, "reasons": []})
+    monkeypatch.setattr(jobs_api, "worker_capabilities", lambda: {"reconstruction_available": True, "reasons": []})
 
 
 def test_job_needs_photos_and_engine(client, admin, sector, monkeypatch):
     sid = sector["sector"]["id"]
     import app.api.jobs as jobs_api
 
-    monkeypatch.setattr(jobs_api, "capabilities", lambda: {"reconstruction_available": False, "reasons": ["sin OpenMVS"]})
+    monkeypatch.setattr(jobs_api, "worker_capabilities", lambda: {"reconstruction_available": False, "reasons": ["sin OpenMVS"]})
     r = client.post(f"/api/sectors/{sid}/jobs", headers=admin, json={"idempotency_key": uuid.uuid4().hex})
     assert r.status_code == 503 and "sin OpenMVS" in r.json()["detail"]
-    monkeypatch.setattr(jobs_api, "capabilities", lambda: {"reconstruction_available": True, "reasons": []})
+    monkeypatch.setattr(jobs_api, "worker_capabilities", lambda: {"reconstruction_available": True, "reasons": []})
     _photos(client, admin, sid, 2)
     assert client.post(f"/api/sectors/{sid}/jobs", headers=admin, json={"idempotency_key": uuid.uuid4().hex}).status_code == 422
 
