@@ -8,7 +8,7 @@ export interface Sector { id: string; project_id: string; name: string; area_typ
 export interface Batch { id: string; sector_id: string; label: string | null; status: string; created_at: string; completed_at: string | null }
 export interface Photo {
   id: string; batch_id: string; original_filename: string; status: "accepted" | "rejected" | "duplicate";
-  reject_reason: string | null; sha256: string | null; size_bytes: number | null; width: number | null; height: number | null;
+  reject_reason: string | null; sha256: string | null; size_bytes: number | null; width: number | null; height: number | null; exif_orientation: number | null;
   camera: Record<string, unknown>; camera_group: string | null; quality: { sharpness?: number; mean_luma?: number; dark_fraction?: number; bright_fraction?: number };
   flags: string[]; included: boolean; inclusion_log: { at: string; included: boolean; reason: string }[]; uploaded_at: string;
 }

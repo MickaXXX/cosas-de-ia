@@ -115,6 +115,7 @@ th { color: var(--muted); font-weight: 500; font-size: .8rem; }
 .plan .sec b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- visor ---------- */
+.viewer-shell { --bg: #0b1117; --bg-elev: #111a23; --bg-elev-2: #17222e; --line: #2b3b4b; --text: #e6edf3; --muted: #8ea0b2; --accent: #38bdf8; --accent-ink: #04202d; color-scheme: dark; color: var(--text); }
 .viewer-shell { position: fixed; inset: 0; display: flex; flex-direction: column; background: #070b0f; z-index: 50; }
 .viewer-bar { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: rgba(11, 17, 23, .92); border-bottom: 1px solid #1d2a36; color: #e6edf3; flex-wrap: wrap; }
 .viewer-main { flex: 1; position: relative; min-height: 0; }

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 import shutil
 import subprocess
 from functools import lru_cache
@@ -19,10 +20,8 @@ def _openmvs_version(bin_dir: Path) -> str | None:
         r = subprocess.run([str(exe), "--help"], capture_output=True, text=True, timeout=30)
     except (OSError, subprocess.TimeoutExpired):
         return None
-    for line in (r.stdout + r.stderr).splitlines():
-        if "OpenMVS" in line and ("v" in line or "version" in line.lower()):
-            return line.strip()
-    return "desconocida"
+    m = re.search(r"OpenMVS\s+\S+\s+v(\d+\.\d+\.\d+)", r.stdout + r.stderr)
+    return f"OpenMVS {m.group(1)}" if m else "desconocida"
 
 
 def hardware() -> dict:

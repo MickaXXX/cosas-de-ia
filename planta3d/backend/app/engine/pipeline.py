@@ -197,7 +197,7 @@ class JobRunner:
                        finished_at=now().isoformat())
             log(self.db, self.job_id, f"Etapa «{STAGE_LABELS[name]}» reutilizada tras verificar archivos y "
                                       "parámetros", stage=name)
-            self.chain = params_hash
+            self.chain = _hash({"params": params_hash, "files": reused.get("files", {})})
             self.results[name] = reused.get("result", {})
             self._save_stages()
             return self.results[name]
@@ -229,12 +229,18 @@ class JobRunner:
                    finished_at=now().isoformat())
         self._save_stages()
         log(self.db, self.job_id, f"Fin: {STAGE_LABELS[name]} ({secs:.1f} s)", stage=name, seconds=secs)
-        self.chain = params_hash
+        self.chain = _hash({"params": params_hash, "files": files})
         self.results[name] = result
         return result
 
     # ------------------------------------------------------------------ ejecución
     def run(self) -> str:
+        try:
+            return self._run_locked()
+        finally:
+            self.db.close()
+
+    def _run_locked(self) -> str:
         with job_lock(self.job_id) as got:
             if not got:
                 return "otro trabajador ejecuta este trabajo"
@@ -269,8 +275,6 @@ class JobRunner:
                 self._fail("error_interno", f"Error interno del trabajador: {type(e).__name__}: {e}",
                            traceback.format_exc()[-4000:])
                 return "fallido"
-            finally:
-                self.db.close()
 
     def _fail(self, code: str, message: str, detail: str | None) -> None:
         self.db.rollback()
@@ -305,10 +309,11 @@ class JobRunner:
         self.stage("features", {}, lambda: self._colmap("features", {
             "database": str(db_path), "image_path": str(images), "groups": manifest["colmap_groups"],
             "max_image_size": prof["max_side"]}), [db_path])
-        self.stage("matching", {"strategy": "exhaustive"},
-                   lambda: self._colmap("matching", {"database": str(db_path)}), [db_path])
+        # La correspondencia trabaja sobre una copia: así la salida de la extracción sigue verificable.
+        matched = self.work / "colmap" / "matched.db"
+        self.stage("matching", {"strategy": "exhaustive"}, lambda: self._matching(db_path, matched), [matched])
         sparse = self.work / "colmap" / "sparse"
-        sfm = self.stage("sfm", {"seed": 1}, lambda: self._sfm(db_path, images, sparse), [sparse])
+        sfm = self.stage("sfm", {"seed": 1}, lambda: self._sfm(matched, images, sparse), [sparse])
         review = self.stage("review", {}, lambda: self._review(sfm, manifest), [])
         dense = self.work / "dense"
         self.stage("undistort", {"max": prof["dense_max"]}, lambda: self._undistort(review, images, dense, prof),
@@ -382,10 +387,17 @@ class JobRunner:
         return {"entries": entries, "colmap_groups": colmap_groups, "assumptions": assumptions,
                 "working_max_side": prof["max_side"]}
 
+    def _matching(self, features_db: Path, matched: Path) -> dict:
+        shutil.copyfile(features_db, matched)
+        return self._colmap("matching", {"database": str(matched)})
+
     def _sfm(self, db_path: Path, images: Path, sparse: Path) -> dict:
         if sparse.exists():
             shutil.rmtree(sparse)
-        out = self._colmap("mapping", {"database": str(db_path), "image_path": str(images),
+        # Copia propia: abrir la base SQLite puede reescribir bytes y romper la verificación de la etapa previa.
+        mapping_db = self.work / "colmap" / "mapping.db"
+        shutil.copyfile(db_path, mapping_db)
+        out = self._colmap("mapping", {"database": str(mapping_db), "image_path": str(images),
                                        "output_path": str(sparse)})
         if not out["components"]:
             raise StageFailed("sfm_sin_modelo", "No se pudo inicializar la reconstrucción: las fotos no comparten "
