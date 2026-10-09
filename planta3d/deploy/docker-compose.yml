@@ -46,7 +46,7 @@ services:
     image: planta3d-api
     environment: *env
     volumes: [files:/data]
-    ports: ["127.0.0.1:8000:8000"]
+    ports: ["${P3D_BIND:-127.0.0.1}:8000:8000"]
     depends_on:
       migrate: { condition: service_completed_successfully }
       redis: { condition: service_started }

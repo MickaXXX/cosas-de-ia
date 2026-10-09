@@ -1,0 +1,6 @@
+# Evita que Git en Windows convierta a CRLF archivos que se usan dentro de Linux/Docker.
+*.sh text eol=lf
+*.patch text eol=lf
+*.py text eol=lf
+Dockerfile* text eol=lf
+*.yml text eol=lf
