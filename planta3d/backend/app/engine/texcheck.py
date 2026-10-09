@@ -53,7 +53,8 @@ def empty_color_area_fraction(mesh: TexturedMesh, atlases: list[np.ndarray], emp
 
 def check_texture_orientation(mesh: TexturedMesh, recon_dir: Path, images_dir: Path,
                               n_samples: int = 3000, seed: int = 0) -> dict:
-    import pycolmap
+    from .colmap_import import pycolmap as _load_pycolmap
+    pycolmap = _load_pycolmap()
 
     rec = pycolmap.Reconstruction(recon_dir)
     if mesh.face_uvs is None:

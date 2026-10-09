@@ -130,3 +130,22 @@ def test_recover_after_worker_crash_reuses_stages(client, admin, job, monkeypatc
     assert engine_procs() == []
     rep = client.get(f"/api/models/{j.model_version_id}/report", headers=admin).json()
     assert rep["texture_check"]["status"] == "concluyente"
+
+
+@pytest.mark.skipif(not os.environ.get("P3D_TEST_PHOTOS_MIXED"), reason="Requiere P3D_TEST_PHOTOS_MIXED (dos escenas sin relación)")
+def test_disconnected_photos_are_reported_not_hidden(client, admin, sector):
+    sid = sector["sector"]["id"]
+    bid = client.post(f"/api/sectors/{sid}/batches", headers=admin, json={}).json()["id"]
+    for p in sorted(Path(os.environ["P3D_TEST_PHOTOS_MIXED"]).iterdir()):
+        upload(client, admin, bid, p.name, p.read_bytes())
+    job = client.post(f"/api/sectors/{sid}/jobs", headers=admin,
+                      json={"idempotency_key": uuid.uuid4().hex, "profile": "rapido"}).json()["id"]
+    out, _ = start_runner(job).communicate(timeout=3600)
+    j = job_row(job)
+    assert j.status.value == "ready", (j.error_code, j.error_message, out[-1500:])
+    r = j.report
+    total, reg = r["photos"]["job_input"], r["photos"]["registered_presented"]
+    assert reg < total
+    # Lo que no quedó en el modelo presentado se informa con nombre (no registradas u otros componentes).
+    assert len(r["photos"]["unregistered"]) + len(r["photos"]["in_other_components"]) == total - reg
+    assert any("NO representa todo el conjunto" in w or "componentes desconectados" in w for w in r["warnings"]), r["warnings"]

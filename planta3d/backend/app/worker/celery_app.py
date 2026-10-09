@@ -1,6 +1,6 @@
 """Cola de trabajos. Celery solo transporta el identificador; el estado vive en PostgreSQL."""
 from celery import Celery
-from celery.signals import worker_ready
+from celery.signals import worker_ready, worker_shutdown
 
 from ..config import get_settings
 
@@ -36,3 +36,16 @@ def _recover(**_):
 
     threading.Thread(target=beat, daemon=True, name="planta3d-caps").start()
     recover_orphans()
+
+
+@worker_shutdown.connect
+def _retire(**_):
+    """Al apagarse, el trabajador retira su anuncio: la API deja de ofrecer reconstrucción de inmediato."""
+    try:
+        import redis
+
+        from ..engine.capabilities import WORKER_CAPS_KEY
+
+        redis.Redis.from_url(get_settings().redis_url, socket_timeout=2).delete(WORKER_CAPS_KEY)
+    except Exception:  # noqa: BLE001
+        pass

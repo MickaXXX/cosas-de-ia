@@ -518,16 +518,17 @@ function CalibrationPanel({ model, cal, canEdit, onChanged, onStart }: { model: 
       <h3 style={{ marginTop: 12 }}>Referencias de ajuste ({cal.references.length})</h3>
       {cal.references.map((r) => (
         <div key={r.id} style={{ borderBottom: "1px solid #22313f", padding: "5px 0" }}>
-          <div className="row"><b style={{ color: "#38bdf8" }}>{r.label}</b><span className="spacer" />{canEdit && <button className="btn ghost sm" onClick={() => del("references", r.id)}>✕</button>}</div>
+          <div className="row" style={{ flexWrap: "nowrap", alignItems: "flex-start" }}><b style={{ color: "#38bdf8", flex: 1, minWidth: 0 }}>{r.label}</b>{canEdit && <button className="btn ghost sm" onClick={() => del("references", r.id)}>✕</button>}</div>
           <small>Real {fmt.len(r.real_distance_m)} · modelo {r.model_distance?.toFixed(4)} u{r.abs_error_m != null && cal.references.length > 1 ? ` · residuo ${fmt.len(r.abs_error_m)}` : ""}<br />{r.source}</small>
         </div>
       ))}
       <h3 style={{ marginTop: 12 }}>Comprobaciones reservadas ({cal.n_checks}/{cal.min_checks_required} mínimas)</h3>
       {cal.checks.map((c) => (
         <div key={c.id} style={{ borderBottom: "1px solid #22313f", padding: "5px 0" }}>
-          <div className="row"><b style={{ color: c.within_tolerance === false ? "#f87171" : "#34d399" }}>{c.label}</b>
-            {c.within_tolerance != null && <span className={`badge ${c.within_tolerance ? "ok" : "bad"}`}>{c.within_tolerance ? "en tolerancia" : "fuera"}</span>}
-            <span className="spacer" />{canEdit && <button className="btn ghost sm" onClick={() => del("checks", c.id)}>✕</button>}</div>
+          <div className="row" style={{ flexWrap: "nowrap", alignItems: "flex-start" }}>
+            <span style={{ flex: 1, minWidth: 0 }}><b style={{ color: c.within_tolerance === false ? "#f87171" : "#34d399" }}>{c.label}</b>{" "}
+              {c.within_tolerance != null && <span className={`badge ${c.within_tolerance ? "ok" : "bad"}`}>{c.within_tolerance ? "en tolerancia" : "fuera"}</span>}</span>
+            {canEdit && <button className="btn ghost sm" onClick={() => del("checks", c.id)}>✕</button>}</div>
           <small>Real {fmt.len(c.real_distance_m)}{c.scaled_distance_m != null ? ` · modelo ${fmt.len(c.scaled_distance_m)} · error ${fmt.len(c.abs_error_m!)} (${(c.rel_error! * 100).toFixed(2)} %)` : " · sin escala aún"}<br />{c.source}</small>
         </div>
       ))}

@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import os
+import json
 import platform
 import re
 import shutil
 import subprocess
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -57,14 +59,15 @@ def capabilities() -> dict:
     s = get_settings()
     reasons: list[str] = []
     out: dict = {"engine": "COLMAP (SfM) + OpenMVS (densificación, malla y textura)", "hardware": hardware()}
+    # En un subproceso: importar pycolmap instala manejadores de señales de glog en el proceso que lo importa.
+    probe = "import json, pycolmap; print(json.dumps([pycolmap.__version__, bool(getattr(pycolmap, 'has_cuda', False))]))"
     try:
-        import pycolmap
-
-        out["colmap"] = {"version": pycolmap.__version__, "binding": "pycolmap",
-                         "cuda": bool(getattr(pycolmap, "has_cuda", False))}
+        r = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, timeout=120)
+        version, cuda = json.loads(r.stdout.strip().splitlines()[-1])
+        out["colmap"] = {"version": version, "binding": "pycolmap", "cuda": cuda}
     except Exception as e:  # noqa: BLE001
         out["colmap"] = None
-        reasons.append(f"pycolmap no disponible: {e}")
+        reasons.append(f"pycolmap no disponible: {type(e).__name__}")
     missing = [t for t in OPENMVS_TOOLS if not (s.openmvs_bin_dir / t).exists()]
     if missing:
         out["openmvs"] = None

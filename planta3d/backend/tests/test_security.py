@@ -72,3 +72,17 @@ def test_path_traversal_rejected():
 
     with pytest.raises(ValueError):
         get_storage().path("../../etc/passwd")
+
+
+def test_production_refuses_dev_secrets():
+    import pytest
+
+    from app.config import Settings, check_production
+
+    with pytest.raises(RuntimeError):
+        check_production(Settings(environment="production", secret_key="dev-insecure-change-me",
+                                  bootstrap_admin_password="x" * 20))
+    with pytest.raises(RuntimeError):
+        check_production(Settings(environment="production", secret_key="a" * 64,
+                                  bootstrap_admin_password="cambiar-esta-clave"))
+    check_production(Settings(environment="production", secret_key="a" * 64, bootstrap_admin_password="x" * 20))

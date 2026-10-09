@@ -29,8 +29,9 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    # Valkey (BSD-3), compatible con el protocolo de Redis. Las versiones recientes de Redis usan RSAL/SSPL.
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--appendonly", "yes"]
     volumes: [redisdata:/data]
     restart: unless-stopped
 

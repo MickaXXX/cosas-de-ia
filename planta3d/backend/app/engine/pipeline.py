@@ -503,7 +503,8 @@ class JobRunner:
     def _alignment(self, rec_dir: Path, mesh_path: Path) -> tuple[list, dict]:
         """Orientación de visualización estimada (no reescribe el modelo): 'arriba' a partir del eje Y de
         las cámaras (fotos orientadas en vertical), ejes horizontales por PCA y suelo en y≈0."""
-        import pycolmap
+        from .colmap_import import pycolmap as _load_pycolmap
+        pycolmap = _load_pycolmap()
 
         rec = pycolmap.Reconstruction(rec_dir)
         downs = []
@@ -542,7 +543,8 @@ class JobRunner:
         return M.reshape(-1).tolist(), info
 
     def _cameras_json(self, rec_dir: Path, manifest: dict, out: Path) -> int:
-        import pycolmap
+        from .colmap_import import pycolmap as _load_pycolmap
+        pycolmap = _load_pycolmap()
 
         rec = pycolmap.Reconstruction(rec_dir)
         by_rel = {e["image"]: e for e in manifest["entries"]}

@@ -130,6 +130,12 @@ export function Report({ r }: { r: any }) {
         Motor: COLMAP {r.engine?.colmap?.version}, {r.engine?.openmvs?.version}. Resolución de trabajo: {r.working_resolution_max_side} px.
       </p>
       {r.photos.unregistered?.length > 0 && <div className="notice">Fotos no registradas: {r.photos.unregistered.join(", ")}</div>}
+      {r.photos.in_other_components?.length > 0 && <div className="notice">Fotos en otros componentes (no incluidas en el modelo presentado): {r.photos.in_other_components.join(", ")}</div>}
+      {r.components?.length > 1 && (
+        <div className="table-wrap"><table><thead><tr><th>Componente</th><th>Fotos</th><th>Puntos</th><th>Reproyección</th></tr></thead><tbody>
+          {r.components.map((c: any) => <tr key={c.index}><td>{c.index}{c.index === r.presented_component ? " (presentado)" : ""}</td><td>{c.registered_images}</td><td>{c.points3D}</td><td>{c.mean_reprojection_error_px.toFixed(2)} px</td></tr>)}
+        </tbody></table></div>
+      )}
       {r.intrinsics_assumptions?.map((a: string) => <div key={a} className="notice info">{a}</div>)}
     </div>
   );

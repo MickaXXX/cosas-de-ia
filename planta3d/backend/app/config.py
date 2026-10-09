@@ -59,10 +59,16 @@ class Settings(BaseSettings):
         return self.environment == "production"
 
 
+def check_production(s: Settings) -> None:
+    if s.is_production and (s.secret_key.startswith("dev-") or len(s.secret_key) < 32):
+        raise RuntimeError("P3D_SECRET_KEY debe configurarse en producción (≥ 32 caracteres aleatorios)")
+    if s.is_production and s.bootstrap_admin_password in ("cambiar-esta-clave", ""):
+        raise RuntimeError("P3D_BOOTSTRAP_ADMIN_PASSWORD debe configurarse en producción")
+
+
 @lru_cache
 def get_settings() -> Settings:
     s = Settings()
     s.data_dir = s.data_dir.resolve()
-    if s.is_production and s.secret_key.startswith("dev-"):
-        raise RuntimeError("P3D_SECRET_KEY debe configurarse en producción")
+    check_production(s)
     return s
