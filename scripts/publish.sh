@@ -28,7 +28,7 @@ for f in "${FILES[@]}"; do
   [ -f "$f" ] || { echo "· $f no existe, se omite"; continue; }
   EXISTENTES+=("$f")
   case "$f" in
-    *.json)
+    *.json|*.geojson)
       python3 - "$f" <<'PY'
 import json, sys
 ruta = sys.argv[1]
@@ -70,7 +70,7 @@ for intento in 1 2 3; do
   # Tras el merge, revalidar: nunca empujar algo que no parsee.
   for f in "${EXISTENTES[@]}"; do
     case "$f" in
-      *.json) python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "$f" ;;
+      *.json|*.geojson) python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "$f" ;;
     esac
   done
   if git push origin "HEAD:$RAMA"; then

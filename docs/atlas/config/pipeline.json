@@ -1,0 +1,66 @@
+{
+  "_comment": "Configuración del pipeline de datos. Editable sin tocar código: los scripts de scripts/atlas/ la leen en cada ejecución.",
+  "version": 1,
+  "bbox": { "south": -33.66, "west": -70.86, "north": -33.30, "east": -70.43 },
+  "overpass_endpoints": [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+  ],
+  "osm_max_age_days": 30,
+  "poi_categories": {
+    "mall": { "label": "Malls y centros comerciales", "query": "nwr[\"shop\"=\"mall\"]" },
+    "supermercado": { "label": "Supermercados", "query": "nwr[\"shop\"=\"supermarket\"][\"name\"]" },
+    "hospital": { "label": "Hospitales", "query": "nwr[\"amenity\"=\"hospital\"]" },
+    "clinica": { "label": "Clínicas y centros médicos", "query": "nwr[\"amenity\"=\"clinic\"][\"name\"]" },
+    "universidad": { "label": "Universidades e institutos", "query": "nwr[\"amenity\"~\"^(university|college)$\"][\"name\"]" },
+    "parque": { "label": "Parques", "query": "nwr[\"leisure\"=\"park\"][\"name\"]", "min_area_m2": 10000 },
+    "turismo": { "label": "Museos y atractivos", "query": "nwr[\"tourism\"~\"^(museum|attraction|gallery)$\"][\"name\"]" },
+    "cultura": { "label": "Teatros y centros culturales", "query": "nwr[\"amenity\"~\"^(theatre|arts_centre)$\"][\"name\"]" }
+  },
+  "geocode": {
+    "provider": "nominatim",
+    "endpoint": "https://nominatim.openstreetmap.org/search",
+    "min_interval_s": 1.1,
+    "max_per_run": 120
+  },
+  "uf": {
+    "primary": "mindicador",
+    "mindicador_url": "https://mindicador.cl/api/uf",
+    "cmf_url": "https://api.cmfchile.cl/api-sbifv3/recursos_api/uf",
+    "stale_after_days": 2
+  },
+  "radar": {
+    "provider": "google_news_rss",
+    "endpoint": "https://news.google.com/rss/search",
+    "lang": "hl=es-419&gl=CL&ceid=CL:es-419",
+    "max_age_days": 120,
+    "queries": [
+      "\"Línea 7\" Metro Santiago",
+      "\"Línea 8\" Metro Santiago",
+      "\"Línea 9\" Metro Santiago",
+      "extensión Metro Santiago estación nueva",
+      "nuevo mall Santiago construcción",
+      "nueva clínica Santiago inversión",
+      "nuevo hospital Región Metropolitana construcción",
+      "teleférico Santiago construcción",
+      "proyecto inmobiliario Providencia",
+      "proyecto inmobiliario Ñuñoa",
+      "proyecto inmobiliario Las Condes",
+      "Santiago Centro proyecto urbano renovación",
+      "SEIA Región Metropolitana proyecto inmobiliario aprobado",
+      "plan regulador Ñuñoa Providencia Las Condes altura"
+    ]
+  },
+  "staleness_days": {
+    "projects": 30,
+    "rentals": 45,
+    "developments": 120,
+    "rent_reference": 200,
+    "mortgage_rate": 45
+  },
+  "alerts": {
+    "price_drop_pct": 3,
+    "price_drop_uf": 100
+  }
+}

@@ -1,0 +1,75 @@
+name: Atlas · cambios desde la app
+
+# El panel de administración de Atlas no guarda credenciales. Para publicar un cambio
+# abre un issue ya rellenado:
+#   atlas-config:      supuestos y parámetros (docs/atlas/config/defaults.json)
+#   atlas-import:      CSV de proyectos o arriendos
+#   atlas-obra:        una obra o anuncio para el radar urbano
+#   atlas-actualizar:  "Ejecutar actualización ahora"
+# Solo el dueño del repositorio puede hacerlo. El issue queda como registro de quién
+# y cuándo; el commit, como registro de antes/después.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: atlas-data-refs/heads/main
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: startsWith(github.event.issue.title, 'atlas-') && github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Aplicar cambio
+        id: apply
+        if: ${{ !startsWith(github.event.issue.title, 'atlas-actualizar:') }}
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: python scripts/atlas/apply_issue.py
+
+      - name: Actualizar todo
+        id: now
+        if: ${{ startsWith(github.event.issue.title, 'atlas-actualizar:') }}
+        env:
+          CMF_API_KEY: ${{ secrets.CMF_API_KEY }}
+        run: python scripts/atlas/run.py now --force
+
+      - name: Geocodificar y validar lo nuevo
+        if: ${{ steps.apply.outcome == 'success' }}
+        run: python scripts/atlas/run.py bootstrap
+
+      - name: Publicar
+        if: ${{ steps.apply.outcome == 'success' || steps.now.outcome == 'success' }}
+        run: |
+          shopt -s nullglob
+          scripts/publish.sh "atlas: cambio desde la app (#${{ github.event.issue.number }}) [skip ci]" \
+            docs/atlas/config/defaults.json docs/atlas/data/*.json docs/atlas/data/osm/* docs/atlas/data/snapshots/*
+
+      - name: Responder en el issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUMMARY: ${{ steps.apply.outputs.summary }}
+          OK: ${{ steps.apply.outcome == 'success' || steps.now.outcome == 'success' }}
+        run: |
+          if [ "$OK" = "true" ]; then
+            MSG="${SUMMARY:-Actualización ejecutada.} La app toma los cambios al recargar (GitHub Pages tarda ~1 minuto)."
+            gh issue comment ${{ github.event.issue.number }} --body "$MSG"
+            gh issue close ${{ github.event.issue.number }} --reason completed
+          else
+            gh issue comment ${{ github.event.issue.number }} --body "No se aplicó el cambio. ${SUMMARY:-Revisa el log del workflow.}"
+          fi

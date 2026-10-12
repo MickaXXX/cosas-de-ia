@@ -1,0 +1,75 @@
+name: Atlas · actualizar datos
+
+# Tareas programadas de Atlas Inversión Santiago (docs/atlas).
+# GitHub Actions agenda en UTC; scripts/atlas/run.py traduce a hora de Santiago.
+on:
+  schedule:
+    # Diario: UF (≈ 06:20 en invierno / 07:20 en verano, hora de Santiago).
+    - cron: "20 10 * * *"
+    # Semanal, lunes 08:00 America/Santiago. Se agendan las dos horas UTC posibles
+    # (UTC-3 en verano, UTC-4 en invierno) y run.py ejecuta solo la que corresponde.
+    - cron: "0 11 * * 1"
+    - cron: "0 12 * * 1"
+    # Mensual: capas de OpenStreetMap (Metro, servicios, comunas).
+    - cron: "40 9 3 * *"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "now = todo · daily = UF · weekly = semanal (sin esperar al lunes) · monthly = capas OSM · bootstrap = lo que falte"
+        type: choice
+        options: [now, daily, weekly, monthly, bootstrap]
+        default: now
+  # Cuando cambian los datos curados o el pipeline: geocodifica lo nuevo, baja lo
+  # que falte y valida. Los commits del bot llevan [skip ci] y no se re-disparan.
+  push:
+    paths:
+      - "scripts/atlas/**"
+      - "docs/atlas/data/projects.json"
+      - "docs/atlas/data/developments.json"
+      - "docs/atlas/data/rentals.json"
+      - "docs/atlas/config/pipeline.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atlas-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Elegir tarea
+        id: task
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT: ${{ github.event.inputs.task }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then T="$INPUT"
+          elif [ "$EVENT" = "push" ]; then T=bootstrap
+          elif [ "$SCHEDULE" = "20 10 * * *" ]; then T=daily
+          elif [ "$SCHEDULE" = "40 9 3 * *" ]; then T=monthly
+          else T=weekly
+          fi
+          echo "task=$T" >> "$GITHUB_OUTPUT"
+          echo "Tarea: $T"
+
+      - name: Ejecutar
+        env:
+          CMF_API_KEY: ${{ secrets.CMF_API_KEY }}
+        run: python scripts/atlas/run.py "${{ steps.task.outputs.task }}" ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
+
+      - name: Publicar
+        run: |
+          shopt -s nullglob
+          scripts/publish.sh "atlas: datos ${{ steps.task.outputs.task }} $(date -u +%Y-%m-%dT%H:%M) [skip ci]" \
+            docs/atlas/data/*.json docs/atlas/data/osm/* docs/atlas/data/snapshots/*
