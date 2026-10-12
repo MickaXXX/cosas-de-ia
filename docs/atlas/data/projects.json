@@ -769,6 +769,26 @@
           "confidence": "baja",
           "verification_status": "extraido_busqueda_web",
           "notes": "Precio 'desde' de un portal; la página puede tener meses de antigüedad. Confirmar con la inmobiliaria."
+        },
+        {
+          "field": "payment_terms",
+          "value": {
+            "pie_installments_max": 26,
+            "pie_interest": "sin_interes"
+          },
+          "unit": "cuotas",
+          "source_name": "Meganoticias",
+          "source_url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html",
+          "document_reference": null,
+          "original_published_at": "2025-05-07",
+          "observed_at": "2026-10-12",
+          "ingested_at": "2026-10-12T22:00:00Z",
+          "expires_at": null,
+          "access_method": "busqueda_web",
+          "license_status": "publico_sin_licencia",
+          "confidence": "baja",
+          "verification_status": "extraido_busqueda_web",
+          "notes": "Condición de pago publicada en prensa hace más de un año. Resumen propio, sin copiar el texto."
         }
       ],
       "demo": false,
@@ -778,7 +798,21 @@
         "type": "station",
         "name": "Plaza Egaña"
       },
-      "geocoded_at": "2026-10-12T20:43:32Z"
+      "geocoded_at": "2026-10-12T20:43:32Z",
+      "payment_terms": {
+        "pie_installments_max": 26,
+        "pie_post_delivery": false,
+        "pie_interest": "sin_interes",
+        "currency": "UF",
+        "pie_min_upfront_pct": null,
+        "source_name": "Meganoticias",
+        "source_url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html",
+        "published_at": "2025-05-07",
+        "observed_at": "2026-10-12",
+        "verification_status": "extraido_busqueda_web",
+        "confidence": "baja",
+        "notes": "Nota de mayo de 2025: 'pie en hasta 26 cuotas en UF y sin interés'. Puede no estar vigente; con la entrega estimada para 2027 quedan menos meses para las cuotas. Confirmar con la inmobiliaria."
+      }
     },
     {
       "id": "bilbao-514-providencia",
@@ -936,12 +970,12 @@
       "id": "las-condes-7960",
       "name": "Las Condes 7960",
       "developer": {
-        "name": "Alto Las Condes",
+        "name": "Actual Inmobiliaria (según portal)",
         "url": null
       },
       "address": "Avenida Las Condes 7960",
       "commune": "Las Condes",
-      "neighborhood": null,
+      "neighborhood": "Alto Las Condes",
       "lat": -33.3996,
       "lon": -70.552862,
       "geo_precision": "exacta",
@@ -994,6 +1028,23 @@
           "confidence": "baja",
           "verification_status": "extraido_busqueda_web",
           "notes": "Precio 'desde' de un portal; la página puede tener meses de antigüedad. Confirmar con la inmobiliaria."
+        },
+        {
+          "field": "developer",
+          "value": "Actual Inmobiliaria",
+          "unit": null,
+          "source_name": "Portal Inmobiliario (vía búsqueda web)",
+          "source_url": "https://www.portalinmobiliario.com/proyectos/alto-las-condes-santiago-metropolitana/_MINVU*SUBSIDY_8034723",
+          "document_reference": null,
+          "original_published_at": null,
+          "observed_at": "2026-10-12",
+          "ingested_at": "2026-10-12T22:00:00Z",
+          "expires_at": null,
+          "access_method": "busqueda_web",
+          "license_status": "publico_sin_licencia",
+          "confidence": "baja",
+          "verification_status": "extraido_busqueda_web",
+          "notes": "Antes figuraba 'Alto Las Condes' como inmobiliaria: es el sector. El listado indica 'Venta en blanco' y desde UF 3.887 en otra captura; precio sin confirmar."
         }
       ],
       "demo": false,

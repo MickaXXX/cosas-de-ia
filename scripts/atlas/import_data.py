@@ -146,6 +146,13 @@ def build_projects(rows: list[dict], now: str) -> dict[str, dict]:
                 "short_term_rental": {"status": r.get("short_term_rental_status") or "por_verificar"},
                 "observed_at": r["data_observed_at"], "demo": bool(r.get("is_demo")),
                 "units": [],
+                **({"payment_terms": {
+                    "pie_installments_max": int(round(r["pie_installments_max"])),
+                    "pie_post_delivery": bool(r.get("pie_post_delivery")),
+                    "pie_min_upfront_pct": r.get("pie_min_upfront_pct"),
+                    "source_name": "Importación CSV", "source_url": r.get("publication_url"),
+                    "observed_at": r["data_observed_at"], "verification_status": "importado_sin_verificar",
+                }} if r.get("pie_installments_max") is not None else {}),
                 "evidence": [{
                     "field": "units", "source_name": "Importación CSV", "source_url": r.get("publication_url"),
                     "observed_at": r["data_observed_at"], "ingested_at": now, "access_method": "importacion_csv",

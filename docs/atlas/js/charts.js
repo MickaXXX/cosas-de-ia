@@ -41,7 +41,8 @@ export function barChart(o) {
   const n = o.items.length, band = (W - L - R) / n, bw = Math.max(2, Math.min(28, band - 2));
   const every = o.labelEvery || Math.ceil(n / 12);
   let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title || 'Gráfico de barras')}">`;
-  for (const t of ticks) s += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${esc(o.fmt(t))}</text>`;
+  const tickFmt = o.tickFmt || o.fmt;
+  for (const t of ticks) s += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${esc(tickFmt(t))}</text>`;
   s += `<line class="axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
   o.items.forEach((it, i) => {
     const x = L + i * band + (band - bw) / 2;
@@ -76,6 +77,11 @@ export function lineChart(o) {
     const pts = sr.values.map((v, i) => (Number.isFinite(v) ? `${xs(i).toFixed(1)},${y(v).toFixed(1)}` : null)).filter(Boolean);
     s += `<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" ${sr.dashed ? 'stroke-dasharray="5 4"' : ''} points="${pts.join(' ')}"/>`;
   });
+  for (const mk of o.markers || []) {                // marcas verticales (p. ej., la entrega)
+    if (!(mk.i >= 0 && mk.i < n)) continue;
+    const x = xs(mk.i);
+    s += `<line class="axis" stroke-dasharray="3 3" x1="${x}" x2="${x}" y1="${T}" y2="${H - B}"/><text x="${Math.min(x + 4, W - R - 60)}" y="${T + 10}">${esc(mk.label)}</text>`;
+  }
   const every = Math.ceil(n / 10);
   for (let i = 0; i < n; i++) {
     const x0 = i === 0 ? L : (xs(i - 1) + xs(i)) / 2, x1 = i === n - 1 ? W - R : (xs(i) + xs(i + 1)) / 2;

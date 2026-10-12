@@ -136,6 +136,10 @@ export function buildProjects(records, nowIso) {
         publication_url: r.publication_url, brochure_url: r.brochure_url,
         short_term_rental: { status: r.short_term_rental_status || 'por_verificar' },
         observed_at: r.data_observed_at, demo: !!r.is_demo, units: [],
+        payment_terms: r.pie_installments_max == null ? undefined : {
+          pie_installments_max: Math.round(r.pie_installments_max), pie_post_delivery: !!r.pie_post_delivery,
+          pie_min_upfront_pct: r.pie_min_upfront_pct ?? null, source_name: 'Importación CSV (navegador)', source_url: r.publication_url || null,
+          observed_at: r.data_observed_at, verification_status: 'importado_sin_verificar' },
         first_seen_at: nowIso, source_kind: 'importacion_local',
         evidence: [{ field: 'units', source_name: 'Importación CSV (navegador)', source_url: r.publication_url,
           observed_at: r.data_observed_at, ingested_at: nowIso, access_method: 'importacion_csv',

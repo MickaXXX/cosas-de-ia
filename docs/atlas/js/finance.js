@@ -133,7 +133,7 @@ export function irr(flows) {
   let flo = npv(lo, flows);
   const fhi = npv(hi, flows);
   if (!Number.isFinite(flo) || !Number.isFinite(fhi) || flo * fhi > 0) return null;
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 200 && hi - lo > 1e-11; i++) {      // 1e-11 mensual: ~36 iteraciones
     const mid = (lo + hi) / 2;
     const fm = npv(mid, flows);
     if (!Number.isFinite(fm)) return null;
@@ -168,6 +168,36 @@ export function occupancyAt(k, { initialVacancyMonths = 1, leaseMonths = 24, tur
 
 const CONTRIB_MONTHS = new Set([3, 5, 8, 10]);   // abril, junio, septiembre, noviembre
 
+// ------------------------------------------------------------------ calendario de aportes
+/**
+ * Calendario de aportes de capital del comprador, mes a mes (t = 0 es este mes).
+ * - Al contado (t = 0): reserva + el pie que el comprador decide adelantar (`upfrontUf`).
+ * - El resto del pie en `installmentsMax` cuotas iguales en UF, sin interés, desde t = 0.
+ *   Sin `postDelivery`, las cuotas terminan a más tardar en la entrega PROMETIDA (un atraso
+ *   no las estira); con `postDelivery` pueden seguir después de escriturar (crédito directo
+ *   de la inmobiliaria). Si no hay cuotas, el saldo del pie se paga en la escritura.
+ * - En la escritura (t = D) se pagan los gastos operacionales y el amoblado.
+ */
+export function equitySchedule({ pie, closingUf = 0, furnishingUf = 0, deliveryMonths = 0, promisedMonths = deliveryMonths,
+  reservaUf = 0, upfrontUf = 0, installmentsMax = 48, postDelivery = false }, H) {
+  const D = Math.max(0, Math.round(deliveryMonths));
+  const promised = Math.max(0, Math.round(promisedMonths));
+  const upfront = Math.min(pie, Math.max(0, reservaUf) + Math.max(0, upfrontUf));
+  const rest = Math.max(0, pie - upfront);
+  const maxN = Math.max(0, Math.round(installmentsMax ?? 0));
+  let cuotas = 0;
+  if (rest > EPS && maxN > 0) cuotas = postDelivery ? maxN : (D > 0 ? Math.max(1, Math.min(promised || D, maxN)) : 0);
+  const cuota = cuotas ? rest / cuotas : 0;
+  const atEscrituraPie = cuotas ? 0 : rest;
+  const len = Math.max(H, D, cuotas) + 1;
+  const rows = new Array(len).fill(0);
+  rows[0] += upfront;
+  for (let t = 0; t < cuotas; t++) rows[t] += cuota;
+  rows[D] += atEscrituraPie + closingUf + furnishingUf;
+  return { rows, upfront, cuota, cuotas, cuotasAfterDelivery: Math.max(0, cuotas - D), atEscrituraPie,
+    atEscritura: atEscrituraPie + closingUf + furnishingUf + (D < cuotas ? cuota : 0), D };
+}
+
 // ------------------------------------------------------------------ simulación
 /**
  * Simulación mes a mes desde hoy (t = 0) hasta el horizonte, para arriendo tradicional
@@ -188,10 +218,9 @@ export function simulate(inp) {
     incendioPctMonthly: p.incendioPctMonthly, insuredValueUf: st.finalPrice * p.insuredValueFactor });
   const months = [];
   // El pie en cuotas se paga según la fecha de entrega PROMETIDA: un atraso no estira las cuotas.
-  const promised = Math.max(0, Math.round(p.deliveryMonths));
-  const pieMonths = D > 0 ? Math.max(1, Math.min(promised || D, p.pieInstallmentsMax)) : 0;
-  const reserva = Math.min(p.reservaUf, st.pie);
-  const pieCuota = D > 0 ? (st.pie - reserva) / pieMonths : 0;
+  const eq = equitySchedule({ pie: st.pie, closingUf: st.closingCosts.total, furnishingUf: st.furnishingUf,
+    deliveryMonths: D, promisedMonths: p.deliveryMonths, reservaUf: p.reservaUf, upfrontUf: p.pieUpfrontUf,
+    installmentsMax: p.pieInstallmentsMax, postDelivery: p.piePostDelivery }, H);
   let cum = 0, cumOp = 0;
   const equityFlows = [];                         // perspectiva del inversionista, para TIR
   for (let t = 0; t <= H; t++) {
@@ -200,13 +229,7 @@ export function simulate(inp) {
       equity: 0, income: 0, occ: 0, vacancyLoss: 0, collectionLoss: 0, gcOwner: 0, contribuciones: 0,
       maintenance: 0, capex: 0, admin: 0, brokerage: 0, tax: 0, platform: 0, cleaning: 0, utilities: 0,
       iva: 0, other: 0, noi: 0, dividend: 0, desgravamen: 0, incendio: 0, cf: 0 };
-    // Aportes de capital
-    if (D === 0 && t === 0) row.equity = st.pie + st.closingCosts.total + st.furnishingUf;
-    if (D > 0) {
-      if (t === 0) row.equity += reserva;
-      if (t < pieMonths) row.equity += pieCuota;
-      if (t === D) row.equity += st.closingCosts.total + st.furnishingUf;
-    }
+    row.equity = eq.rows[t] || 0;                // aportes de capital (pie, cuotas, escritura)
     const k = t - D - 1;                          // índice de mes de operación (0 = primer mes tras escriturar)
     if (k >= 0) {
       const loanRow = sched.rows[k];
@@ -241,7 +264,7 @@ export function simulate(inp) {
     const cumCf = months.slice(0, t + 1).reduce((s, r) => s + r.cf, 0);
     const paidIn = months.slice(0, t + 1).reduce((s, r) => s + r.equity, 0);
     let irrM = null;
-    if (sale != null) { const f = flows.slice(); f[f.length - 1] += sale; irrM = irr(f); }
+    if (sale != null && !p.skipIrr) { const f = flows.slice(); f[f.length - 1] += sale; irrM = irr(f); }
     return { years: y, value: valueAt(t), balance: loanBalanceAt(t), saleNet: sale, cumCf, equityPaid: paidIn,
       result: sale == null ? null : sale + cumCf - paidIn, irrReal: annualize(irrM),
       underConstruction: t < D };
@@ -249,7 +272,7 @@ export function simulate(inp) {
   const fullFlows = equityFlows.slice();
   const finalSale = saleNetAt(H);
   if (finalSale != null) fullFlows[fullFlows.length - 1] += finalSale;
-  const irrReal = annualize(irr(fullFlows));
+  const irrReal = p.skipIrr ? null : annualize(irr(fullFlows));      // skipIrr: solo flujos (alternativas del plan)
   // Métricas estabilizadas (valor esperado de largo plazo, no un año puntual)
   const ss = steadyState(p, st, sched);
   const op = months.filter((r) => r.t > D);
@@ -280,7 +303,7 @@ export function simulate(inp) {
     equity: st.equity,
     fixedMonthly,
   };
-  return { input: p, structure: st, schedule: sched, months, annual, metrics, steady: ss };
+  return { input: p, structure: st, schedule: sched, equity: eq, months, annual, metrics, steady: ss };
 }
 
 function ltrMonth(p, k, growth) {
@@ -381,7 +404,7 @@ export const DEFAULT_INPUT = {
   mode: 'tradicional',
   priceUf: 3000, discountPct: 0, bonoPiePct: 0, creditPct: 0.8, maxCreditPct: 0.9,
   annualRate: 0.045, rateConvention: 'nominal', loanYears: 30,
-  deliveryMonths: 0, deliveryDelayMonths: 0, pieInstallmentsMax: 48, reservaUf: 0,
+  deliveryMonths: 0, deliveryDelayMonths: 0, pieInstallmentsMax: 48, reservaUf: 0, pieUpfrontUf: 0, piePostDelivery: false,
   closing: { tasacionUf: 3, estudioTitulosUf: 5, borradorUf: 6, notariaUf: 4, cbrPct: 0.004, timbresPct: 0.008 },
   furnishingUf: 0,
   desgravamenPctMonthly: 0.00012, incendioPctMonthly: 0.00022, insuredValueFactor: 0.8,

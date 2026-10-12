@@ -18,6 +18,20 @@ Prompt: *"Agrega la comuna La Reina al mapa y al ranking sin modificar los filtr
 - **A mano en `data/projects.json`:** copia la forma de un proyecto existente. Sin `lat`/`lon`, el pipeline lo geocodifica con `address` + `commune` (o `geocode_query`), o lo ancla con `"anchor": {"type": "station", "name": "Ñuble"}`.
 - **Verificación con la inmobiliaria:** ficha → "Registrar verificación" → publicar.
 
+## Cargar condiciones de pie en cuotas
+- **Lo confirmaste con la inmobiliaria:** ficha → "Registrar verificación" → cuotas máximas, si siguen después de la entrega y el % al contado. Queda como `verificado`.
+- **Lo viste publicado:** en `data/projects.json` agrega al proyecto (o a una unidad):
+  ```json
+  "payment_terms": { "pie_installments_max": 36, "pie_post_delivery": false, "pie_interest": "sin_interes",
+    "pie_min_upfront_pct": 5, "source_name": "Sitio de la inmobiliaria", "source_url": "https://…",
+    "published_at": "2026-10-01", "observed_at": "2026-10-12", "verification_status": "extraido_busqueda_web" }
+  ```
+  `validate.py` exige cuotas enteras 0–120 y avisa si no hay fuente o si la condición tiene más de 180 días.
+- **Por CSV:** columnas `pie_installments_max`, `pie_post_delivery`, `pie_min_upfront_pct`.
+- **Tu caja y tu ahorro:** Configuración → Mi plan de pago (o `config/defaults.json → investor`). El repositorio es público: si publicas estos montos, quedan visibles.
+
+Prompt: *"La inmobiliaria X me confirmó pie en 48 cuotas, 12 después de la entrega: cárgalo y dime si me alcanza."*
+
 ## Agregar una obra / POI al radar urbano
 - **Desde la app:** Radar urbano → "+ Proponer obra" (o "Validar como obra" sobre un candidato del radar de noticias). Se abre un issue `atlas-obra:` y queda `pendiente_revision`.
 - **En `data/developments.json`:** campos `id, name, type, impact, description` (resumen propio), `organism, stage, estimated_date, estimated_label, certainty, radius_m, radius_justification, sources[] {title, url, publisher, published_at, official}, last_checked, status`.

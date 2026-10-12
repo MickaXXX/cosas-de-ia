@@ -13,6 +13,15 @@ export function clp(x, { sign = false } = {}) {
   return `${x < 0 ? '−' : sign && x > 0 ? '+' : ''}$${s}`;
 }
 
+/** CLP compacto para ejes: −$20 M, $350 mil, $0. */
+export function clpShort(x) {
+  if (!isNum(x)) return 's/d';
+  const a = Math.abs(x), s = x < 0 ? '−' : '';
+  if (a >= 1e6) return `${s}$${(a / 1e6).toLocaleString('es-CL', { maximumFractionDigits: a >= 1e7 ? 0 : 1 })} M`;
+  if (a >= 1e3) return `${s}$${Math.round(a / 1e3).toLocaleString('es-CL')} mil`;
+  return `${s}$${Math.round(a)}`;
+}
+
 export function uf(x, d = 2, { sign = false } = {}) {
   if (!isNum(x)) return 's/d';
   const f = d === 0 ? NF0 : d === 1 ? NF1 : NF2;

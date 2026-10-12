@@ -179,10 +179,21 @@
   },
   "typicalM2": { "0": 28, "1": 40, "2": 60, "3": 85, "_note": "Superficie útil supuesta cuando la fuente no la informa (se rotula 'superficie supuesta')." },
   "investor": {
-    "pieAvailableUf": null,
+    "cashTodayClp": 5000000,
+    "_cashTodayNote": "Caja disponible hoy para reserva, pie al contado y gastos de escritura.",
+    "monthlySavingsClp": 400000,
+    "_monthlySavingsNote": "Ahorro mensual disponible para la inversión: paga las cuotas del pie y, después de la entrega, cubre el flujo negativo del depto.",
+    "savingsIndexedToUf": false,
+    "_savingsIndexedNote": "false = el ahorro queda fijo en pesos y pierde valor en UF con la inflación (conservador). true = sube con la UF.",
+    "minCushionClp": 0,
+    "_minCushionNote": "Colchón que nunca quieres tocar: el plan es 'no alcanza' si tu caja baja de este monto en algún mes.",
+    "upfrontPolicy": "optimo",
+    "_upfrontPolicyNote": "optimo = adelanta todo el pie posible sin quedar corto después; toda_la_caja = adelanta toda la caja de hoy; solo_reserva = no adelanta pie.",
+    "assumeInstallmentsUntilDelivery": true,
+    "_assumeInstallmentsNote": "Si el proyecto no publica condiciones y la entrega es futura, supone pie en cuotas hasta la entrega (rotulado como supuesto).",
+    "planMonthsAfterDelivery": 36,
     "reserveUf": 60,
     "monthlyIncomeClp": null,
-    "maxNegativeFlowClp": 0,
     "horizonYears": 10
   }
 }

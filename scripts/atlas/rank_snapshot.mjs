@@ -44,11 +44,15 @@ for (const p of projects) {
     passed: a.gates.passed, pending: a.gates.fails.slice(0, 4), status: a.status.code,
     price_uf: a.priceUf, monthly_cf_clp: uf?.value ? Math.round(a.metrics.monthlyCf * uf.value) : null,
     rent_source: a.rentSource, hypothetical: !!a.unit.hypothetical,
+    plan: a.plan ? { status: a.plan.status, terms: a.plan.terms.source, cuotas: a.plan.cuotas,
+      cuota_clp: uf?.value ? Math.round(a.plan.cuotaUf * uf.value) : null, min_installments_needed: a.plan.minInstallmentsNeeded } : null,
   });
 }
 rows.sort((x, y) => (y.passed - x.passed) || (y.score - x.score));
 rows.forEach((r, i) => { r.position = i + 1; });
+const inv = config.investor || {};
 const out = { generated_at: new Date().toISOString(), profile: config.ranking.profile, uf: uf?.value ?? null,
+  investor_plan: { cash_today_clp: inv.cashTodayClp ?? null, monthly_savings_clp: inv.monthlySavingsClp ?? null },
   note: 'Ranking con la configuración publicada y solo datos reales. "passed" = pasa las puertas de calidad.', rows };
 writeFileSync(path.join(APP, 'data', 'ranking_snapshot.json'), `${JSON.stringify(out, null, 1)}\n`);
 console.log(`ranking_snapshot.json: ${rows.length} proyectos (${rows.filter((r) => r.passed).length} verificados)`);

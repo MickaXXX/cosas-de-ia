@@ -2,6 +2,7 @@
  * finanzas, escenarios, riesgo, score y explicación. Es la única función que conoce a
  * todos los módulos; la interfaz y el ranking solo llaman a analyzeUnit(). */
 import { simulate, runScenarios, requiredIncomeClp } from './finance.js';
+import { cashPlan } from './plan.js';
 import { deliveryStatus, monthsToDelivery } from './status.js';
 import { rentAnalysis, referenceEstimate } from './rentals.js';
 import { estimateCommonExpenses } from './commonexp.js';
@@ -115,6 +116,28 @@ export function microsectorOf(p, cfg) {
   return null;
 }
 
+/**
+ * Condiciones de pago del pie para una unidad:
+ * - publicadas en el proyecto/unidad (`payment_terms`, con fuente), o
+ * - SUPUESTO rotulado: pie en cuotas hasta la entrega prometida si la entrega es futura, o
+ * - sin cuotas: entrega inmediata (o fecha desconocida) → pie completo al escriturar.
+ */
+export function paymentTerms(project, unit, a, cfg) {
+  const pt = { ...(project.payment_terms || {}), ...(unit.payment_terms || {}) };
+  const fin = cfg.financing, inv = cfg.investor || {};
+  if (pt.pie_installments_max != null) {
+    return { installmentsMax: Math.max(0, +pt.pie_installments_max || 0), postDelivery: !!pt.pie_post_delivery,
+      minUpfrontPct: pt.pie_min_upfront_pct != null ? pt.pie_min_upfront_pct / 100 : 0, interest: pt.pie_interest || null,
+      source: 'publicado', verification: pt.verification_status || 'extraido_busqueda_web', sourceName: pt.source_name || null,
+      url: pt.source_url || null, publishedAt: pt.published_at || null, notes: pt.notes || null };
+  }
+  if (a.deliveryMonths > 0 && inv.assumeInstallmentsUntilDelivery !== false) {
+    return { installmentsMax: Math.min(a.deliveryMonths, fin.pieInstallmentsMax ?? 48), postDelivery: false, minUpfrontPct: 0,
+      source: 'supuesto', notes: 'Pie en cuotas hasta la entrega: práctica habitual en venta en verde/blanco, no publicada para este proyecto.' };
+  }
+  return { installmentsMax: 0, postDelivery: false, minUpfrontPct: 0, source: a.deliveryAssumed ? 'sin_datos' : 'sin_cuotas' };
+}
+
 /** Arma el input del simulador para una unidad, con los supuestos de configuración y los
  *  ajustes del usuario (overrides). */
 export function financeInput(project, unit, a, ctx, mode, overrides = {}) {
@@ -129,7 +152,8 @@ export function financeInput(project, unit, a, ctx, mode, overrides = {}) {
     bonoPiePct: (unit.bono_pie_pct ?? 0) / 100,
     creditPct: fin.creditPct, maxCreditPct: fin.maxCreditPct,
     annualRate: fin.annualRate, rateConvention: fin.rateConvention, loanYears: fin.loanYears,
-    deliveryMonths: a.deliveryMonths, deliveryDelayMonths: 0, pieInstallmentsMax: fin.pieInstallmentsMax, reservaUf: fin.reservaUf,
+    deliveryMonths: a.deliveryMonths, deliveryDelayMonths: 0, reservaUf: fin.reservaUf,
+    pieInstallmentsMax: a.terms ? a.terms.installmentsMax : fin.pieInstallmentsMax, piePostDelivery: !!a.terms?.postDelivery, pieUpfrontUf: 0,
     closing: fin.closing, furnishingUf: mode === 'renta_corta' ? air.furnishingUf : 0,
     desgravamenPctMonthly: fin.desgravamenPctMonthly, incendioPctMonthly: fin.incendioPctMonthly, insuredValueFactor: fin.insuredValueFactor,
     rentUf: rentClp && ufv ? rentClp / ufv : 0,
@@ -220,9 +244,22 @@ export function analyzeUnit(project, unitIn, ctx, opt = {}) {
     a.rentSource = 'usuario';
   }
   a.gc = estimateCommonExpenses(project, unit, { listings: ctx.rentals, cfg: cfg.commonExpenses });
-  // Finanzas
+  // Finanzas y plan de pago personal (caja de hoy + ahorro mensual + pie en cuotas)
+  a.terms = paymentTerms(project, unit, a, cfg);
   a.input = financeInput(project, unit, a, ctx, mode, opt.overrides);
   a.base = a.priceUf ? simulate(a.input) : null;
+  a.plan = a.base ? cashPlan(a.base, cfg.investor, { ufValue: ufv, terms: { ...a.terms, installmentsMax: a.input.pieInstallmentsMax, postDelivery: a.input.piePostDelivery } }) : null;
+  if (a.plan && a.plan.upfrontUf > 1e-6 && !(opt.overrides && 'pieUpfrontUf' in opt.overrides)) {
+    // El pie que adelantas cambia el calendario de aportes (y la TIR), no el flujo del depto.
+    a.input = { ...a.input, pieUpfrontUf: a.plan.upfrontUf };
+    a.base = simulate(a.input);
+  }
+  if (a.plan && a.plan.status === 'no_alcanzable' && a.input.creditPct < a.input.maxCreditPct - 1e-9) {
+    const alt = simulate({ ...a.input, creditPct: a.input.maxCreditPct, pieUpfrontUf: 0, skipIrr: true });
+    const p2 = cashPlan(alt, cfg.investor, { ufValue: ufv, terms: { ...a.terms, installmentsMax: a.input.pieInstallmentsMax, postDelivery: a.input.piePostDelivery } });
+    a.planMaxCredit = p2 && { creditPct: a.input.maxCreditPct, status: p2.status, label: p2.short, minInstallmentsNeeded: p2.minInstallmentsNeeded,
+      cuotaUf: p2.cuotaUf, cuotas: p2.cuotas, marginUf: p2.marginUf, monthlyCfUf: alt.metrics.monthlyCf };
+  }
   a.metrics = a.base?.metrics || {};
   a.structure = a.base?.structure || { warnings: ['Sin precio: no se puede simular'] };
   a.scenarios = a.priceUf ? runScenarios(a.input, cfg.scenarios) : {};

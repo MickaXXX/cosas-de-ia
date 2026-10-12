@@ -25,7 +25,7 @@ No necesita build ni `npm install`. MapLibre GL viene incluido en `docs/atlas/ve
 
 ### Pruebas
 ```bash
-node --test tests/atlas/*.test.mjs                  # motor financiero, colores, comparables, ranking, CSV (29 pruebas)
+node --test tests/atlas/*.test.mjs                  # motor financiero, plan de pago, colores, comparables, ranking, CSV (39 pruebas)
 python3 -m unittest discover -s scripts/atlas/tests # pipeline: DST, UF de respaldo, cambios/alertas, issues, geometría (22 pruebas)
 python3 scripts/atlas/validate.py --strict          # calidad de los datos (falla si hay errores)
 ```
@@ -49,13 +49,14 @@ La CI (`atlas-tests.yml`) corre las tres en cada cambio de Atlas.
 | Ficha completa con "¿De dónde sale este número?" | ✅ | Fuente, fecha, fórmula y confianza |
 | Dividendo francés en UF, seguros, gastos de compra, bono pie, 70/80/90%, 15–30 años | ✅ Probado | Reproduce GoodProp: UF 3.249,18 al 3,8% a 30 años = **UF 15,14** |
 | Compra en verde: pie en cuotas, crédito y arriendo desde la entrega, atraso, alza de tasa | ✅ Probado | |
+| **Tu plan de pago:** caja de hoy + ahorro mensual + pie en cuotas → alcanzable / ajustado / no alcanza, saldo de tu caja mes a mes, cuotas mínimas que pedir, alternativa con crédito 90% | ✅ Probado | Pie en cuotas **publicado** solo en Fundamenta Eco Egaña (26 cuotas, prensa may-2025, sin verificar). En el resto: **supuesto** rotulado (cuotas hasta la entrega) o pie al contado |
 | Arriendo en 2 km: promedio, mediana, mín., máx., p25, p75, CLP/m², histograma, exclusiones | ✅ Lógica probada | ⚠️ **No hay avisos reales cargados.** Sin 8 comparables homogéneos se usa una referencia comunal publicada (Assetplan/Yapo 2025), rotulada de **baja confianza** |
 | Gasto común: publicado > comparables > banda por comuna (ESTIMADO) | ✅ | Bandas derivadas de promedios publicados (Millacero/Impulsa jul-2026) ÷ superficie típica supuesta |
 | Flujo mes a mes (vacancia, corretaje, contribuciones en abr/jun/sep/nov), escenarios conservador/base/optimista/estrés | ✅ Probado | El dueño paga el GC en meses vacíos en todos los escenarios |
 | Proyección 1–30 años, TIR real y nominal, VAN, venta neta | ✅ | Plusvalía separada del flujo |
 | Riesgo multidimensional + Monte Carlo reproducible | ✅ | Probabilidades rotuladas **SIMULADAS** |
 | Airbnb mes a mes, IVA, ocupación y tarifa de equilibrio, legalidad | ✅ Modo supuestos | Sin AirDNA: **simulación de supuestos**, no datos de mercado |
-| Ranking con 8 pestañas, perfiles y pesos editables, puertas de calidad | ✅ Probado | DEMO nunca entra al ranking real |
+| Ranking con 8 pestañas (incluida "Con mi plan de pago" y tu capacidad de compra), perfiles y pesos editables, puertas de calidad | ✅ Probado | DEMO nunca entra al ranking real |
 | Comparador (2–5 unidades, mismo escenario) | ✅ | |
 | Alertas: proyecto nuevo, baja de precio, cambio de entrega/stock, obra nueva, cambio de posición en el ranking | ✅ | Repo (cada lunes) + reglas locales sobre favoritos |
 | Digest semanal "Mis 10 mejores oportunidades" | ✅ En la app · correo opcional | Correo requiere secretos SMTP |
@@ -87,6 +88,7 @@ docs/atlas/                    ← app estática (GitHub Pages)
        status.js    colores de entrega
        rentals.js   comparables 2 km, deduplicación, extremos, estadísticos, referencia comunal
        commonexp.js gasto común publicado/estimado
+       plan.js      tu plan de pago: caja de hoy + ahorro + pie en cuotas → saldo mes a mes y estado
        risk.js      riesgo y Monte Carlo (PRNG con semilla)
        scoring.js   score por perfil, puertas de calidad, plusvalía proyectiva, explicaciones
        analysis.js  une todo por unidad (único módulo que conoce a los demás)
@@ -166,6 +168,7 @@ El chat con Claude usa el SDK oficial (`@anthropic-ai/sdk`) cargado bajo demanda
 - **Contribuciones:** (60% del precio como avalúo supuesto − exento $61.711.570) × 0,933% (tasa a confirmar en sii.cl).
 - **Valorización:** plusvalía real 1% anual (base), costo de venta 2,5%, inflación 3,5% para TIR nominal.
 - **Escenarios:** conservador, base, optimista y estrés, con arriendo, vacancia, mantención, GC, plusvalía, atraso de entrega y alza de tasa en verde.
+- **Tu plan de pago:** caja hoy $5.000.000 y ahorro $400.000/mes (fijo en pesos: pierde valor en UF con la inflación). Pie al contado "óptimo": todo lo posible manteniendo 3 meses de dividendo + gasto común de margen. Sin condiciones publicadas: pie en cuotas hasta la entrega si es futura (supuesto rotulado), pie al contado si es inmediata o desconocida. Se revisa hasta 36 meses después de la entrega. **No alcanza** = tu caja baja de cero (o de tu colchón) algún mes; **ajustado** = margen menor a 3 meses de costos fijos o el depto te pide más de lo que ahorras.
 
 ---
 
@@ -183,6 +186,7 @@ Ver `HOW_TO_EXTEND.md` (agregar comuna, proveedor, POI, indicador) y `AGENTS.md`
 - Precios, entregas y stock de los proyectos reales salen de portales vía búsqueda web y no están verificados.
 - Las direcciones se geocodificaron con Nominatim. Dos quedaron marcadas "por revisar": 252 Marathon y Bilbao 514.
 - La seguridad comunal (CEAD) no está cargada.
+- Pie en cuotas: solo un proyecto lo publica (Fundamenta, nota de mayo de 2025, sin verificar). En los demás el plan de pago usa un supuesto rotulado o pie al contado. El plan no reemplaza la evaluación del banco: no revisa tu renta, deudas ni antigüedad laboral.
 - Las probabilidades de pérdida son simuladas con distribuciones supuestas, no calibradas con datos observados.
 - Los microsectores de Santiago Centro son propuestas a verificar.
 - El trazado de la Línea 7 viene de OpenStreetMap (comunitario). Las estaciones de L8 y L9 se ubican en las combinaciones confirmadas; no se dibujan trazados no publicados.

@@ -45,6 +45,9 @@ export function renderComparador(root) {
       ${row('Precio', ({ a }) => N(a.priceUf, uf(a.priceUf, 0)), 'min')}
       ${row('UF/m²', ({ a }) => N(a.pricePerM2Uf, num(a.pricePerM2Uf, 1)), 'min')}
       ${row('Capital inicial', ({ r }) => N(r.structure.equity, uf(r.structure.equity, 0)), 'min')}
+      ${row('Tu plan de pago', ({ a }) => (a.plan ? `<span class="chip ${a.plan.tone}">${a.plan.icon} ${esc(a.plan.short)}</span>` : 's/d'))}
+      ${row('Cuotas del pie', ({ a }) => (a.plan ? (a.plan.cuotas ? `${a.plan.cuotas} × ${clp(a.plan.cuotaUf * v)}${a.terms.source === 'publicado' ? '' : ' (sup.)'}` : a.plan.minInstallmentsNeeded ? `necesitas ≥ ${a.plan.minInstallmentsNeeded}` : 'al escriturar') : 's/d'))}
+      ${row('Peor mes de tu caja', ({ a }) => (a.plan ? N(a.plan.minBalanceUf, clp(a.plan.minBalanceUf * v)) : 's/d'), 'max')}
       ${row('Dividendo', ({ r }) => N(r.metrics.dividend * v, clp(r.metrics.dividend * v)), 'min')}
       ${row('Arriendo usado', ({ r }) => clp(r.input.rentUf * v))}
       ${row('Fuente del arriendo', ({ a }) => esc(a.rentSource))}

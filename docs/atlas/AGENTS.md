@@ -19,6 +19,8 @@ Reglas para cualquier agente (Claude Code, Cursor, Codex…) que trabaje en `doc
 | Colores de pin / reglas de entrega | `docs/atlas/js/status.js` |
 | Comparables de arriendo, radio, estadísticos | `docs/atlas/js/rentals.js` |
 | Gasto común estimado | `docs/atlas/js/commonexp.js` + `config/defaults.json → commonExpenses` |
+| Plan de pago personal (caja, ahorro, pie en cuotas) | `docs/atlas/js/plan.js` + `finance.js → equitySchedule` + `config/defaults.json → investor` (+ pruebas en `tests/atlas/plan.test.mjs`) |
+| Condiciones de pie en cuotas de un proyecto | `data/projects.json → payment_terms` (con fuente) · `analysis.js → paymentTerms` |
 | Riesgo y Monte Carlo | `docs/atlas/js/risk.js` + `config/defaults.json → risk` |
 | Score, perfiles, puertas de calidad | `docs/atlas/js/scoring.js` + `config/defaults.json → ranking` |
 | Unir todo por unidad | `docs/atlas/js/analysis.js` |

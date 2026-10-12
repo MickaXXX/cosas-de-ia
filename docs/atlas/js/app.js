@@ -74,6 +74,10 @@ function applyVerification(p, v) {
   if (v.unit) q.units = [...(q.units || []).filter((u) => u.id !== v.unit.id), v.unit];
   if (v.commonExpensesClp) q.common_expenses_clp = v.commonExpensesClp;
   if (v.strStatus) q.short_term_rental = { ...(q.short_term_rental || {}), status: v.strStatus };
+  if (v.pieInstallmentsMax != null) {
+    q.payment_terms = { pie_installments_max: v.pieInstallmentsMax, pie_post_delivery: !!v.piePostDelivery, pie_min_upfront_pct: v.pieMinUpfrontPct ?? null,
+      source_name: `Verificación de ${v.by || 'usuario'} con la inmobiliaria`, source_url: v.url || null, observed_at: v.at, verification_status: 'verificado' };
+  }
   if (v.address && v.lat != null) { q.address = v.address; q.lat = v.lat; q.lon = v.lon; q.geo_precision = 'exacta'; q.geo_review = false; }
   q.evidence = [{ field: 'verificacion', source_name: `Verificación de ${v.by || 'usuario'} con la inmobiliaria`, source_url: v.url || q.publication_url,
     observed_at: v.at, access_method: 'verificacion_manual', confidence: 'alta', verification_status: 'verificado', notes: v.notes }, ...(q.evidence || [])];
@@ -125,7 +129,7 @@ function defaultFilters() {
     communes: [...S.config.communes.active], priceMin: null, priceMax: null, ufm2Max: null, m2Min: null, m2Max: null,
     bedrooms: [], status: Object.keys(STATUS), metroMax: null, grossYieldMin: null, cfMin: null, dividendMax: null,
     pieMax: null, riskMax: null, evidenceMin: null, onlyStock: false, onlyMicro: false, developer: '', includeHypo: true,
-    strVerified: false, onlyAnalyzable: false,
+    strVerified: false, onlyAnalyzable: false, planReachable: false, pieCuotas: false,
   };
 }
 
@@ -147,7 +151,7 @@ export function passes(p) {
   if (f.strVerified && p.short_term_rental?.status !== 'permitido_verificado') return false;
   const units = an?.units || [];
   if (!units.length) {
-    if (f.onlyAnalyzable || metricFiltersActive(f) || f.bedrooms.length) return false;
+    if (f.onlyAnalyzable || metricFiltersActive(f) || f.bedrooms.length || f.planReachable || f.pieCuotas) return false;
     const pr = p.price_from_uf;
     if (f.priceMin && (!pr || pr < f.priceMin)) return false;
     if (f.priceMax && (!pr || pr > f.priceMax)) return false;
@@ -171,6 +175,8 @@ function unitPasses(a, f) {
   if (f.pieMax && !(a.structure.equity <= f.pieMax)) return false;
   if (f.riskMax && !(a.risk.total <= f.riskMax)) return false;
   if (f.evidenceMin && !(a.evidence.score >= f.evidenceMin)) return false;
+  if (f.planReachable && !(a.plan && a.plan.status !== 'no_alcanzable')) return false;
+  if (f.pieCuotas && !(a.terms?.source === 'publicado' && a.terms.installmentsMax > 0)) return false;
   return true;
 }
 
@@ -207,6 +213,12 @@ function renderFilters() {
       <div class="pair"><label class="field"><span>m² mín.</span>${inp('m2Min', '25')}</label><label class="field"><span>m² máx.</span>${inp('m2Max', '80')}</label></div>
       <label class="field"><span>UF/m² útil máx.</span>${inp('ufm2Max', '110')}</label>
       <div class="row">${[['Estudio', 0], ['1D', 1], ['2D', 2], ['3D+', 3]].map(([l, b]) => `<button class="btn sm ${f.bedrooms.includes(b) ? 'on' : ''}" data-action="filter-bed" data-bed="${b}">${l}</button>`).join('')}</div>
+    </div></details>
+    <details open><summary>Mi plan de pago</summary><div class="fbody">
+      <div class="small">Caja ${clp(cfg.investor.cashTodayClp)} + ahorro ${clp(cfg.investor.monthlySavingsClp)}/mes <button class="btn sm ghost" data-action="goto-plan-config">Cambiar</button></div>
+      <label class="check"><input type="checkbox" data-filter-bool="planReachable" ${f.planReachable ? 'checked' : ''}>Solo alcanzables con mi plan (incluye ajustados)</label>
+      <label class="check"><input type="checkbox" data-filter-bool="pieCuotas" ${f.pieCuotas ? 'checked' : ''}>Solo con pie en cuotas publicado</label>
+      <div class="tiny muted">Pie en cuotas publicado hay en pocos proyectos: en el resto la ficha usa un supuesto rotulado o asume pie al contado.</div>
     </div></details>
     <details><summary>Inversión</summary><div class="fbody">
       <label class="field"><span>Rentabilidad bruta mín. (%)</span>${inp('grossYieldMin', '4,5')}</label>
@@ -361,6 +373,12 @@ function popupHTML(p) {
     lines.push(['Dividendo 30 años', a.metrics.dividend ? `${uf(a.metrics.dividend)} · ${clp(a.metrics.dividend * ufv)}` : 's/d']);
     lines.push(['Arriendo estimado', a.rentEstimate ? `${clp(a.rentEstimate.baseClp)} (${a.rentSource === 'comparables' ? `${a.rent.counts.used} comparables` : a.rentSource === 'referencia' ? 'ref. comunal' : a.rentSource})` : 'sin datos']);
     lines.push(['Flujo mensual', a.metrics.monthlyCf != null ? clp(a.metrics.monthlyCf * ufv, { sign: true }) : 's/d']);
+    if (a.plan) {
+      const pl = a.plan;
+      lines.push(['Tu plan', `<span class="chip ${pl.tone}">${pl.icon} ${esc(pl.short)}</span>`]);
+      lines.push(['Pie', pl.cuotas ? `hoy ${clp(pl.paidTodayUf * ufv)} + ${pl.cuotas} × ${clp(pl.cuotaUf * ufv)}${a.terms.source === 'publicado' ? '' : ' (supuesto)'}`
+        : pl.minInstallmentsNeeded ? `necesitas ≥ ${pl.minInstallmentsNeeded} cuotas` : `${clp(pl.pieUf * ufv)} al escriturar`]);
+    }
     lines.push(['Score', `${Math.round(a.score)} · ${a.gates.passed ? 'oportunidad verificada' : 'provisional'}`]);
   } else if (p.price_from_uf) lines.push(['Desde', `${uf(p.price_from_uf, 0)} · ${clp(p.price_from_uf * ufv)}`]);
   return `<div class="pop">
@@ -444,7 +462,7 @@ function renderOpps() {
         <div><div class="t">${esc(p.name)}</div>
           <div class="m">${esc(p.commune)} · ${a ? `${uf(a.priceUf, 0)} · ${a.unit.hypothetical ? 'hipotética' : esc(a.unit.type || `${a.unit.bedrooms}D`)}` : p.price_from_uf ? `desde ${uf(p.price_from_uf, 0)}` : 'sin precio'}</div>
           ${a ? `<div class="m">Flujo ${clp(a.metrics.monthlyCf * ufv, { sign: true })}/mes · bruta ${pct(a.metrics.grossYield)}</div>` : '<div class="m muted">Sin unidad analizable</div>'}
-          <div class="row" style="margin-top:3px">${p.demo ? '<span class="chip demo">DEMO</span>' : ''}${a && !a.gates.passed ? '<span class="chip warn">provisional</span>' : ''}${a?.gates.passed ? '<span class="chip good">verificada</span>' : ''}</div></div>
+          <div class="row" style="margin-top:3px">${p.demo ? '<span class="chip demo">DEMO</span>' : ''}${a?.plan ? `<span class="chip ${a.plan.tone}" title="${esc(a.plan.label)}">${a.plan.icon} ${esc(a.plan.short)}</span>` : ''}${a?.terms?.source === 'publicado' && a.terms.installmentsMax > 0 ? '<span class="chip info">pie en cuotas</span>' : ''}${a && !a.gates.passed ? '<span class="chip warn">provisional</span>' : ''}${a?.gates.passed ? '<span class="chip good">verificada</span>' : ''}</div></div>
         <div class="score">${a ? Math.round(a.score) : '–'}<small>score</small></div></div>`;
   }).join('') : '<div class="empty"><b>Sin proyectos en esta vista</b>Mueve el mapa o ajusta los filtros. Si no hay datos: Configuración → Importar proyectos, o activa el modo DEMO.</div>'}
     ${noGeo.length ? `<div class="opps-head" style="position:static"><div class="tiny muted">${noGeo.length} proyecto(s) sin ubicación (no aparecen en el mapa): ${noGeo.map((p) => `<a href="#" data-action="open-project" data-id="${esc(p.id)}">${esc(p.name)}</a>`).join(', ')}</div></div>` : ''}`;
@@ -543,6 +561,11 @@ function setView(v) {
   history.replaceState(null, '', v === 'mapa' ? location.pathname : `#${v}`);
 }
 actions.setView = setView;
+handle('goto-plan-config', () => {
+  S.adminTab = 'supuestos';
+  setView('config');
+  setTimeout(() => document.getElementById('cfg-perfil')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+});
 actions.rerenderView = () => { if (S.view !== 'mapa') VIEWS[S.view]($(`#view-${S.view}`)); else renderOpps(); };
 
 $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-view]'); if (b) setView(b.dataset.view); });

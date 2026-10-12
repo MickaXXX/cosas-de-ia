@@ -37,6 +37,15 @@ def build(url: str) -> tuple[str, str]:
         cf = r.get("monthly_cf_clp")
         lines.append(f"  {r['position']}. {r['name']} ({r['commune']}) · score {r['score']} · "
                      f"flujo {'s/d' if cf is None else f'{cf:,.0f}'.replace(',', '.')} CLP/mes · {flag}")
+    plan = snap.get("investor_plan") or {}
+    if plan.get("cash_today_clp") is not None:
+        money = lambda x: f"{x:,.0f}".replace(",", ".")
+        ok = [r for r in snap.get("rows", []) if (r.get("plan") or {}).get("status") in ("alcanzable", "ajustado")]
+        near = sorted((r for r in snap.get("rows", []) if (r.get("plan") or {}).get("min_installments_needed")),
+                      key=lambda r: r["plan"]["min_installments_needed"])[:3]
+        lines += ["", f"Con tu plan (caja ${money(plan['cash_today_clp'])} + ahorro ${money(plan['monthly_savings_clp'] or 0)}/mes):"]
+        lines += [f"  - {r['name']} ({r['commune']}): {r['plan']['status']}" for r in ok[:5]] or ["  - Ninguno alcanza con las condiciones de pie conocidas."]
+        lines += [f"  - {r['name']}: alcanzaría con pie en {r['plan']['min_installments_needed']} cuotas" for r in near]
     lines += ["", f"Cambios detectados en los últimos 7 días ({len(events)}):"]
     for e in events[:40]:
         lines.append(f"  - {LABELS.get(e['type'], e['type'])}: {e['title']}"

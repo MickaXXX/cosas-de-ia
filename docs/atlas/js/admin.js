@@ -42,9 +42,16 @@ function revert(id) {
 // ------------------------------------------------------------------ campos
 const F = (path, label, kind = 'num', extra = {}) => ({ path, label, kind, ...extra });
 const SECTIONS = [
-  { id: 'perfil', title: 'Mi perfil de inversionista', help: 'Opcional. Se usa en "Mejores con mi presupuesto", en el Asesor y en la reserva de caja del análisis de riesgo. No se envía a ningún lado.', fields: [
-    F('investor.pieAvailableUf', 'Capital disponible para pie + gastos (UF)'), F('investor.reserveUf', 'Reserva de emergencia para el depto (UF)'),
-    F('investor.monthlyIncomeClp', 'Ingreso líquido mensual (CLP)', 'num', { step: 10000 }), F('investor.maxNegativeFlowClp', 'Flujo negativo mensual que toleras (CLP, ej. -80000)', 'num', { step: 5000 }),
+  { id: 'perfil', title: 'Mi plan de pago', help: 'Tu caja de hoy y tu ahorro mensual. Con esto cada ficha calcula si te alcanza (pie al contado, cuotas del pie, escritura y flujo después de la entrega), el ranking "Mi plan" y el filtro "Alcanzable". Se guarda en este navegador; si lo publicas queda en el repositorio, que es público.', fields: [
+    F('investor.cashTodayClp', 'Caja disponible hoy (CLP): reserva, pie al contado y escritura', 'num', { step: 100000 }),
+    F('investor.monthlySavingsClp', 'Ahorro mensual para la inversión (CLP)', 'num', { step: 10000 }),
+    F('investor.minCushionClp', 'Colchón que no quieres tocar (CLP)', 'num', { step: 100000 }),
+    F('investor.upfrontPolicy', 'Pie al contado', 'select', { options: [['optimo', 'Óptimo: todo lo posible sin quedar corto después'], ['toda_la_caja', 'Toda mi caja de hoy'], ['solo_reserva', 'Nada: guardo la caja como colchón']] }),
+    F('investor.savingsIndexedToUf', 'Mi ahorro sube con la UF (si no, queda fijo en pesos)', 'bool'),
+    F('investor.assumeInstallmentsUntilDelivery', 'Si no hay datos y la entrega es futura, suponer pie en cuotas hasta la entrega', 'bool'),
+    F('investor.planMonthsAfterDelivery', 'Meses después de la entrega que revisa el plan', 'int'),
+    F('investor.reserveUf', 'Reserva de emergencia para el depto (UF, para el riesgo simulado)'),
+    F('investor.monthlyIncomeClp', 'Ingreso líquido mensual (CLP, para la regla del banco)', 'num', { step: 10000 }),
     F('investor.horizonYears', 'Horizonte de inversión (años)', 'int')] },
   { id: 'fin', title: 'Financiamiento', help: 'Tasa de referencia: promedio BCCh 3,97% (jun-2026) + margen. La CAE no es la tasa del crédito.', fields: [
     F('financing.annualRate', 'Tasa anual del crédito', 'pct', { step: 0.01 }),
@@ -134,7 +141,7 @@ export function renderConfig(root) {
 handle('admin-tab', (el) => { S.adminTab = el.dataset.tab; rerender(); });
 
 const BODY = {
-  supuestos: (cfg) => SECTIONS.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.help ? `<p class="small muted" style="margin-top:-4px">${esc(s.help)}</p>` : ''}
+  supuestos: (cfg) => SECTIONS.map((s) => `<div class="card" id="cfg-${s.id}"><h3>${esc(s.title)}</h3>${s.help ? `<p class="small muted" style="margin-top:-4px">${esc(s.help)}</p>` : ''}
     <div class="sim-grid">${s.fields.map((f) => fieldHTML(f, cfg)).join('')}</div></div>`).join('')
     + `<div class="card"><h3>Ocupación Airbnb por mes (opcional)</h3><p class="small muted">Vacío = usa la ocupación promedio. Solo con evidencia (proveedor licenciado o historial propio); si no, déjalo vacío.</p>
       <div class="sim-grid">${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((m, i) => {
@@ -389,6 +396,9 @@ export function openVerifyForm(projectId) {
       <label class="field"><span>Precio UF</span><input type="number" step="0.01" id="vPrice" value="${u.offer_price_uf ?? u.list_price_uf ?? ''}"></label>
       <label class="field"><span>Bono pie %</span><input type="number" step="0.1" id="vBono" value="${u.bono_pie_pct ?? ''}"></label>
       <label class="field"><span>Gasto común informado (CLP)</span><input type="number" id="vGc" value="${prev.commonExpensesClp ?? ''}"></label>
+      <label class="field"><span>Pie en cuotas: máximo de cuotas (vacío = no preguntado, 0 = no ofrecen)</span><input type="number" min="0" max="120" id="vCuotas" value="${prev.pieInstallmentsMax ?? ''}"></label>
+      <label class="check"><input type="checkbox" id="vPost" ${prev.piePostDelivery ? 'checked' : ''}>Cuotas del pie pueden seguir después de la entrega</label>
+      <label class="field"><span>% del precio al contado en la promesa</span><input type="number" min="0" max="30" step="0.5" id="vUpPct" value="${prev.pieMinUpfrontPct ?? ''}"></label>
       <label class="field"><span>Renta corta según reglamento</span><select id="vStr"><option value="">(sin cambios)</option>${['permitido_verificado', 'no_permitido_verificado', 'condicionado', 'por_verificar'].map((s) => `<option ${prev.strStatus === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
     </div>
     ${p.lat == null ? `<h4>Ubicación</h4><div class="sim-grid"><label class="field"><span>Dirección</span><input type="text" id="vAddr" value="${esc(prev.address || '')}"></label><label class="field"><span>Latitud</span><input type="number" step="any" id="vLat" value="${prev.lat ?? ''}"></label><label class="field"><span>Longitud</span><input type="number" step="any" id="vLon" value="${prev.lon ?? ''}"></label></div>` : ''}
@@ -403,7 +413,9 @@ handle('verif-save', (el) => {
     useful_m2: +g('vM2'), offer_price_uf: +g('vPrice'), list_price_uf: +g('vPrice'), bono_pie_pct: g('vBono') ? +g('vBono') : 0, available: document.getElementById('vStock').checked } : null;
   const v = { at: g('vAt'), by: LS.get('admin.name', '') || 'usuario', immediate: document.getElementById('vImm').checked, stock: document.getElementById('vStock').checked,
     deliveryDate: g('vDate') || null, unit, commonExpensesClp: g('vGc') ? +g('vGc') : null, strStatus: g('vStr') || null, url: g('vUrl') || null, notes: g('vNotes') || null,
-    address: g('vAddr') || null, lat: g('vLat') ? +g('vLat') : null, lon: g('vLon') ? +g('vLon') : null };
+    address: g('vAddr') || null, lat: g('vLat') ? +g('vLat') : null, lon: g('vLon') ? +g('vLon') : null,
+    pieInstallmentsMax: g('vCuotas') === '' || g('vCuotas') == null ? null : Math.max(0, Math.round(+g('vCuotas'))),
+    piePostDelivery: document.getElementById('vPost').checked, pieMinUpfrontPct: g('vUpPct') ? +g('vUpPct') : null };
   if (v.immediate && v.deliveryDate) return toast('Entrega inmediata y fecha futura a la vez: elige una.');
   const all = LS.get('verifications', {});
   all[id] = v;
@@ -417,8 +429,8 @@ handle('verif-del', (el) => { const all = LS.get('verifications', {}); delete al
 handle('verif-publish', (el) => {
   const id = el.dataset.id, x = LS.get('verifications', {})[id], p = projectById(id);
   if (!x?.unit) return toast('Para publicar hace falta la unidad cotizada (m² y precio).');
-  const cols = ['project_id', 'project_name', 'developer_name', 'address', 'commune', 'latitude', 'longitude', 'unit_id', 'unit_type', 'bedrooms', 'useful_area_m2', 'offer_price_uf', 'bono_pie_pct', 'common_expenses_clp', 'delivery_date', 'delivery_date_status', 'immediate_delivery_verified', 'available_stock_verified', 'short_term_rental_status', 'publication_url', 'data_observed_at', 'evidence_notes'];
-  const row = [p.id, p.name, p.developer?.name || '', x.address || p.address || '', p.commune, x.lat ?? p.lat ?? '', x.lon ?? p.lon ?? '', x.unit.id, x.unit.type || '', x.unit.bedrooms, x.unit.useful_m2, x.unit.offer_price_uf, x.unit.bono_pie_pct || '', x.commonExpensesClp || '',
+  const cols = ['project_id', 'project_name', 'developer_name', 'address', 'commune', 'latitude', 'longitude', 'unit_id', 'unit_type', 'bedrooms', 'useful_area_m2', 'offer_price_uf', 'bono_pie_pct', 'pie_installments_max', 'pie_post_delivery', 'pie_min_upfront_pct', 'common_expenses_clp', 'delivery_date', 'delivery_date_status', 'immediate_delivery_verified', 'available_stock_verified', 'short_term_rental_status', 'publication_url', 'data_observed_at', 'evidence_notes'];
+  const row = [p.id, p.name, p.developer?.name || '', x.address || p.address || '', p.commune, x.lat ?? p.lat ?? '', x.lon ?? p.lon ?? '', x.unit.id, x.unit.type || '', x.unit.bedrooms, x.unit.useful_m2, x.unit.offer_price_uf, x.unit.bono_pie_pct || '', x.pieInstallmentsMax ?? '', x.pieInstallmentsMax != null ? (x.piePostDelivery ? 'si' : 'no') : '', x.pieMinUpfrontPct ?? '', x.commonExpensesClp || '',
     x.deliveryDate || '', x.deliveryDate ? 'confirmada' : '', x.immediate ? 'si' : 'no', x.stock ? 'si' : 'no', x.strStatus || '', x.url || p.publication_url || '', x.at, `Verificado por ${x.by}. ${x.notes || ''}`.trim()];
   const q = (s) => (/[",\n]/.test(String(s)) ? `"${String(s).replace(/"/g, '""')}"` : s);
   openIssue(`atlas-import: proyectos verificación ${p.name}`, `Verificación con la inmobiliaria registrada en la app.\n\n\`\`\`csv\n${cols.join(',')}\n${row.map(q).join(',')}\n\`\`\``);

@@ -5,7 +5,8 @@ import { analyzeUnit, unitPrice } from './analysis.js';
 import { annuityPayment, monthlyRate, simulate, requiredIncomeClp } from './finance.js';
 import { histogram } from './rentals.js';
 import { barChart, lineChart, histogramChart, meter } from './charts.js';
-import { clp, uf, pct, num, meters, date, esc, MONTHS } from './format.js';
+import { clp, clpShort, uf, pct, num, meters, date, esc, MONTHS } from './format.js';
+import { POLICIES } from './plan.js';
 import { DEV_LABELS, DEV_COLORS } from './map.js';
 import { riskLabel } from './risk.js';
 import { COMPONENTS } from './scoring.js';
@@ -82,7 +83,7 @@ function headHTML(p, a) {
       ${a ? '<button class="btn sm" data-action="ficha-print">⬇ Informe PDF</button><button class="btn sm" data-action="ficha-xls">⬇ Excel</button><button class="btn sm" data-action="ficha-sim">Abrir en simulador</button>' : ''}
       ${p.lat != null ? `<button class="btn sm" data-action="ficha-locate" data-lon="${p.lon}" data-lat="${p.lat}">Ver en mapa</button>` : ''}
     </div>
-    ${a ? `<nav class="ficha-nav noprint">${[['resumen', 'Resumen'], ['compra', 'Compra y crédito'], ['arriendo', 'Arriendo 2 km'], ['gastos', 'Gastos'], ['flujo', 'Flujo'], ['escenarios', 'Escenarios'], ['proyeccion', '30 años'], ['riesgo', 'Riesgo'], ['airbnb', 'Airbnb'], ['entorno', 'Entorno'], ['obras', 'Obras cercanas'], ['documentos', 'Evidencia'], ['diligencia', 'Checklist'], ['decision', 'Decisión']].map(([id, l]) => `<a href="#sec-${id}" data-action="ficha-goto" data-sec="${id}">${l}</a>`).join('')}</nav>` : ''}
+    ${a ? `<nav class="ficha-nav noprint">${[['resumen', 'Resumen'], ['plan', 'Tu plan de pago'], ['compra', 'Compra y crédito'], ['arriendo', 'Arriendo 2 km'], ['gastos', 'Gastos'], ['flujo', 'Flujo'], ['escenarios', 'Escenarios'], ['proyeccion', '30 años'], ['riesgo', 'Riesgo'], ['airbnb', 'Airbnb'], ['entorno', 'Entorno'], ['obras', 'Obras cercanas'], ['documentos', 'Evidencia'], ['diligencia', 'Checklist'], ['decision', 'Decisión']].map(([id, l]) => `<a href="#sec-${id}" data-action="ficha-goto" data-sec="${id}">${l}</a>`).join('')}</nav>` : ''}
   </div>`;
 }
 
@@ -129,10 +130,12 @@ function fichaHTML(p, units, a) {
         ${kpi('Capital inicial', uf(a.structure.equity, 0), `pie ${uf(a.structure.pie, 0)} + gastos ${uf(a.structure.closingCosts.total, 0)}`, why({ title: 'Aporte real de capital', value: uf(a.structure.equity), formula: `Pie a pagar ${uf(a.structure.pie)} (precio × (1 − crédito − bono))\n+ gastos operacionales ${uf(a.structure.closingCosts.total)}\n+ amoblado ${uf(a.structure.furnishingUf)}`, confidence: 'supuesto', notes: a.structure.warnings.join(' ') || null, warn: a.structure.warnings.length > 0 }))}
         ${!a.rentEstimate ? kpi('Rentabilidad', 's/d', 'falta un arriendo de referencia: ingrésalo arriba o importa avisos') : kpi('Rentabilidad bruta', pct(m.grossYield), `neta sin deuda ${pct(m.capRate)}`, why({ title: 'Rentabilidades', formula: `Bruta = arriendo × 12 / precio\nNeta sin deuda (cap rate) = NOI anual / (precio real + gastos)\nSobre capital = flujo anual / capital inicial = ${pct(m.cashOnCash)}`, confidence: a.rentSource === 'comparables' ? 'media' : 'baja' }))}
         ${kpi('Riesgo', `${Math.round(a.risk.total)} · ${riskLabel(a.risk.total)}`, a.mc ? `Prob. SIMULADA de año 1 negativo: ${pct(a.mc.probNegativeFirstYear, 0)}` : '', why({ title: 'Riesgo multidimensional (0 = bajo, 100 = alto)', formula: Object.entries(a.risk.dims).map(([k, v]) => `${k}: ${Math.round(v.score)} — ${v.why}`).join('\n'), notes: a.mc?.label, confidence: 'supuesto' }))}
+        ${a.plan ? kpi('Tu plan', `<span class="chip ${a.plan.tone}">${a.plan.icon} ${esc(a.plan.short)}</span>`, planSubline(a), why({ title: 'Tu plan de pago', value: a.plan.label, formula: 'Saldo de tu caja mes a mes = caja de hoy + ahorro − (reserva, pie al contado, cuotas del pie, gastos de escritura) + flujo del depto después de la entrega.\nNo alcanza: el saldo baja de cero (o de tu colchón) en algún mes.\nAjustado: nunca baja, pero el peor mes deja menos de 3 meses de dividendo + gasto común, o el depto te pide más de lo que ahorras.', notes: a.plan.reasons.join(' '), confidence: a.plan.terms.source === 'publicado' ? 'media' : 'supuesto', warn: a.plan.status !== 'alcanzable' })) : ''}
         ${kpi('Score', `${Math.round(a.score)}/100`, `perfil ${esc(cfg.ranking.profiles[cfg.ranking.profile].label)}`, why({ title: 'Score de oportunidad', formula: a.profileScore.contrib.map((c) => `${COMPONENTS[c.key].label}: ${Math.round(c.value)} × peso ${c.weight}`).join('\n'), notes: a.gates.passed ? 'Pasa todas las puertas de calidad.' : `Provisional: ${a.gates.fails.join(' · ')}`, warn: !a.gates.passed }))}
       </div>
       <p class="tiny muted" style="margin-top:8px">CLP en pesos de hoy con ${ufRef} (${esc(S.raw.uf?.source || '')}). Plusvalía separada: ver 30 años.</p>
     </div>
+    ${planHTML(p, a)}
     ${compraHTML(a)}
     ${arriendoHTML(p, a)}
     ${gastosHTML(a)}
@@ -151,6 +154,83 @@ function fichaHTML(p, units, a) {
 
 function kpi(k, v, s, w = '', cls = '') {
   return `<div class="kpi"><div class="k">${esc(k)} ${w}</div><div class="v ${cls}">${v}</div><div class="s">${s}</div></div>`;
+}
+
+// ------------------------------------------------------------------ plan de pago personal
+const TERMS_LABEL = { publicado: 'publicado', supuesto: 'SUPUESTO', sin_datos: 'sin datos verificados', sin_cuotas: 'sin cuotas publicadas' };
+
+function monthLabel(t) {
+  const [y, m] = S.ctx.today.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + t, 1));
+  return `${MONTHS[d.getUTCMonth()].toLowerCase()}-${String(d.getUTCFullYear()).slice(2)}`;
+}
+
+function planSubline(a) {
+  const pl = a.plan, ufv = a.ufValue;
+  if (pl.status === 'no_alcanzable') return pl.minInstallmentsNeeded ? `necesitas pie en ≥ ${pl.minInstallmentsNeeded} cuotas` : `faltan ${clp(-pl.marginUf * ufv)}`;
+  return pl.cuotas ? `${pl.cuotas} cuotas de ${clp(pl.cuotaUf * ufv)}` : `colchón mínimo ${clp(pl.minBalanceUf * ufv)}`;
+}
+
+function planHTML(p, a) {
+  const inv = S.config.investor;
+  if (!a.plan) {
+    return `<div class="section card" id="sec-plan"><h3>Tu plan de pago</h3>
+      <div class="empty">Define tu caja de hoy y tu ahorro mensual para saber si te alcanza.</div>
+      <div class="sim-grid">${planCfgFields(inv)}</div></div>`;
+  }
+  const pl = a.plan, ufv = a.ufValue, c = (u) => clp(u * ufv);
+  const o = ov()[key(a.project, a.unit)] || {};
+  const userTerms = o.fin?.pieInstallmentsMax != null;
+  const t = pl.terms;
+  const termsLine = userTerms ? `<span class="chip info">tu supuesto</span> ${a.input.pieInstallmentsMax} cuotas${a.input.piePostDelivery ? ', pueden seguir después de la entrega' : ''}`
+    : t.source === 'publicado' ? `<span class="chip good">publicado</span> hasta ${t.installmentsMax} cuotas${t.interest === 'sin_interes' ? ' en UF sin interés' : ''}${t.postDelivery ? ', también después de la entrega' : ''} · ${esc(t.sourceName || 'fuente')}${t.publishedAt ? ` (${date(t.publishedAt)})` : ''}${t.url ? ` · <a href="${esc(t.url)}" target="_blank" rel="noopener">ver fuente</a>` : ''}${t.verification !== 'verificado' ? ' · <b>sin verificar con la inmobiliaria</b>' : ''}`
+    : t.source === 'supuesto' ? `<span class="chip warn">SUPUESTO</span> pie en cuotas hasta la entrega (práctica habitual en verde/blanco; este proyecto no lo publica)`
+    : `<span class="chip crit">${esc(TERMS_LABEL[t.source])}</span> ${t.source === 'sin_datos' ? 'sin fecha de entrega ni condiciones publicadas: se supone pie al contado al escriturar' : 'entrega inmediata: el pie se paga al escriturar salvo que la inmobiliaria ofrezca cuotas'}`;
+  const D = pl.deliveryMonths;
+  const series = pl.series;
+  const chart = lineChart({ title: 'Saldo de tu caja mes a mes', x: series.map((r) => monthLabel(r.t)), zero: true, fmt: (v) => clp(v), tickFmt: clpShort,
+    series: [{ name: 'Saldo de tu caja', values: series.map((r) => r.balance * ufv), color: pl.status === 'no_alcanzable' ? 'var(--crit)' : 'var(--s1)' },
+      ...(pl.cushionUf > 0 ? [{ name: 'Tu colchón', values: series.map(() => pl.cushionUf * ufv), dashed: true, color: 'var(--muted)' }] : [])],
+    markers: [{ i: D, label: D === 0 ? 'escritura (hoy)' : `entrega ${monthLabel(D)}` }], height: 220 });
+  const keyRows = [0, ...(D > 0 ? [D - 1] : []), D, D + 1, pl.minBalanceT, Math.min(pl.end, D + 12), pl.end]
+    .filter((x, i, arr) => x >= 0 && x <= pl.end && arr.indexOf(x) === i).sort((x, y) => x - y);
+  const fix = [];
+  if (pl.status === 'no_alcanzable') {
+    if (pl.minInstallmentsNeeded) fix.push(`Pedir el pie en <b>al menos ${pl.minInstallmentsNeeded} cuotas</b>${pl.minInstallmentsNeeded > pl.promisedMonths ? ` (${pl.minInstallmentsNeeded - pl.promisedMonths} después de la entrega: crédito directo de la inmobiliaria)` : ''}.`);
+    if (a.planMaxCredit) fix.push(`Con crédito ${pct(a.planMaxCredit.creditPct, 0)} (si un banco lo aprueba): <b>${esc(a.planMaxCredit.label)}</b>${a.planMaxCredit.minInstallmentsNeeded ? `, con pie en ≥ ${a.planMaxCredit.minInstallmentsNeeded} cuotas` : ''}; el flujo pasaría a ${clp(a.planMaxCredit.monthlyCfUf * ufv, { sign: true })}/mes.`);
+    if (!a.structure.bonoPiePct) fix.push('Buscar <b>bono pie</b>: baja el pie que pagas (depende de la tasación).');
+    fix.push('Negociar descuento o elegir una unidad más chica: baja pie, gastos y dividendo.');
+  }
+  return `<div class="section card" id="sec-plan"><h3>Tu plan de pago · caja ${clp(inv.cashTodayClp)} + ahorro ${clp(inv.monthlySavingsClp)}/mes</h3>
+    <div class="note ${pl.tone}"><b>${pl.icon} ${esc(pl.label)}.</b> ${pl.reasons.length ? esc(pl.reasons[0]) : 'Tu caja nunca baja de cero y queda margen para imprevistos.'}</div>
+    <div class="kpis" style="margin-top:10px">
+      ${kpi('Pagas hoy', c(pl.paidTodayUf), pl.policy === 'optimo' && pl.upfrontUf < 1e-6 && pl.cuotas ? 'no conviene adelantar pie: tu caja paga las primeras cuotas' : `reserva + pie al contado (${esc(pl.policy === 'optimo' ? 'óptimo' : pl.policy === 'toda_la_caja' ? 'toda tu caja' : 'solo reserva')})`, why({ title: 'Pie al contado hoy', value: c(pl.paidTodayUf), formula: `${POLICIES[pl.policy]}.\nPie total ${c(pl.pieUf)} = precio × (1 − crédito − bono pie).\nAdelantar pie baja la cuota, pero no cambia lo que pagas en total: conservar caja te da colchón.`, confidence: 'supuesto' }))}
+      ${kpi('Cuotas del pie', pl.cuotas ? `${pl.cuotas} × ${c(pl.cuotaUf)}` : 'sin cuotas', pl.cuotas ? `${uf(pl.cuotaUf)} c/u${pl.cuotasAfterDelivery ? ` · ${pl.cuotasAfterDelivery} después de la entrega` : ''}` : 'el pie se paga al escriturar', why({ title: 'Cuotas del pie', formula: `(Pie ${c(pl.pieUf)} − pagado hoy ${c(pl.paidTodayUf)}) / ${pl.cuotas || 1} cuotas\nEn UF: en pesos suben con la UF.`, source: t.sourceName || (t.source === 'supuesto' ? 'Supuesto de la app' : null), url: t.url, confidence: t.source === 'publicado' ? 'baja' : 'supuesto', notes: t.notes, warn: t.source !== 'publicado' }), pl.cuotas && pl.cuotaUf > pl.savingsUf ? 'neg' : '')}
+      ${kpi('En la escritura', c(pl.atEscrituraUf), `gastos operacionales${pl.atEscrituraPieUf > 1e-6 ? ' + saldo del pie' : pl.cuotaAtEscritura ? ' + cuota del mes' : ''} · ${D === 0 ? 'hoy' : monthLabel(D)}`, why({ title: 'Lo que pagas al escriturar', value: c(pl.atEscrituraUf), formula: `Gastos operacionales ${c(pl.closingUf)} (tasación, estudio de títulos, notaría, CBR, timbres)\n+ saldo del pie no pagado en cuotas\nTu caja ese mes: ${c(pl.balanceAtEscrituraUf)} después de pagar.`, confidence: 'supuesto' }))}
+      ${kpi('Peor mes de tu caja', c(pl.minBalanceUf), `${monthLabel(pl.minBalanceT)} (mes ${pl.minBalanceT})`, why({ title: 'Saldo mínimo de tu caja', value: c(pl.minBalanceUf), formula: `Mínimo del saldo mes a mes entre hoy y ${pl.end - D} meses después de la entrega.\nColchón exigido: ${c(pl.cushionUf)}.`, notes: pl.savingsIndexed ? 'Ahorro supuesto indexado a la UF.' : 'Ahorro supuesto fijo en pesos: en UF pierde valor con la inflación (conservador).', confidence: 'supuesto' }), pl.marginUf < 0 ? 'neg' : 'pos')}
+      ${kpi('Libre al mes tras la entrega', clp(pl.steadyNetUf * ufv, { sign: true }), `ahorro ${c(pl.savingsEndUf)} ${a.metrics.monthlyCf >= 0 ? '+' : '−'} flujo del depto ${c(Math.abs(a.metrics.monthlyCf))}`, why({ title: 'Lo que te queda cada mes después de la entrega', formula: 'Ahorro mensual + flujo estabilizado del depto (arriendo − dividendo − GC en meses vacíos − contribuciones − mantención …)', confidence: a.rentSource === 'comparables' ? 'media' : 'baja', notes: a.rentSource !== 'comparables' ? 'El arriendo no viene de comparables en 2 km: el flujo es de baja confianza.' : null }), pl.steadyNetUf < 0 ? 'neg' : 'pos')}
+    </div>
+    <p class="small" style="margin:8px 0 4px">Pie en cuotas: ${termsLine}</p>
+    ${chart}
+    ${pl.reasons.length > 1 ? `<ul class="small">${pl.reasons.slice(1).map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+    ${fix.length ? `<h4>Qué lo haría alcanzable</h4><ul class="small">${fix.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
+    <details class="small"><summary>Mes a mes (meses clave)</summary><div class="table-scroll"><table class="t"><tr><th>Mes</th><th>Fase</th><th class="num">Ahorro</th><th class="num">Pagos (pie/escritura)</th><th class="num">Flujo depto</th><th class="num">Saldo de tu caja</th></tr>
+      ${keyRows.map((k) => { const r = series[k]; return `<tr class="${k === pl.minBalanceT ? 'hl' : ''}"><td>${monthLabel(k)} (${k})</td><td>${esc(r.phase)}</td><td class="num">${c(r.savings)}</td><td class="num">${r.equity ? `−${c(r.equity)}` : '—'}</td><td class="num">${r.cf ? clp(r.cf * ufv, { sign: true }) : '—'}</td><td class="num">${c(r.balance)}</td></tr>`; }).join('')}</table></div></details>
+    <h4>Ajusta el plan</h4>
+    <div class="sim-grid">
+      ${planCfgFields(inv)}
+      ${simField('pieInstallmentsMax', 'Cuotas del pie (esta unidad)', a.input.pieInstallmentsMax, 1, 'int', userTerms ? 'tu supuesto' : t.source === 'publicado' ? 'publicado' : t.source === 'supuesto' ? 'supuesto' : 'sin datos')}
+      <label class="check"><input type="checkbox" data-sim-bool="piePostDelivery" ${a.input.piePostDelivery ? 'checked' : ''}>Las cuotas pueden seguir después de la entrega</label>
+    </div>
+    <p class="tiny muted">Caja, ahorro y colchón valen para todos los proyectos (Configuración → Mi plan de pago). Las cuotas solo para esta unidad. No es una preaprobación: el banco además evalúa tu renta y tus deudas.</p>
+  </div>`;
+}
+
+function planCfgFields(inv) {
+  return `<label class="field"><span>Caja hoy (CLP)</span><input type="number" step="100000" data-cfg="investor.cashTodayClp" data-kind="num" value="${inv.cashTodayClp ?? ''}"></label>
+    <label class="field"><span>Ahorro mensual (CLP)</span><input type="number" step="10000" data-cfg="investor.monthlySavingsClp" data-kind="num" value="${inv.monthlySavingsClp ?? ''}"></label>
+    <label class="field"><span>Colchón que no tocas (CLP)</span><input type="number" step="100000" data-cfg="investor.minCushionClp" data-kind="num" value="${inv.minCushionClp ?? 0}"></label>
+    <label class="field"><span>Pie al contado</span><select data-cfg="investor.upfrontPolicy" data-kind="select">${Object.entries({ optimo: 'Óptimo', toda_la_caja: 'Toda mi caja', solo_reserva: 'Solo reserva' }).map(([k, l]) => `<option value="${k}" ${inv.upfrontPolicy === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
 }
 
 // ------------------------------------------------------------------ compra y crédito
@@ -178,7 +258,7 @@ function compraHTML(a) {
         <tr><td><b>Aporte real de capital</b></td><td class="num"><b>${num(st.equity, 2)}</b></td><td></td><td class="num"><b>${clp(st.equity * ufv)}</b></td></tr></table>
         <details class="small" style="margin-top:6px"><summary>Detalle de gastos operacionales</summary>${st.closingCosts.items.map((i) => `<div class="row between"><span>${esc(i.label)}</span><span class="num">${uf(i.uf)}</span></div>`).join('')}<div class="tiny muted">Supuestos editables en Configuración. Cotizar con banco y notaría.</div></details>
         ${st.warnings.map((w) => `<div class="note warn small" style="margin-top:6px">${esc(w)}</div>`).join('')}
-        ${a.input.deliveryMonths > 0 ? `<div class="note small" style="margin-top:6px">Compra en verde/blanco: pie en ${Math.min(a.input.deliveryMonths, a.input.pieInstallmentsMax)} cuotas hasta la entrega (~${a.input.deliveryMonths} meses). El crédito, el dividendo y el arriendo parten al escriturar. La tasa se fija al escriturar: puede cambiar. Riesgo de atraso: ver escenario Estrés.</div>` : ''}
+        ${a.input.deliveryMonths > 0 ? `<div class="note small" style="margin-top:6px">Compra en verde/blanco: pie en ${a.base.equity.cuotas} cuotas (~${a.input.deliveryMonths} meses a la entrega; detalle en Tu plan de pago). El crédito, el dividendo y el arriendo parten al escriturar. La tasa se fija al escriturar: puede cambiar. Riesgo de atraso: ver escenario Estrés.</div>` : ''}
       </div>
       <div><h4 style="margin-top:0">Ajusta y recalcula</h4>
         <div class="sim-grid">
@@ -214,8 +294,19 @@ document.addEventListener('change', (e) => {
   const kind = el.dataset.kind;
   if (el.dataset.sim === 'rentClp') o.rentClp = v;
   else if (el.dataset.sim === 'gcClp') o.gcClp = v;
-  else o.fin[el.dataset.sim] = kind === 'pct' ? v / 100 : v;
+  else o.fin[el.dataset.sim] = kind === 'pct' ? v / 100 : kind === 'int' ? Math.max(0, Math.round(v)) : v;
+  // Más cuotas que meses a la entrega solo tiene sentido si pueden seguir después de escriturar.
+  if (el.dataset.sim === 'pieInstallmentsMax' && current.a && o.fin.pieInstallmentsMax > current.a.deliveryMonths) o.fin.piePostDelivery = true;
   rerender();
+});
+document.addEventListener('change', (e) => {
+  const el = e.target;
+  if (!current || !el.closest?.('#drawerInner')) return;
+  if (el.dataset.simBool) {
+    const o = (ov()[key(current.p, current.unit)] ||= {});
+    o.fin = { ...(o.fin || {}), [el.dataset.simBool]: el.checked };
+    rerender();
+  } else if (el.dataset.cfg) rerender();         // caja/ahorro: lo guarda Configuración; aquí solo se redibuja
 });
 handle('sim-preset', (el) => { const o = (ov()[key(current.p, current.unit)] ||= {}); o.fin = { ...(o.fin || {}), creditPct: +el.dataset.cp }; rerender(); });
 handle('sim-reset', () => { delete ov()[key(current.p, current.unit)]; rerender(); });
@@ -484,6 +575,12 @@ export function questionsFor(p, a) {
   if (!p.delivery?.immediate_verified) q.push('¿Cuál es la fecha de entrega comprometida en la promesa y qué multa paga la inmobiliaria por atraso?');
   else q.push('¿Tiene recepción final? ¿Puedo ver el certificado?');
   if (a.input.bonoPiePct > 0) q.push('El bono pie, ¿queda por escrito? ¿Qué pasa si la tasación del banco sale bajo el precio de escritura?');
+  const pl = a.plan;
+  if (a.terms?.source !== 'publicado' || a.terms?.verification !== 'verificado') {
+    q.push(`¿Ofrecen el pie en cuotas? ¿Cuántas, en UF y sin interés?${pl?.minInstallmentsNeeded ? ` (necesito al menos ${pl.minInstallmentsNeeded})` : ''} ¿Pueden seguir después de la entrega (crédito directo)?`);
+    q.push('¿Qué porcentaje exigen al contado en la promesa? ¿Cuánto es la reserva y es reembolsable?');
+  }
+  if (pl?.cuotasAfterDelivery) q.push('Las cuotas del pie después de la entrega, ¿cómo se documentan (pagaré)? ¿Tienen interés o reajuste además de la UF? ¿El banco las considera como deuda?');
   if (a.gc.kind !== 'PUBLICADO') q.push('¿Cuál es el gasto común estimado de esta unidad y qué incluye (calefacción, agua caliente, conserjería)?');
   q.push('¿El reglamento de copropiedad permite arriendos por días (Airbnb)? ¿Hay restricciones o cobros especiales?');
   q.push('¿Qué gastos operacionales cubre la inmobiliaria (escritura, CBR, tasación)?');
@@ -495,16 +592,18 @@ export function questionsFor(p, a) {
 
 // ------------------------------------------------------------------ decisión
 function decisionHTML(p, a) {
-  const ufv = a.ufValue, m = a.metrics, inv = S.config.investor;
-  const tol = inv.maxNegativeFlowClp;
+  const ufv = a.ufValue, m = a.metrics;
   const cfClp = m.monthlyCf * ufv;
+  const pl = a.plan;
   let verdict, cls, reasons = [];
-  if (!a.gates.passed) {
+  if (pl?.status === 'no_alcanzable') {
+    verdict = 'No te alcanza con tu plan actual'; cls = 'crit';
+    reasons = pl.reasons.slice(0, 3);
+    if (a.planMaxCredit && a.planMaxCredit.status !== 'no_alcanzable') reasons.push(`Con crédito ${pct(a.planMaxCredit.creditPct, 0)} sería: ${a.planMaxCredit.label.toLowerCase()}.`);
+  } else if (!a.gates.passed) {
     verdict = 'Investigar primero'; cls = 'warn';
     reasons = a.gates.fails.slice(0, 5);
-  } else if (tol != null && tol !== 0 && cfClp < tol) {
-    verdict = 'Descartar por flujo negativo bajo tu criterio'; cls = 'crit';
-    reasons = [`Flujo base ${clp(cfClp)}/mes es peor que tu tolerancia de ${clp(tol)}/mes.`];
+    if (pl?.status === 'ajustado') reasons.push(`Tu plan alcanza con poco margen: ${pl.reasons[0] || 'revisa Tu plan de pago'}`);
   } else {
     verdict = 'Atractivo si se cumple…'; cls = 'good';
     if (a.gc.kind !== 'PUBLICADO') reasons.push('el gasto común real no supera la banda alta estimada');
@@ -512,7 +611,11 @@ function decisionHTML(p, a) {
     if (a.input.bonoPiePct > 0) reasons.push('la tasación respalda el precio con bono pie');
     if (a.mc && a.mc.probNegativeFirstYear > 0.3) reasons.push(`aceptas una probabilidad simulada de ${pct(a.mc.probNegativeFirstYear, 0)} de año 1 negativo`);
   }
-  if (cfClp < 0 && (tol == null || tol === 0)) reasons.push(`Flujo negativo de ${clp(cfClp)}/mes: solo conviene si aceptas aportar ese monto (define tu tolerancia en Configuración → Mi perfil).`);
+  if (cls === 'good' && pl?.status === 'ajustado') { verdict = 'Atractivo pero ajustado para tu caja si se cumple…'; cls = 'warn'; reasons.push(...pl.reasons.slice(0, 2)); }
+  if (cfClp < 0 && pl && pl.status !== 'no_alcanzable') {
+    reasons.push(pl.steadyNetUf >= 0 ? `Flujo negativo de ${clp(cfClp)}/mes: lo cubre tu ahorro (te quedan ${clp(pl.steadyNetUf * ufv)}/mes).`
+      : `Flujo negativo de ${clp(cfClp)}/mes: supera tu ahorro y tu caja baja ${clp(-pl.steadyNetUf * ufv)} cada mes.`);
+  } else if (cfClp < 0 && !pl) reasons.push(`Flujo negativo de ${clp(cfClp)}/mes: define tu caja y ahorro en Configuración → Mi plan de pago.`);
   return `<div class="section card" id="sec-decision"><h3>Decisión sugerida</h3>
     <div class="decision"><div class="verdict" style="color:var(--${cls === 'warn' ? 'warn' : cls === 'crit' ? 'crit' : 'good'})">${esc(verdict)}</div>
     <ul class="small">${reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
@@ -525,13 +628,15 @@ handle('ficha-xls', () => {
   const resumen = [{ proyecto: p.name, unidad: a.unit.id, comuna: p.commune, precio_uf: a.priceUf, precio_clp: Math.round(a.priceClp), uf_valor: ufv, uf_fecha: a.ufDate,
     dividendo_uf: a.metrics.dividend?.toFixed(2), arriendo_clp: Math.round(a.rentEstimate?.baseClp || 0), fuente_arriendo: a.rentEstimate?.source, flujo_mensual_clp: Math.round(a.metrics.monthlyCf * ufv),
     rent_bruta: a.metrics.grossYield?.toFixed(4), cap_rate: a.metrics.capRate?.toFixed(4), cash_on_cash: a.metrics.cashOnCash?.toFixed(4), dscr: a.metrics.dscr?.toFixed(2),
-    tir_real: a.metrics.irrReal?.toFixed(4), riesgo: Math.round(a.risk.total), score: Math.round(a.score), estado: a.gates.passed ? 'verificada' : 'provisional', pendientes: a.gates.fails.join(' | ') }];
+    tir_real: a.metrics.irrReal?.toFixed(4), riesgo: Math.round(a.risk.total), score: Math.round(a.score), estado: a.gates.passed ? 'verificada' : 'provisional', pendientes: a.gates.fails.join(' | '),
+    tu_plan: a.plan?.short ?? 's/d', pie_cuotas: a.plan?.cuotas ?? '', cuota_pie_clp: a.plan ? Math.round(a.plan.cuotaUf * ufv) : '', cuotas_minimas: a.plan?.minInstallmentsNeeded ?? '' }];
   const flujo = a.base.months.slice(0, 60).map((r) => ({ mes: r.t, fase: r.phase, ocupacion: r.occ.toFixed(2), arriendo_uf: r.income.toFixed(2), gc_dueno_uf: r.gcOwner.toFixed(2), dividendo_uf: r.dividend.toFixed(2), flujo_uf: r.cf.toFixed(2), flujo_clp: Math.round(r.cf * ufv) }));
   const proy = a.base.annual.map((r) => ({ anio: r.years, valor_uf: r.value.toFixed(0), deuda_uf: r.balance.toFixed(0), neto_venta_uf: r.saleNet?.toFixed(0), flujo_acum_uf: r.cumCf.toFixed(0), resultado_uf: r.result?.toFixed(0), tir_real: r.irrReal?.toFixed(4) }));
   const esc_ = Object.entries(a.scenarios).map(([k, r]) => ({ escenario: k, arriendo_clp: Math.round(r.input.rentUf * ufv), flujo_mensual_clp: Math.round(r.metrics.monthlyCf * ufv), meses_negativos_24: r.metrics.negativeMonths24, tir_real: r.metrics.irrReal?.toFixed(4) }));
   const comps = (a.rent?.comps || []).map((c) => ({ id: c.id, distancia_m: Math.round(c.distance), precio_clp: c.price_clp, m2: c.useful_m2, fuente: c.source, publicado: c.published_at }));
   const sup = Object.entries(a.input).filter(([, v]) => typeof v !== 'object').map(([k, v]) => ({ supuesto: k, valor: v }));
-  download(`atlas_${p.id}_${a.unit.id}.xls`, toExcelHTML([{ name: 'Resumen', rows: resumen }, { name: 'Flujo mensual (60 meses)', rows: flujo }, { name: 'Proyección', rows: proy }, { name: 'Escenarios', rows: esc_ }, { name: 'Comparables', rows: comps }, { name: 'Supuestos', rows: sup }]), 'application/vnd.ms-excel');
+  const plan = a.plan ? a.plan.series.map((r) => ({ mes: r.t, fase: r.phase, ahorro_clp: Math.round(r.savings * ufv), pagos_pie_escritura_clp: Math.round(r.equity * ufv), flujo_depto_clp: Math.round(r.cf * ufv), saldo_caja_clp: Math.round(r.balance * ufv) })) : [];
+  download(`atlas_${p.id}_${a.unit.id}.xls`, toExcelHTML([{ name: 'Resumen', rows: resumen }, { name: 'Flujo mensual (60 meses)', rows: flujo }, { name: 'Proyección', rows: proy }, { name: 'Escenarios', rows: esc_ }, { name: 'Comparables', rows: comps }, ...(plan.length ? [{ name: 'Tu plan de pago', rows: plan }] : []), { name: 'Supuestos', rows: sup }]), 'application/vnd.ms-excel');
 });
 
 handle('alert-create', (el) => {

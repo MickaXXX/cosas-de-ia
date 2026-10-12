@@ -101,6 +101,7 @@ def validate_projects(doc, cfg, rep: Report) -> dict:
         for k in ("publication_url", "brochure_url"):
             if p.get(k) and not URL_RE.match(str(p[k])):
                 rep.err(pid, k, "URL inválida")
+        validate_payment_terms(pid, p.get("payment_terms"), rep)
         a = age_days(p.get("observed_at"))
         if not p.get("demo") and (a is None or a > cfg["staleness_days"]["projects"]):
             stats["stale"] += 1
@@ -119,7 +120,32 @@ def validate_projects(doc, cfg, rep: Report) -> dict:
             b = u.get("bedrooms")
             if b is not None and (not isinstance(b, int) or not 0 <= b <= 6):
                 rep.err(uid, "bedrooms", f"Dormitorios inválidos: {b}")
+            validate_payment_terms(uid, u.get("payment_terms"), rep)
     return stats
+
+
+def validate_payment_terms(pid: str, pt, rep: Report) -> None:
+    """Condiciones de pago del pie (pie en cuotas). Deben traer fuente: sin ella son un supuesto."""
+    if pt is None:
+        return
+    if not isinstance(pt, dict):
+        rep.err(pid, "payment_terms", "Debe ser un objeto")
+        return
+    n = pt.get("pie_installments_max")
+    if n is not None and (not isinstance(n, int) or isinstance(n, bool) or not 0 <= n <= 120):
+        rep.err(pid, "payment_terms.pie_installments_max", f"Cuotas inválidas: {n} (entero 0–120)")
+    up = pt.get("pie_min_upfront_pct")
+    if up is not None and (num(up) is None or not 0 <= num(up) <= 30):
+        rep.err(pid, "payment_terms.pie_min_upfront_pct", f"Porcentaje al contado inválido: {up} (0–30)")
+    if "pie_post_delivery" in pt and not isinstance(pt["pie_post_delivery"], (bool, type(None))):
+        rep.err(pid, "payment_terms.pie_post_delivery", "Debe ser true/false")
+    if pt.get("source_url") and not URL_RE.match(str(pt["source_url"])):
+        rep.err(pid, "payment_terms.source_url", "URL inválida")
+    if n is not None and not pt.get("source_url") and pt.get("verification_status") != "verificado":
+        rep.warn(pid, "payment_terms", "Pie en cuotas sin fuente ni verificación: confirmar con la inmobiliaria")
+    a = age_days(pt.get("published_at") or pt.get("observed_at"))
+    if a is not None and a > 180:
+        rep.warn(pid, "payment_terms", f"Condición de pie publicada hace {a:.0f} días: puede no estar vigente")
 
 
 def validate_developments(doc, cfg, rep: Report) -> dict:
