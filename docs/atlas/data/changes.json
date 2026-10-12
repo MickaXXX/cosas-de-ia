@@ -1,6 +1,39 @@
 {
   "events": [
     {
+      "id": "1e3679476d6629a7",
+      "type": "cambio_ranking",
+      "entity_id": "bilbao-514-providencia",
+      "title": "Bilbao 514: puesto 1 → 6 en el ranking",
+      "before": 1,
+      "after": 6,
+      "detected_at": "2026-10-12T21:26:44Z",
+      "source_url": null,
+      "evidence": "calculo"
+    },
+    {
+      "id": "9f8c5b7b53c26c15",
+      "type": "cambio_ranking",
+      "entity_id": "rau-santa-lucia",
+      "title": "Rau Santa Lucía: puesto 2 → 7 en el ranking",
+      "before": 2,
+      "after": 7,
+      "detected_at": "2026-10-12T21:26:44Z",
+      "source_url": null,
+      "evidence": "calculo"
+    },
+    {
+      "id": "e96977e9fec12a8f",
+      "type": "cambio_ranking",
+      "entity_id": "fundamenta-irarrazaval-vespucio",
+      "title": "Megaproyecto Irarrázaval – Américo Vespucio: puesto 3 → 9 en el ranking",
+      "before": 3,
+      "after": 9,
+      "detected_at": "2026-10-12T21:26:44Z",
+      "source_url": null,
+      "evidence": "calculo"
+    },
+    {
       "id": "5dad99933f62c877",
       "type": "proyecto_nuevo",
       "entity_id": "rau-santa-lucia",
@@ -298,5 +331,5 @@
       "evidence": "media"
     }
   ],
-  "generated_at": "2026-10-12T21:24:08Z"
+  "generated_at": "2026-10-12T21:26:44Z"
 }

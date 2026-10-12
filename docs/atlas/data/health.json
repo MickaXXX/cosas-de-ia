@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T21:24:08Z",
+  "generated_at": "2026-10-12T21:26:44Z",
   "sources": [
     {
       "id": "uf",
@@ -155,7 +155,7 @@
   "jobs": {
     "bootstrap": {
       "task": "bootstrap",
-      "started_at": "2026-10-12T21:24:08Z",
+      "started_at": "2026-10-12T21:26:44Z",
       "steps": [
         {
           "name": "Capas OSM (si faltan)",
@@ -178,7 +178,7 @@
         {
           "name": "Foto del ranking",
           "status": "ok",
-          "seconds": 0.2,
+          "seconds": 0.7,
           "error": null
         },
         {
@@ -188,10 +188,16 @@
           "error": null
         }
       ],
-      "finished_at": "2026-10-12T21:24:08Z",
+      "finished_at": "2026-10-12T21:26:44Z",
       "status": "ok"
     },
     "history": [
+      {
+        "task": "bootstrap",
+        "started_at": "2026-10-12T21:26:44Z",
+        "finished_at": "2026-10-12T21:26:44Z",
+        "status": "ok"
+      },
       {
         "task": "bootstrap",
         "started_at": "2026-10-12T21:24:08Z",
