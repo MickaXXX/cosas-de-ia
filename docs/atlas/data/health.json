@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T20:43:51Z",
+  "generated_at": "2026-10-12T21:13:35Z",
   "sources": [
     {
       "id": "uf",
@@ -47,7 +47,7 @@
       "status": "ok",
       "last_update": "2026-10-12T21:00:00Z",
       "records": 17,
-      "detail": "17 reales · 0 demo · 4 unidades · 15 con precio por re-verificar · 1 ubicaciones por revisar",
+      "detail": "17 reales · 0 demo · 4 unidades · 15 con precio por re-verificar · 3 ubicaciones por revisar",
       "url": null,
       "kind": "dato"
     },
@@ -155,24 +155,24 @@
   "jobs": {
     "bootstrap": {
       "task": "bootstrap",
-      "started_at": "2026-10-12T20:40:08Z",
+      "started_at": "2026-10-12T21:13:35Z",
       "steps": [
         {
           "name": "Capas OSM (si faltan)",
           "status": "ok",
-          "seconds": 186.6,
+          "seconds": 0.0,
           "error": null
         },
         {
           "name": "Geocodificación",
           "status": "ok",
-          "seconds": 33.5,
+          "seconds": 0.1,
           "error": null
         },
         {
           "name": "UF (si falta)",
           "status": "ok",
-          "seconds": 2.2,
+          "seconds": 0.0,
           "error": null
         },
         {
@@ -182,10 +182,16 @@
           "error": null
         }
       ],
-      "finished_at": "2026-10-12T20:43:51Z",
+      "finished_at": "2026-10-12T21:13:35Z",
       "status": "ok"
     },
     "history": [
+      {
+        "task": "bootstrap",
+        "started_at": "2026-10-12T21:13:35Z",
+        "finished_at": "2026-10-12T21:13:35Z",
+        "status": "ok"
+      },
       {
         "task": "bootstrap",
         "started_at": "2026-10-12T20:40:08Z",
@@ -218,6 +224,12 @@
       "field": "observed_at",
       "level": "warning",
       "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "252-marathon-surmonte",
+      "field": "geo",
+      "level": "warning",
+      "message": "El nombre sugiere Av. Marathon 252, pero el portal informa Zañartu 1905: verificar dirección."
     },
     {
       "entity": "252-marathon-surmonte",
@@ -260,6 +272,12 @@
       "field": "observed_at",
       "level": "warning",
       "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "bilbao-514-providencia",
+      "field": "geo",
+      "level": "warning",
+      "message": "Dirección inferida del nombre del proyecto: verificar."
     },
     {
       "entity": "bilbao-514-providencia",
@@ -324,6 +342,6 @@
   ],
   "summary": {
     "errors": 0,
-    "warnings": 20
+    "warnings": 22
   }
 }
