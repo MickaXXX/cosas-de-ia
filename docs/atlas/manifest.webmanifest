@@ -1,0 +1,12 @@
+{
+  "name": "Atlas Inversión Santiago",
+  "short_name": "Atlas",
+  "description": "Mapa y análisis de proyectos de departamentos para inversión en Santiago.",
+  "lang": "es-CL",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f3ef",
+  "theme_color": "#14213d",
+  "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

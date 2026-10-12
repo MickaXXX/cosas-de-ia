@@ -339,7 +339,7 @@
       "source_kind": "busqueda_web",
       "notes": null,
       "geo_note": "El nombre sugiere Av. Marathon 252, pero el portal informa Zañartu 1905: verificar dirección.",
-      "geo_review": false,
+      "geo_review": true,
       "geocoded_at": "2026-10-12T20:43:20Z",
       "geo_display_name": "Barrio Plaza Zañartu, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile"
     },
@@ -857,7 +857,7 @@
       "source_kind": "busqueda_web",
       "notes": null,
       "geo_note": "Dirección inferida del nombre del proyecto: verificar.",
-      "geo_review": false,
+      "geo_review": true,
       "geocoded_at": "2026-10-12T20:43:34Z",
       "geo_display_name": "Avenida Francisco Bilbao, Barrio Las Mil Calles, Providencia, Provincia de Santiago, Región Metropolitana de Santiago, 7500000, Chile"
     },

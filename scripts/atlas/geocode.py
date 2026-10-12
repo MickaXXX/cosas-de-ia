@@ -181,14 +181,17 @@ def main() -> int:
                 rec["geo_note"] = f"Nominatim no encontró «{q}» ({g['at'][:10]}). Ingresar coordenadas a mano."
                 changed += 1
                 continue
+            note = rec.get("geo_note") or ""
+            manual_flag = bool(rec.get("geo_review") and note and not note.startswith(("Nominatim", "El resultado", "Ancla")))
             rec["lat"], rec["lon"] = g["lat"], g["lon"]
             rec["geo_precision"] = precision(g["rank"])
             rec["geo_source"] = "nominatim"
             rec["geocoded_at"] = g["at"]
             rec["geo_display_name"] = g["display_name"]
             expected = rec.get("commune")
-            rec["geo_review"] = bool(expected and g.get("commune") and norm(expected) not in norm(g["display_name"]))
-            if rec["geo_review"]:
+            mismatch = bool(expected and g.get("commune") and norm(expected) not in norm(g["display_name"]))
+            rec["geo_review"] = manual_flag or mismatch
+            if mismatch and not manual_flag:
                 rec["geo_note"] = f"El resultado ({g.get('commune')}) no coincide con la comuna indicada ({expected})."
             changed += 1
         if changed:

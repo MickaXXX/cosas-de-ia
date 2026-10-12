@@ -156,8 +156,13 @@ function deepMerge(a, b) {
  * @param {object} ctx  buildContext()
  * @param {{mode?:'tradicional'|'renta_corta', overrides?:object, profile?:string, weights?:object, mc?:boolean|number, radiusM?:number}} opt
  */
-export function analyzeUnit(project, unit, ctx, opt = {}) {
+export function analyzeUnit(project, unitIn, ctx, opt = {}) {
   const cfg = ctx.config;
+  let unit = unitIn;
+  if (!unit.useful_m2) {
+    const typ = (cfg.typicalM2 || {})[String(Math.min(unit.bedrooms ?? 1, 3))];
+    if (typ) unit = { ...unit, useful_m2: typ, m2_assumed: true };
+  }
   const mode = opt.mode || 'tradicional';
   const ufv = ctx.uf?.value;
   const a = { project, unit, mode, ufValue: ufv, ufDate: ctx.uf?.date };
@@ -195,7 +200,7 @@ export function analyzeUnit(project, unit, ctx, opt = {}) {
   a.rent = a.hasGeo ? rentAnalysis(project, unit, ctx.rentals, { radiusM, areaTolerance: cfg.rentals.areaTolerance, minSample: cfg.rentals.minSample, ufClp: ufv }) : null;
   if (a.rent?.estimate) { a.rentEstimate = a.rent.estimate; a.rentSource = 'comparables'; }
   else {
-    const ref = project.demo ? null : referenceEstimate(project.commune, unit, ctx.references, cfg.rentals.areaElasticity);
+    const ref = project.demo ? null : referenceEstimate(project.commune, unit, ctx.references, cfg.rentals.areaElasticity, cfg.typicalM2);
     if (ref) { a.rentEstimate = ref; a.rentSource = 'referencia'; } else { a.rentEstimate = null; a.rentSource = 'sin_datos'; }
   }
   if (opt.rentClpOverride) {
@@ -237,7 +242,8 @@ export function analyzeUnit(project, unit, ctx, opt = {}) {
   a.score = a.profileScore.score;
   a.gates = qualityGates(a, cfg.ranking.gates);
   if (!a.priceEvidence.some((s) => ACCEPTED_PRICE_EVIDENCE.has(s))) a.gates.fails.push('Precio extraído de búsqueda web: confirmar con la inmobiliaria');
-  if (unit.reference) a.gates.fails.push('Precio "desde" referencial: no es una unidad concreta');
+  if (unit.reference) a.gates.fails.push(unit.hypothetical ? 'Unidad hipotética armada con el precio "desde"' : 'Precio "desde" referencial: no es una unidad concreta');
+  if (unit.m2_assumed) a.gates.fails.push(`Superficie supuesta (${unit.useful_m2} m² típicos de la tipología)`);
   if (a.needsMicrosector && !a.microsector) a.gates.fails.push(`${project.commune}: fuera de los microsectores definidos`);
   if (a.deliveryAssumed) a.gates.fails.push('Fecha de entrega no verificada: se simuló como entrega inmediata');
   if (a.rentSource === 'usuario') a.gates.fails.push('Arriendo ingresado a mano');

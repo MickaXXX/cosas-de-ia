@@ -59,6 +59,7 @@ async function revalidar(req, cache, esShell) {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (url.pathname.includes('/atlas/')) return;   // Atlas Inversión Santiago se sirve aparte
   const esDatos = url.pathname.includes('/data/');
   const req = esDatos ? new Request(url.origin + url.pathname) : e.request;   // ignora ?fresh=1
   const exigeRed = url.searchParams.has('fresh');                            // botón "Actualizar"

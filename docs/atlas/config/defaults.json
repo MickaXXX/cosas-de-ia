@@ -177,6 +177,7 @@
     "radiusM": 1500,
     "saturation": 25
   },
+  "typicalM2": { "0": 28, "1": 40, "2": 60, "3": 85, "_note": "Superficie útil supuesta cuando la fuente no la informa (se rotula 'superficie supuesta')." },
   "investor": {
     "pieAvailableUf": null,
     "reserveUf": 60,

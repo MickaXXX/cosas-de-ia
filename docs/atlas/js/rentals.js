@@ -138,18 +138,25 @@ export function rentAnalysis(project, unit, listings, opts = {}) {
  *  terceros (promedio por tipología o por m²). Confianza baja y etiqueta explícita: no es
  *  un radio de 2 km. Si la referencia trae superficie (ref_m2), se ajusta con
  *  arriendo ∝ m²^elasticidad (los departamentos chicos rinden más por m²). */
-export function referenceEstimate(commune, unit, references, elasticity = 0.7) {
+export function referenceEstimate(commune, unit, references, elasticity = 0.7, typicalM2 = null) {
   const refs = (references || []).filter((r) => r.commune === commune);
   if (!refs.length) return null;
   const typ = unit.bedrooms === 0 ? 'estudio' : `${Math.min(unit.bedrooms, 3)}D`;
-  const ref = refs.find((r) => r.typology === typ) || refs.find((r) => r.typology === 'todas');
+  let ref = refs.find((r) => r.typology === typ) || refs.find((r) => r.typology === 'todas');
+  let refM2 = ref?.ref_m2 ?? null;
+  let assumedRefM2 = false;
+  if (!ref && typicalM2) {
+    // Solo hay otra tipología (p. ej. 1D): se ajusta por superficie suponiendo su m² típico.
+    ref = refs.find((r) => /^\dD$/.test(r.typology) && typicalM2[r.typology[0]]);
+    if (ref) { refM2 = typicalM2[ref.typology[0]]; assumedRefM2 = true; }
+  }
   if (!ref) return null;
   let base = ref.value_clp;
   let method = `referencia comunal ${ref.typology === 'todas' ? 'general' : ref.typology}`;
-  if (ref.ref_m2 && unit.useful_m2) {
-    const factor = Math.pow(unit.useful_m2 / ref.ref_m2, elasticity);
+  if (refM2 && unit.useful_m2) {
+    const factor = Math.pow(unit.useful_m2 / refM2, elasticity);
     base *= factor;
-    method += ` ajustada por superficie (${unit.useful_m2} m² vs ${ref.ref_m2} m², elasticidad ${elasticity})`;
+    method += ` ajustada por superficie (${unit.useful_m2} m² vs ${refM2} m²${assumedRefM2 ? ' supuestos para la tipología de referencia' : ''}, elasticidad ${elasticity})`;
   }
   return {
     lowClp: base * 0.88, baseClp: base, highClp: base * 1.12, method,
