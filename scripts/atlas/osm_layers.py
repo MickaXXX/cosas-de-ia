@@ -255,7 +255,7 @@ out geom;"""
   node["construction:railway"="station"]["station"="subway"]({bb});
   node["railway"="proposed"]["station"="subway"]({bb});
 );
-out tags;"""
+out body;"""
     res3, _ = overpass(q3, cfg)
     stations, seen = [], {}
     line_feats = [(f["properties"]["ref"], f["geometry"]["coordinates"]) for f in feats]
@@ -287,11 +287,16 @@ out tags;"""
 
 
 # --------------------------------------------------------------------------- POIs
-def build_pois(cfg: dict) -> dict:
+def build_pois(cfg: dict, only: set | None = None) -> dict:
     bb = bbox_str(cfg)
     feats, counts, errors = [], {}, {}
-    previous = load_json(OSM / "pois.geojson", {"features": []})
+    previous = load_json(OSM / "pois.geojson", {"features": []}) or {"features": []}
     for cat, spec in cfg["poi_categories"].items():
+        if only is not None and cat not in only:
+            kept = [f for f in previous.get("features", []) if f["properties"].get("category") == cat]
+            feats += kept
+            counts[cat] = len(kept)
+            continue
         need_geom = "min_area_m2" in spec
         out = "out geom;" if need_geom else "out center tags;"
         q = f"[out:json][timeout:180];\n({spec['query']}({bb}););\n{out}"
@@ -382,17 +387,28 @@ out geom;"""
 
 
 # --------------------------------------------------------------------------- main
-def is_stale(cfg: dict) -> bool:
-    meta = load_json(OSM / "meta.json", {})
-    files = ["metro_lines.geojson", "metro_stations.geojson", "pois.geojson", "communes.geojson"]
-    if any(not (OSM / f).exists() for f in files):
-        return True
-    last = meta.get("generated_at")
-    if not last:
-        return True
+LAYER_FILES = {"metro": ["metro_lines.geojson", "metro_stations.geojson"], "pois": ["pois.geojson"],
+               "communes": ["communes.geojson"]}
+
+
+def stale_layers(cfg: dict) -> dict[str, set | None]:
+    """Capas que hay que (re)descargar: faltan, fallaron, quedaron parciales o son viejas.
+    Para POIs devuelve solo las categorías con error (None = todas)."""
     from datetime import datetime
-    age = utc_now() - datetime.fromisoformat(last.replace("Z", "+00:00"))
-    return age > timedelta(days=cfg.get("osm_max_age_days", 30))
+    meta = load_json(OSM / "meta.json", {}) or {}
+    layers = meta.get("layers") or {}
+    out: dict[str, set | None] = {}
+    for name, files in LAYER_FILES.items():
+        m = layers.get(name) or {}
+        if any(not (OSM / f).exists() for f in files) or m.get("status") != "ok" or not m.get("updated_at"):
+            out[name] = None
+            continue
+        age = utc_now() - datetime.fromisoformat(m["updated_at"].replace("Z", "+00:00"))
+        if age > timedelta(days=cfg.get("osm_max_age_days", 30)):
+            out[name] = None
+        elif name == "pois" and m.get("errors"):
+            out[name] = set(m["errors"])
+    return out
 
 
 def main(argv=None) -> int:
@@ -401,19 +417,27 @@ def main(argv=None) -> int:
     ap.add_argument("--if-stale", action="store_true")
     args = ap.parse_args(argv)
     cfg = load_json(CONFIG / "pipeline.json")
-    if args.if_stale and not is_stale(cfg):
-        log("Capas OSM al día; no se descargan.")
-        return 0
+    todo: dict[str, set | None] = {n: None for n in LAYER_FILES}
+    if args.if_stale:
+        todo = stale_layers(cfg)
+        if not todo:
+            log("Capas OSM al día; no se descargan.")
+            return 0
+        log(f"Capas por actualizar: {', '.join(f'{k}{sorted(v) if v else ''}' for k, v in todo.items())}")
     meta = load_json(OSM / "meta.json", {}) or {}
     meta.setdefault("layers", {})
     ok = True
     for name, fn in (("metro", build_metro), ("pois", build_pois), ("communes", build_communes)):
-        if args.only and args.only != name:
+        if (args.only and args.only != name) or name not in todo:
             continue
         log(f"Capa {name}…")
         try:
-            info = fn(cfg)
-            meta["layers"][name] = {"status": "ok", "updated_at": iso(), **info}
+            info = fn(cfg, todo[name]) if name == "pois" else fn(cfg)
+            if name == "pois" and info.get("errors"):
+                info["status_detail"] = "parcial"
+            prev = meta["layers"].get(name, {})
+            stamp = prev.get("updated_at") if (name == "pois" and todo[name]) else iso()
+            meta["layers"][name] = {"status": "ok", "updated_at": stamp or iso(), "last_attempt": iso(), **info}
         except Exception as e:                       # noqa: BLE001
             ok = False
             prev = meta["layers"].get(name, {})

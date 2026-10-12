@@ -1,0 +1,187 @@
+{
+  "_meta": {
+    "version": 1,
+    "updated_at": "2026-10-12T21:00:00Z",
+    "updated_by": "configuración inicial",
+    "note": "Supuestos editables. Se cambian desde Configuración en la app (por navegador) o publicándolos para todos (issue 'atlas-config:'). Nada aquí es una cotización ni un dato de mercado salvo que diga 'source'."
+  },
+  "communes": {
+    "active": ["Providencia", "Las Condes", "Vitacura", "Ñuñoa", "Lo Barnechea", "Santiago"],
+    "available": ["La Reina", "San Miguel", "Macul", "Estación Central", "Independencia", "La Florida", "Recoleta", "San Joaquín", "Huechuraba", "Peñalolén", "La Cisterna", "Quinta Normal"],
+    "note": "Lista inicial de trabajo, no una certificación de seguridad. Ninguna comuna completa se declara 'segura'.",
+    "microsectorsOnly": ["Santiago"],
+    "microsectors": [
+      { "id": "lastarria-forestal", "commune": "Santiago", "name": "Lastarria – Bellas Artes – Parque Forestal", "center": [-70.6405, -33.4373], "radius_m": 650, "status": "propuesto", "justification": "Polo cultural y turístico con Metro L1/L5 (Universidad Católica, Baquedano, Bellas Artes). Propuesta inicial: verificar con datos CEAD y visita." },
+      { "id": "santa-lucia-paris-londres", "commune": "Santiago", "name": "Cerro Santa Lucía – París-Londres", "center": [-70.6455, -33.4425], "radius_m": 550, "status": "propuesto", "justification": "Entorno turístico (Cerro Santa Lucía, barrio París-Londres) y Metro L1 Santa Lucía/U. de Chile. Propuesta inicial: verificar." },
+      { "id": "santa-isabel-portugal", "commune": "Santiago", "name": "Santa Isabel – Portugal – Lira", "center": [-70.6420, -33.4495], "radius_m": 600, "status": "propuesto", "justification": "Alta concentración de edificios nuevos para inversión y Metro L5 Santa Isabel. Propuesta inicial: verificar seguridad del entorno." }
+    ]
+  },
+  "security": {
+    "note": "Indicadores por comuna desde CEAD/SIED. Sin descarga automática: se ingresan con su período y fuente en Configuración → Seguridad. Mientras no haya dato, el componente toma un valor bajo (no beneficia el score).",
+    "byCommune": {}
+  },
+  "communeLiquidity": {
+    "_note": "Supuesto editable 0–100 de profundidad del mercado de reventa/arriendo por comuna. No es un dato observado.",
+    "Providencia": 80, "Las Condes": 78, "Ñuñoa": 75, "Santiago": 70, "Vitacura": 65, "Lo Barnechea": 55,
+    "San Miguel": 68, "La Reina": 55, "Macul": 60, "Estación Central": 60, "Independencia": 60, "La Florida": 62
+  },
+  "map": {
+    "center": [-70.615, -33.435],
+    "zoom": 12.4,
+    "styles": {
+      "claro": "https://tiles.openfreemap.org/styles/liberty",
+      "oscuro": "https://tiles.openfreemap.org/styles/dark"
+    },
+    "fallbackRaster": {
+      "claro": "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+      "oscuro": "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
+      "attribution": "© OpenStreetMap © CARTO"
+    }
+  },
+  "status": { "maxVerificationAgeDays": 60 },
+  "rentals": {
+    "radiusM": 2000,
+    "expandedRadiusM": 3000,
+    "areaTolerance": 0.2,
+    "minSample": 8,
+    "areaElasticity": 0.7,
+    "_areaElasticityNote": "Ajuste de la referencia comunal por superficie: arriendo ∝ (m²)^0,7 (departamentos chicos rinden más por m²). Supuesto editable."
+  },
+  "infrastructure": { "radiiM": [250, 500, 1000, 2000], "nearbyRadiusM": 2000 },
+  "financing": {
+    "annualRate": 0.042,
+    "_annualRateNote": "Referencia: tasa promedio de créditos hipotecarios 3,97% (Banco Central, junio 2026, vía Emol 07-07-2026) + margen editable para segunda vivienda/inversión. No es una cotización.",
+    "rateConvention": "nominal",
+    "loanYears": 30,
+    "creditPct": 0.8,
+    "maxCreditPct": 0.9,
+    "presetsCreditPct": [0.7, 0.8, 0.9],
+    "incomeRatio": 0.25,
+    "desgravamenPctMonthly": 0.00012,
+    "incendioPctMonthly": 0.00022,
+    "insuredValueFactor": 0.8,
+    "pieInstallmentsMax": 48,
+    "reservaUf": 0,
+    "closing": { "tasacionUf": 3, "estudioTitulosUf": 5, "borradorUf": 6, "notariaUf": 4, "cbrPct": 0.004, "timbresPct": 0.008 },
+    "_closingNote": "Gastos operacionales aproximados (supuestos). Impuesto de timbres: 0,8% del crédito (tope legal para plazos > 1 año). Cotizar con banco y notaría."
+  },
+  "rentalModel": {
+    "leaseMonths": 24,
+    "initialVacancyMonths": 1,
+    "turnoverVacancyMonths": 1,
+    "brokeragePctOfRent": 0.595,
+    "_brokerageNote": "Corretaje al propietario: 50% de un mes de arriendo + IVA por cada contrato nuevo.",
+    "collectionLossPct": 0.02,
+    "maintenancePctOfRent": 0.05,
+    "adminPctOfRent": 0,
+    "capexReserveUfMonth": 0.3,
+    "ownerGcShareWhenRented": 0,
+    "rentTaxPct": 0,
+    "_rentTaxNote": "0% por defecto (régimen DFL2 para personas, hasta 2 viviendas). Verificar con asesor tributario.",
+    "rentRealGrowth": 0
+  },
+  "contribuciones": {
+    "exemptClp": 61711570,
+    "exemptValidFrom": "2026-07-01",
+    "ratePct": 0.00933,
+    "avaluoFactor": 0.6,
+    "source": "Monto exento habitacional 2° semestre 2026: SII (sii.cl, reajustes y exenciones). Tasa 0,933% según fuentes secundarias tras reavalúo 2025: confirmar en sii.cl. Avalúo fiscal = 60% del precio: supuesto.",
+    "source_url": "https://www.sii.cl/ayudas/ayudas_por_servicios/2242-reajustes_exenciones-2468.html"
+  },
+  "valuation": {
+    "appreciationReal": 0.01,
+    "saleCostPct": 0.025,
+    "ufInflation": 0.035,
+    "discountRateReal": 0.04,
+    "horizonYears": 30
+  },
+  "scenarios": {
+    "conservador": { "label": "Conservador", "rentFactor": 0.93, "initialVacancyMonths": 2, "turnoverVacancyMonths": 1.5, "maintenancePctOfRent": 0.07, "collectionLossPct": 0.03, "commonExpensesFactor": 1.1, "appreciationReal": 0.0, "marketValueFactor": 0.95, "deliveryDelayMonths": 3, "rateBumpIfFuture": 0.005, "occupancyFactor": 0.85, "adrFactor": 0.95 },
+    "base": { "label": "Base", "rentFactor": 1.0, "initialVacancyMonths": 1, "turnoverVacancyMonths": 1, "maintenancePctOfRent": 0.05, "collectionLossPct": 0.02, "commonExpensesFactor": 1.0, "appreciationReal": 0.01, "marketValueFactor": 1.0, "deliveryDelayMonths": 0, "occupancyFactor": 1.0, "adrFactor": 1.0 },
+    "optimista": { "label": "Optimista", "rentFactor": 1.05, "initialVacancyMonths": 0.5, "turnoverVacancyMonths": 0.5, "maintenancePctOfRent": 0.04, "collectionLossPct": 0.01, "commonExpensesFactor": 0.95, "appreciationReal": 0.02, "marketValueFactor": 1.0, "deliveryDelayMonths": 0, "occupancyFactor": 1.1, "adrFactor": 1.05 },
+    "estres": { "label": "Estrés", "rentFactor": 0.85, "initialVacancyMonths": 4, "turnoverVacancyMonths": 3, "maintenancePctOfRent": 0.09, "collectionLossPct": 0.05, "commonExpensesFactor": 1.25, "appreciationReal": -0.01, "marketValueFactor": 0.88, "deliveryDelayMonths": 12, "rateBumpIfFuture": 0.01, "occupancyFactor": 0.65, "adrFactor": 0.85 }
+  },
+  "commonExpenses": {
+    "radiusM": 1500,
+    "minSample": 5,
+    "minBuildingYear": 2012,
+    "amenityAdjust": { "piscina": 0.06, "gimnasio": 0.03, "conserjer": 0.05, "quincho": 0.02, "cowork": 0.02, "lavander": 0.01, "sauna": 0.02 },
+    "_bandsNote": "CLP por m² útil. Derivado de promedios por departamento publicados (Millacero e Impulsa Gestión, jul-2026: Vitacura $246.992, Lo Barnechea $182.414, Providencia $170.432, Las Condes $156.498, Ñuñoa $136.514, Santiago $91.105) ÷ superficie típica SUPUESTA (Vitacura/Lo Barnechea 70 m², Las Condes 60, Providencia 55, Ñuñoa 50, Santiago 40). Assetplan (ene-2026) reporta GC de 1D más altos en Las Condes (~$236.000): de ahí el techo alto. Es un ESTIMADO.",
+    "defaultBand": { "low": 1800, "base": 2400, "high": 3200, "source": "supuesto general de la app" },
+    "bandsByCommune": {
+      "Vitacura": { "low": 2800, "base": 3530, "high": 4700, "source": "derivado Millacero/Impulsa jul-2026 ÷ 70 m² (supuesto)" },
+      "Lo Barnechea": { "low": 2100, "base": 2610, "high": 3500, "source": "derivado Millacero/Impulsa jul-2026 ÷ 70 m² (supuesto)" },
+      "Providencia": { "low": 2500, "base": 3100, "high": 4200, "source": "derivado Millacero/Impulsa jul-2026 ÷ 55 m² (supuesto)" },
+      "Las Condes": { "low": 2100, "base": 2610, "high": 5000, "source": "derivado Millacero/Impulsa jul-2026 ÷ 60 m² (supuesto); techo según Assetplan 1D" },
+      "Ñuñoa": { "low": 2200, "base": 2730, "high": 3700, "source": "derivado Millacero/Impulsa jul-2026 ÷ 50 m² (supuesto)" },
+      "Santiago": { "low": 1800, "base": 2280, "high": 3100, "source": "derivado Millacero/Impulsa jul-2026 ÷ 40 m² (supuesto)" },
+      "Macul": { "low": 1600, "base": 1990, "high": 2700, "source": "derivado Millacero/Impulsa jul-2026 ÷ 50 m² (supuesto)" },
+      "La Florida": { "low": 2000, "base": 2450, "high": 3300, "source": "derivado Millacero/Impulsa jul-2026 ÷ 55 m² (supuesto)" }
+    }
+  },
+  "airbnb": {
+    "_note": "Sin proveedor licenciado (AirDNA u otro): todo es SIMULACIÓN DE SUPUESTOS editables, no datos de mercado.",
+    "adrClp": 45000,
+    "occupancy": 0.55,
+    "occupancyByMonth": [null, null, null, null, null, null, null, null, null, null, null, null],
+    "avgStayNights": 3,
+    "cleaningFeeClp": 18000,
+    "cleaningCostClp": 16000,
+    "suppliesPerNightClp": 2000,
+    "platformFeePct": 0.03,
+    "cohostPct": 0.2,
+    "utilitiesClpMonth": 65000,
+    "replacementPct": 0.03,
+    "ivaApplies": true,
+    "ivaRate": 0.19,
+    "_ivaNote": "Arriendo amoblado con servicios puede estar afecto a IVA (SII). Tratamiento editable: confirmar con asesor tributario.",
+    "furnishingUf": 80
+  },
+  "risk": {
+    "weights": { "flujo": 30, "vacancia": 20, "liquidez": 15, "entrega": 10, "costos": 10, "datos": 15, "legal": 20, "estacionalidad": 10 },
+    "monteCarlo": {
+      "iterations": 1000,
+      "rankingIterations": 200,
+      "seed": 20261012,
+      "rentSd": 0.08,
+      "occupancySd": 0.15,
+      "vacancyMonths": [[0, 0.25], [1, 0.4], [2, 0.2], [3, 0.1], [6, 0.05]],
+      "badMarketVacancy": [[1, 0.2], [2, 0.3], [3, 0.3], [6, 0.2]],
+      "deliveryDelay": [[0, 0.6], [3, 0.2], [6, 0.12], [12, 0.08]],
+      "capexShockProb": 0.12,
+      "capexShockUf": [5, 12, 35],
+      "_note": "Distribuciones SUPUESTAS (no calibradas con datos observados). Por eso las probabilidades se rotulan como simuladas."
+    },
+    "defaultReserveUf": 60
+  },
+  "ranking": {
+    "profile": "balanceado",
+    "profiles": {
+      "conservador": { "label": "Conservador", "weights": { "flujo": 30, "vacancia": 20, "rentabilidad_capital": 15, "liquidez": 15, "seguridad_servicios": 10, "evidencia": 10 } },
+      "balanceado": { "label": "Balanceado", "weights": { "flujo": 20, "vacancia": 15, "rentabilidad_capital": 15, "rentabilidad_neta": 15, "liquidez": 10, "seguridad_servicios": 10, "evidencia": 15 } },
+      "agresivo": { "label": "Agresivo", "weights": { "flujo": 10, "vacancia": 10, "rentabilidad_capital": 30, "rentabilidad_neta": 25, "liquidez": 5, "seguridad_servicios": 5, "evidencia": 15 } }
+    },
+    "gates": { "maxPriceAgeDays": 60, "minComps": 8, "geoPrecision": ["exacta", "calle"] },
+    "appreciation": {
+      "stageWeights": { "idea": 0.1, "anuncio": 0.2, "diseno": 0.35, "evaluacion": 0.45, "aprobado": 0.6, "en_construccion": 0.85, "operativo": 0.5 },
+      "typeWeights": { "metro_futuro": 1.0, "metro_extension": 0.9, "transporte": 0.6, "mall": 0.5, "comercio": 0.4, "hospital": 0.45, "clinica": 0.4, "universidad": 0.35, "parque": 0.45, "cultura": 0.3, "polo_empleo": 0.5, "vial": 0.3, "residencial": 0.1, "normativa": 0.3, "otro": 0.2 }
+    }
+  },
+  "services": {
+    "_note": "Score propio de servicios (0–100) con POIs de OpenStreetMap: distancia al Metro y presencia de comercio, salud, parques y cultura cercanos. Ponderaciones editables.",
+    "metroPoints": [[200, 40], [500, 34], [800, 24], [1200, 12], [2000, 0]],
+    "within": { "supermercado": [600, 15], "mall": [1500, 10], "clinica": [1200, 10], "hospital": [2500, 5], "parque": [700, 10], "universidad": [1500, 5], "turismo": [1000, 5] }
+  },
+  "tourism": {
+    "_note": "Índice de atractivo turístico PROPIO: museos/atractivos/cultura de OSM a 1,5 km y Metro cercano. No mide ocupación de Airbnb ni demanda real.",
+    "radiusM": 1500,
+    "saturation": 25
+  },
+  "investor": {
+    "pieAvailableUf": null,
+    "reserveUf": 60,
+    "monthlyIncomeClp": null,
+    "maxNegativeFlowClp": 0,
+    "horizonYears": 10
+  }
+}

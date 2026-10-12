@@ -87,13 +87,13 @@ def step_validate():
 
 PLANS = {
     "daily": [("UF", step_uf), ("Validación", step_validate)],
-    "weekly": [("UF", step_uf), ("Geocodificación", step_geocode), ("Radar de noticias", step_radar),
-               ("Capas OSM (si están viejas)", step_osm_if_stale), ("Validación y cambios", step_validate)],
-    "monthly": [("Capas OSM", step_osm_full), ("Validación", step_validate)],
-    "bootstrap": [("Geocodificación", step_geocode), ("UF (si falta)", step_uf_if_missing),
-                  ("Capas OSM (si faltan)", step_osm_if_stale), ("Validación", step_validate)],
-    "now": [("UF", step_uf), ("Geocodificación", step_geocode), ("Radar de noticias", step_radar),
-            ("Capas OSM (si están viejas)", step_osm_if_stale), ("Validación y cambios", step_validate)],
+    "weekly": [("UF", step_uf), ("Capas OSM (si están viejas)", step_osm_if_stale), ("Geocodificación", step_geocode),
+               ("Radar de noticias", step_radar), ("Validación y cambios", step_validate)],
+    "monthly": [("Capas OSM", step_osm_full), ("Geocodificación", step_geocode), ("Validación", step_validate)],
+    "bootstrap": [("Capas OSM (si faltan)", step_osm_if_stale), ("Geocodificación", step_geocode),
+                  ("UF (si falta)", step_uf_if_missing), ("Validación", step_validate)],
+    "now": [("UF", step_uf), ("Capas OSM (si están viejas)", step_osm_if_stale), ("Geocodificación", step_geocode),
+            ("Radar de noticias", step_radar), ("Validación y cambios", step_validate)],
 }
 
 

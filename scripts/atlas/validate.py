@@ -139,7 +139,7 @@ def validate_developments(doc, cfg, rep: Report) -> dict:
         if st == "publicado" and not d.get("radius_justification"):
             rep.err(did, "radius_justification", "Falta justificar el radio de influencia")
         if not d.get("geometry") and (d.get("lat") in (None, "") or d.get("lon") in (None, "")):
-            rep.warn(did, "geo", "Sin ubicación: pendiente de geocodificar")
+            rep.warn(did, "geo", "Sin ubicación: pendiente de geocodificar o de resolver su ancla OSM")
         elif d.get("lat") not in (None, "") and not in_bbox(d.get("lat"), d.get("lon"), cfg):
             rep.err(did, "lat/lon", "Coordenadas fuera de Santiago")
         if st == "publicado" and len(srcs) < 2 and not any(s.get("official") for s in srcs):

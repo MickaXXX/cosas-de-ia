@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-12T21:00:00Z",
+  "mortgage_rate": {
+    "value": 0.0397,
+    "period": "2026-06",
+    "kind": "tasa promedio de colocación para vivienda (UF), referencia de mercado — no es una cotización",
+    "source_name": "Banco Central de Chile, indicadores de coyuntura (vía Emol, 07-07-2026)",
+    "source_url": "https://www.emol.com/noticias/Economia/2026/07/07/1204934/tasa-creditos-hipotecarios.html",
+    "observed_at": "2026-10-12",
+    "verification_status": "extraido_busqueda_web",
+    "note": "Otra fuente secundaria cita 4,06% para el mismo período. Verificar en la base de datos estadísticos del Banco Central (tasas de colocación vivienda). Ofertas puntuales de bancos (ej. 3,39% vivienda nueva) no son promedio."
+  },
+  "uf_fallback": {
+    "value": 41065.38,
+    "date": "2026-10-01",
+    "source_name": "uf-hoy.com (republica valores del Banco Central)",
+    "source_url": "https://www.uf-hoy.com/uf",
+    "note": "Solo se usa si data/uf.json no existe. El job diario lo reemplaza por el valor del día."
+  },
+  "common_expenses_by_commune": {
+    "period": "2026-07",
+    "unit": "CLP por departamento (promedio mensual de la muestra)",
+    "source_name": "Millacero e Impulsa Gestión (219 gastos comunes), vía Meganoticias 13-07-2026",
+    "source_url": "https://www.meganoticias.cl/nacional/526829-comunas-gastos-comunes-caros-elevados-ranking-santiago-las-condes-providencia-13-07-2026.html",
+    "verification_status": "extraido_busqueda_web",
+    "note": "La muestra varía por comuna: los autores advierten que muestra tendencias, no un ranking absoluto.",
+    "values": { "Vitacura": 246992, "Lo Barnechea": 182414, "Providencia": 170432, "Las Condes": 156498, "Ñuñoa": 136514, "La Florida": 134727, "Macul": 99592, "Santiago": 91105 }
+  }
+}

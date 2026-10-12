@@ -128,6 +128,7 @@ class UfFallbackTest(TempDataMixin, unittest.TestCase):
     def test_failure_keeps_last_value_and_marks_stale(self):
         common.write_json(self.tmp / "uf.json", {"value": 41000.5, "date": "2026-10-01", "status": "ok", "series": []})
         with mock.patch.object(update_uf, "from_mindicador", side_effect=RuntimeError("sin red")), \
+                mock.patch.object(update_uf, "from_sii", side_effect=RuntimeError("sin red")), \
                 mock.patch.dict("os.environ", {"CMF_API_KEY": ""}):
             self.assertEqual(update_uf.main(), 0)
         uf = json.loads((self.tmp / "uf.json").read_text())
@@ -139,11 +140,28 @@ class UfFallbackTest(TempDataMixin, unittest.TestCase):
         today = common.santiago_now().date()
         series = [{"date": "2020-01-01", "value": 28000.0}, {"date": today.isoformat(), "value": 41200.0},
                   {"date": "2099-01-01", "value": 99999.0}]
-        with mock.patch.object(update_uf, "from_mindicador", return_value={"series": series, "source": "t", "source_url": "u"}), \
+        with mock.patch.object(update_uf, "from_sii", return_value={"series": series, "source": "t", "source_url": "u"}), \
                 mock.patch.dict("os.environ", {"CMF_API_KEY": ""}):
             update_uf.main()
         uf = json.loads((self.tmp / "uf.json").read_text())
         self.assertEqual(uf["value"], 41200.0)
+
+
+class SiiParserTest(unittest.TestCase):
+    def test_month_sections(self):
+        html = """<div id="mes_enero"><table><tr><th>1</th><td>39.727,01</td><th>2</th><td>39.731,79</td></tr>
+        <tr><th>31</th><td>39.900,10</td><th></th><td></td></tr></table></div>
+        <div id="mes_febrero"><table><tr><th>30</th><td>40.000,00</td><th>1</th><td>39.910,55</td></tr></table></div>"""
+        out = update_uf.parse_sii(html, 2026)
+        self.assertEqual(out[0], {"date": "2026-01-01", "value": 39727.01})
+        self.assertIn({"date": "2026-02-01", "value": 39910.55}, out)
+        self.assertFalse(any(x["date"].startswith("2026-02-30") for x in out), "30 de febrero no existe")
+
+    def test_classic_grid(self):
+        row = "<tr><th>9</th>" + "".join(f"<td>{39000 + m:,.2f}</td>".replace(",", "X").replace(".", ",").replace("X", ".") for m in range(12)) + "</tr>"
+        out = update_uf.parse_sii(f"<table>{row}</table>", 2026)
+        self.assertEqual(len(out), 12)
+        self.assertEqual(out[0], {"date": "2026-01-09", "value": 39000.0})
 
 
 class ChangesTest(TempDataMixin, unittest.TestCase):

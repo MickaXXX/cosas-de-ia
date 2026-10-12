@@ -13,6 +13,11 @@ Precisión que se guarda en `geo_precision`:
 Si el resultado cae fuera de la comuna indicada queda `geo_review = true` para
 revisión humana y la app no lo muestra como ubicación confirmada.
 
+Anclas: un registro puede traer `anchor` = {"type": "station"|"poi", "name": "Ñuble"} y se
+ubica en esa estación de Metro o POI de OpenStreetMap (precisión "aproximada", se dice
+cuál fue el ancla). Un desarrollo puede traer `geometry_from` = {"layer": "metro_future",
+"ref": "7", "status": "en_construccion"} y toma el trazado mapeado en OSM.
+
 Política de uso de Nominatim: máximo 1 petición por segundo, User-Agent propio y
 caché local (data/geocode_cache.json) para no repetir consultas.
 """
@@ -24,7 +29,7 @@ import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import CONFIG, DATA, http_json, iso, load_json, log, write_json  # noqa: E402
+from common import CONFIG, DATA, OSM, http_json, iso, load_json, log, write_json  # noqa: E402
 
 CACHE = DATA / "geocode_cache.json"
 TARGETS = (("projects.json", "projects"), ("developments.json", "developments"), ("rentals.json", "listings"))
@@ -50,11 +55,64 @@ def query_for(rec: dict) -> str | None:
     return None
 
 
+def resolve_anchor(rec: dict, layers: dict) -> bool:
+    """Ubica un registro en una estación o POI de OSM por nombre. Devuelve True si cambió."""
+    a = rec.get("anchor")
+    if not a or rec.get("geo_source") == "manual":
+        return False
+    feats = layers["stations"] if a.get("type") == "station" else layers["pois"]
+    target = norm(a.get("name", ""))
+    hit = next((f for f in feats if norm(f["properties"].get("name", "")) == target), None)
+    if not hit:
+        hit = next((f for f in feats if target and target in norm(f["properties"].get("name", ""))), None)
+    if not hit:
+        if rec.get("geo_note") != f"Ancla «{a.get('name')}» no encontrada en OSM":
+            rec["geo_note"] = f"Ancla «{a.get('name')}» no encontrada en OSM"
+            rec["geo_review"] = True
+            return True
+        return False
+    lon, lat = hit["geometry"]["coordinates"][:2]
+    if rec.get("lat") == lat and rec.get("lon") == lon:
+        return False
+    rec["lat"], rec["lon"] = lat, lon
+    rec["geo_precision"] = "aproximada"
+    rec["geo_source"] = f"ancla OSM: {hit['properties'].get('name')} ({hit['properties'].get('osm_id')})"
+    rec["geocoded_at"] = iso()
+    rec.pop("geo_review", None)
+    return True
+
+
+def resolve_geometry_from(rec: dict, layers: dict) -> bool:
+    spec = rec.get("geometry_from")
+    if not spec:
+        return False
+    feats = layers.get(spec.get("layer"), [])
+    lines = [f["geometry"]["coordinates"] for f in feats
+             if str(f["properties"].get("ref")) == str(spec.get("ref"))
+             and (not spec.get("status") or f["properties"].get("status") == spec["status"])
+             and f["geometry"]["type"] == "LineString"]
+    if not lines:
+        return False
+    geom = {"type": "MultiLineString", "coordinates": lines}
+    if rec.get("geometry") == geom:
+        return False
+    rec["geometry"] = geom
+    rec["geo_source"] = f"OpenStreetMap ({spec.get('layer')}, ref {spec.get('ref')})"
+    rec["geocoded_at"] = iso()
+    return True
+
+
+def load_layers() -> dict:
+    get = lambda f: (load_json(OSM / f, {}) or {}).get("features", [])  # noqa: E731
+    return {"stations": get("metro_stations.geojson"), "pois": get("pois.geojson"),
+            "metro_future": get("metro_future.geojson"), "metro_lines": get("metro_lines.geojson")}
+
+
 def needs_geocode(rec: dict) -> bool:
     if rec.get("geo_source") == "manual":
         return False
-    if rec.get("geometry"):                          # desarrollos con geometría dibujada
-        return False
+    if rec.get("geometry") or rec.get("anchor") or rec.get("geometry_from"):
+        return False                                 # geometría propia o ancla OSM
     has = rec.get("lat") not in (None, "") and rec.get("lon") not in (None, "")
     return (not has) or rec.get("geo_precision") == "pendiente"
 
@@ -98,6 +156,7 @@ def main() -> int:
     cache = load_json(CACHE, {}) or {}
     state = {"calls": 0, "last": 0.0}
     changed_total = 0
+    layers = load_layers()
     for fname, key in TARGETS:
         path = DATA / fname
         doc = load_json(path)
@@ -105,6 +164,9 @@ def main() -> int:
             continue
         changed = 0
         for rec in doc[key]:
+            if resolve_anchor(rec, layers) | resolve_geometry_from(rec, layers):
+                changed += 1
+                continue
             if not needs_geocode(rec):
                 continue
             q = query_for(rec)

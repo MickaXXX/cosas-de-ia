@@ -1,5 +1,289 @@
 {
   "schema_version": 1,
-  "updated_at": null,
-  "developments": []
+  "updated_at": "2026-10-12T21:00:00Z",
+  "note": "Obras y anuncios del radar urbano. Cada uno con fuentes, etapa, certeza y la justificación de su radio. El radio es una ZONA DE ESTUDIO, no una plusvalía asegurada. Fuentes revisadas con búsqueda web el 12-10-2026: los resúmenes son propios.",
+  "developments": [
+    {
+      "id": "metro-l7",
+      "name": "Línea 7 de Metro (Renca – Vitacura)",
+      "type": "metro_futuro",
+      "impact": "mixto",
+      "description": "Nueva línea de 26 km y 19 estaciones entre Renca y Vitacura, pasando por Cerro Navia, Quinta Normal, Santiago, Providencia y Las Condes. A enero de 2026 informaba ~40% de avance y 16 km de túnel excavado. En el 2° semestre de 2026 parten las obras civiles de las primeras estaciones en Vitacura y Las Condes (Vitacura/Las Catalpas, Vespucio/Alonso de Córdova, Cerro Colorado/Rosario Norte).",
+      "organism": "Metro de Santiago",
+      "stage": "en_construccion",
+      "estimated_date": "2028-12",
+      "estimated_label": "fines de 2028 (estimación de Metro; puede cambiar)",
+      "certainty": "alta",
+      "geometry_from": { "layer": "metro_future", "ref": "7", "status": "en_construccion" },
+      "geo_precision": "trazado OSM (mapeado por la comunidad, no oficial)",
+      "radius_m": 800,
+      "radius_justification": "~10 minutos a pie desde la línea: es la distancia en que una estación nueva cambia la accesibilidad diaria. Las estaciones exactas se marcarán cuando estén confirmadas.",
+      "impacts": {
+        "positive": ["Mejor conectividad oriente–poniente sin transbordos", "Mayor demanda de arriendo cerca de futuras estaciones"],
+        "negative": ["Obras con ruido, desvíos y cierre de pistas cerca de las estaciones hasta 2028", "Las fechas de Metro se han corrido antes (2027 → 2028)"]
+      },
+      "timeline": [
+        { "date": "2026-01", "label": "40% de avance, 16 de 26 km de túnel" },
+        { "date": "2026-12", "label": "Inicio obras civiles primeras estaciones Vitacura/Las Condes (2° sem. 2026)" },
+        { "date": "2028-12", "label": "Puesta en servicio estimada" }
+      ],
+      "sources": [
+        { "title": "Línea 7 de Metro alcanza 40% de avance y se estima que abrirá a fines de 2028", "url": "https://www.cnnchile.com/pais/linea-7-de-metro-alcanza-40-de-avance-y-se-estima-que-abrira-a-fines-de-2028/", "publisher": "CNN Chile", "published_at": "2026-02-03", "official": false },
+        { "title": "Avanza la Línea 7 Metro de Santiago: cuándo estará lista y a qué comunas beneficiará", "url": "https://www.infraestructurapublica.cl/avanza-la-linea-7-metro-de-santiago-cuando-estara-lista-y-a-que-comunas-beneficiara/", "publisher": "Infraestructura Pública", "published_at": "2026-03", "official": false },
+        { "title": "Trazado en construcción (OpenStreetMap)", "url": "https://www.openstreetmap.org/way/1300644594", "publisher": "OpenStreetMap", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "metro-l8-los-leones",
+      "name": "Línea 8 de Metro · combinación Los Leones",
+      "type": "metro_futuro",
+      "impact": "mixto",
+      "description": "Línea 8 (Providencia – Puente Alto): 19 km y 14 estaciones por Providencia, Ñuñoa, Macul, Peñalolén, La Florida y Puente Alto. La Comisión de Evaluación Ambiental RM la aprobó por unanimidad el 06-05-2026. Combinaciones previstas: Los Leones, Chile España y Macul. Servicio: 2032 (11 estaciones Puente Alto–Chile España) y 2033 (3 restantes).",
+      "organism": "Metro de Santiago / SEA",
+      "stage": "aprobado",
+      "estimated_date": "2033",
+      "estimated_label": "2033 para el tramo Chile España – Providencia (planificación de Metro)",
+      "certainty": "media",
+      "anchor": { "type": "station", "name": "Los Leones" },
+      "geo_precision": "estación de combinación existente (la estación nueva puede quedar a algunas cuadras)",
+      "radius_m": 800,
+      "radius_justification": "Estación de combinación confirmada: la ganancia de accesibilidad se concentra a ~10 min a pie. Trazado exacto entre estaciones no publicado aquí: no se dibuja una línea inventada.",
+      "impacts": { "positive": ["Nueva conexión directa al sur-oriente"], "negative": ["Obras de varios años desde que se emita la RCA", "Plazo largo (2033): el efecto en arriendos es lejano"] },
+      "sources": [
+        { "title": "Aprueban Línea 8 del Metro", "url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-", "publisher": "24horas", "published_at": "2026-05-06", "official": false },
+        { "title": "Línea 8 del Metro de Santiago: estaciones, comunas beneficiadas y fecha de inauguración", "url": "https://www.elmostrador.cl/datos-utiles/2026/06/01/linea-8-del-metro-de-santiago-estaciones-comunas-beneficiadas-y-fecha-de-inauguracion/", "publisher": "El Mostrador", "published_at": "2026-06-01", "official": false },
+        { "title": "Publicación SEA (firma electrónica)", "url": "https://firma.sea.gob.cl/publicaciones/2026/05/20/1779312740_2168532069", "publisher": "Servicio de Evaluación Ambiental", "published_at": "2026-05-20", "official": true }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "metro-l8-chile-espana",
+      "name": "Línea 8 de Metro · combinación Chile España",
+      "type": "metro_futuro",
+      "impact": "mixto",
+      "description": "Combinación de la futura Línea 8 con la Línea 3 en Chile España (Ñuñoa). Según Metro, el tramo Puente Alto – Chile España (11 estaciones) entraría en servicio en 2032.",
+      "organism": "Metro de Santiago / SEA",
+      "stage": "aprobado",
+      "estimated_date": "2032",
+      "estimated_label": "2032 (planificación de Metro)",
+      "certainty": "media",
+      "anchor": { "type": "station", "name": "Chile España" },
+      "geo_precision": "estación de combinación existente",
+      "radius_m": 800,
+      "radius_justification": "Estación de combinación confirmada; ~10 min a pie.",
+      "impacts": { "positive": ["Conexión Ñuñoa – La Florida – Puente Alto"], "negative": ["Obras prolongadas en Irarrázaval/Chile España"] },
+      "sources": [
+        { "title": "Aprueban Línea 8 del Metro", "url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-", "publisher": "24horas", "published_at": "2026-05-06", "official": false },
+        { "title": "Línea 8 Metro: aprueban proyecto", "url": "https://www.emol.com/noticias/Nacional/2026/05/06/1199242/linea-8-metro-aprueban-proyecto.html", "publisher": "Emol", "published_at": "2026-05-06", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "metro-l9-biobio",
+      "name": "Línea 9 de Metro · tramo 1 (desde Bío Bío)",
+      "type": "metro_futuro",
+      "impact": "mixto",
+      "description": "Línea 9 por el eje Santa Rosa: ~27 km y 19 estaciones (Recoleta, Santiago, San Miguel, San Joaquín, La Granja, San Ramón, La Pintana y Puente Alto). Tramo 1 Bío Bío – Plaza La Pintana (10 estaciones, 14,3 km) previsto para 2030; RCA de tramos 1 y 2 obtenida el 15-05-2025. Tramo 2 hacia Puente Cal y Canto: 2032; tramo 3: 2033.",
+      "organism": "Metro de Santiago",
+      "stage": "en_construccion",
+      "estimated_date": "2030",
+      "estimated_label": "2030 tramo 1 (estimación de Metro)",
+      "certainty": "media",
+      "anchor": { "type": "station", "name": "Bío Bío" },
+      "geo_precision": "estación de combinación existente (inicio del tramo 1)",
+      "radius_m": 800,
+      "radius_justification": "Inicio del tramo 1 en combinación con Línea 6. El resto del trazado (eje Santa Rosa) no se dibuja hasta tener estaciones confirmadas.",
+      "impacts": { "positive": ["Eje Santa Rosa conectado al centro"], "negative": ["Obras en Santa Rosa por varios años"] },
+      "sources": [
+        { "title": "Línea 9 Metro: avance de obras", "url": "https://www.emol.com/noticias/Nacional/2026/09/11/1211210/linea-9-metro-avance-obras.html", "publisher": "Emol", "published_at": "2026-09-11", "official": false },
+        { "title": "Metro de Santiago detalla avance de la Línea 9 y confirma fecha de su primer tramo", "url": "https://www.bloomberglinea.com/latinoamerica/chile/metro-de-santiago-detalla-avance-de-la-linea-9-y-confirma-fecha-de-su-primer-tramo/", "publisher": "Bloomberg Línea", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "metro-l9-cal-y-canto",
+      "name": "Línea 9 de Metro · tramo 2 (Puente Cal y Canto)",
+      "type": "metro_futuro",
+      "impact": "mixto",
+      "description": "Tramo 2 de la Línea 9 hacia Puente Cal y Canto, previsto para 2032 según Metro.",
+      "organism": "Metro de Santiago",
+      "stage": "aprobado",
+      "estimated_date": "2032",
+      "estimated_label": "2032 (estimación de Metro)",
+      "certainty": "media",
+      "anchor": { "type": "station", "name": "Puente Cal y Canto" },
+      "geo_precision": "estación de combinación existente",
+      "radius_m": 800,
+      "radius_justification": "Extremo norte del tramo 2 en combinación con L2/L3.",
+      "impacts": { "positive": ["Conexión directa del eje Santa Rosa con el centro histórico"], "negative": ["Plazo largo"] },
+      "sources": [
+        { "title": "Línea 9 del Metro: una nueva conexión que transformará Santiago", "url": "https://www.elmostrador.cl/datos-utiles/2026/01/12/linea-9-del-metro-una-nueva-conexion-que-transformara-santiago/", "publisher": "El Mostrador", "published_at": "2026-01-12", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "mall-vivo-santiago-nunoa",
+      "name": "Mall Vivo Santiago (Ñuñoa)",
+      "type": "mall",
+      "impact": "mixto",
+      "description": "Centro comercial de 7 pisos y 7 subterráneos en Vicuña Mackenna con Carlos Dittborn, junto a la estación Ñuble (L5/L6), coronado por una torre de 22 pisos de departamentos para arriendo y apart hotel. Inversión cercana a US$200 millones; socios Vivo, Confuturo y Salfacorp (20%). Tiene aprobación ambiental; la apertura se proyectaba para 2029 y podría postergarse por reclamos de vecinos.",
+      "organism": "Vivo Corp / SEA",
+      "stage": "aprobado",
+      "estimated_date": "2029",
+      "estimated_label": "2029 (proyección, sin fecha firme)",
+      "certainty": "media",
+      "anchor": { "type": "station", "name": "Ñuble" },
+      "geo_precision": "estación de referencia (el terreno está junto a la estación)",
+      "radius_m": 1000,
+      "radius_justification": "Mall urbano con cine, oficinas y acceso directo al Metro: atrae comercio y servicios a distancia caminable (~1 km). La torre de renta residencial agrega oferta de arriendo que COMPITE con departamentos cercanos.",
+      "impacts": {
+        "positive": ["Comercio, cine y servicios a pasos", "Nuevo polo de empleo"],
+        "negative": ["Varios años de obras con tránsito pesado", "La torre de arriendo suma competencia directa", "Reclamos vecinales pueden atrasarlo"]
+      },
+      "sources": [
+        { "title": "Con acceso directo al Metro, cine y un apart hotel: así será el nuevo Mall Vivo que se construirá en Santiago", "url": "https://www.meganoticias.cl/nacional/517357-nuevo-mall-vivo-santiago-nunoa-vicuna-mackenna-donde-queda-18-03-2026.html", "publisher": "Meganoticias", "published_at": "2026-03-18", "official": false },
+        { "title": "Salfacorp aportará $15.716 millones por el 20% del proyecto Mall Vivo en Ñuñoa", "url": "https://www.latercera.com/pulso/noticia/salfacorp-aportara-15716-millones-por-el-20-de-proyecto-mall-vivo-en-nunoa/", "publisher": "La Tercera", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "teleferico-bicentenario",
+      "name": "Teleférico Bicentenario · estación Canal San Carlos",
+      "type": "transporte",
+      "impact": "positivo",
+      "description": "Teleférico de ~3,3 km con tres estaciones: Canal San Carlos (Av. Vitacura con Nueva Tajamar, cerca de Metro Tobalaba), Parque Metropolitano (cumbre) y Santa Clara (Ciudad Empresarial, Huechuraba). En 2026 se instalaron las cabinas; se estima operación en 2027.",
+      "organism": "MOP – Dirección General de Concesiones",
+      "stage": "en_construccion",
+      "estimated_date": "2027-03",
+      "estimated_label": "1er trimestre 2027 (estimación)",
+      "certainty": "alta",
+      "anchor": { "type": "station", "name": "Tobalaba" },
+      "geo_precision": "estación de Metro de referencia (la estación del teleférico queda a pocas cuadras)",
+      "radius_m": 600,
+      "radius_justification": "Conecta el polo de oficinas de Providencia/Las Condes con Ciudad Empresarial: beneficio para quien trabaja allá; radio caminable a la estación Canal San Carlos.",
+      "impacts": { "positive": ["Viaje de minutos a Ciudad Empresarial", "Atractivo turístico (Parque Metropolitano)"], "negative": ["Efecto acotado: una línea corta"] },
+      "sources": [
+        { "title": "Informes ejecutivos mensuales del Teleférico", "url": "https://concesiones.mop.gob.cl/uploads/sites/4/2026/08/Informe-Ejecutivo_Teleferico-junio2026.pdf", "publisher": "MOP Concesiones", "published_at": "2026-08", "official": true },
+        { "title": "Inicia instalación de cabinas del Teleférico Bicentenario", "url": "https://www.meganoticias.cl/nacional/524983-inicia-instalacion-cabinas-teleferico-bicentenario-providencia-huechuraba-18-06-2026.html", "publisher": "Meganoticias", "published_at": "2026-06-18", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "hospital-salvador-geriatria",
+      "name": "Nuevo Hospital del Salvador e Instituto Nacional de Geriatría",
+      "type": "hospital",
+      "impact": "positivo",
+      "description": "Complejo público de 641 camas, 26 quirófanos y 373 consultorios en Providencia (calle Salvador), inversión cercana a US$400 millones. En mayo de 2026 el MOP informó 98,56% de avance y se proyectaba apertura parcial en la primavera de 2026, con pruebas técnicas pendientes.",
+      "organism": "MOP / Minsal",
+      "stage": "en_construccion",
+      "estimated_date": "2026-12",
+      "estimated_label": "apertura parcial proyectada para primavera 2026 (con atrasos previos)",
+      "certainty": "alta",
+      "anchor": { "type": "poi", "name": "Nuevo Hospital del Salvador" },
+      "geo_precision": "ubicación del recinto en OpenStreetMap",
+      "radius_m": 1000,
+      "radius_justification": "Hospital de alta complejidad: polo de empleo (personal de salud) y de demanda de arriendo cercana, a ~1 km.",
+      "impacts": { "positive": ["Demanda de arriendo de personal de salud", "Servicios de salud de alta complejidad"], "negative": ["Más tránsito en Salvador e Infante"] },
+      "sources": [
+        { "title": "Hospital del Salvador proyecta apertura parcial para 2026 tras superar el 98% de construcción", "url": "https://www.pauta.cl/actualidad/2026/05/16/hospital-del-salvador-proyecta-apertura-parcial-para-2026-tras-superar-el-98-de-construccion.html", "publisher": "Pauta", "published_at": "2026-05-16", "official": false },
+        { "title": "Minsal, 16-05-2026", "url": "https://www.minsal.cl/2026/05/16/", "publisher": "Ministerio de Salud", "published_at": "2026-05-16", "official": true }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "plaza-baquedano-nueva-alameda",
+      "name": "Nueva Plaza Baquedano (Nueva Alameda Providencia)",
+      "type": "parque",
+      "impact": "positivo",
+      "description": "Remodelación de Plaza Baquedano inaugurada el 05-03-2026 dentro del proyecto Nueva Alameda Providencia (plaza cívica con más vegetación). En abril de 2026 el Gobierno Regional anunció otras obras en ejecución en el centro, en medio de un recorte del programa por parte del Minvu.",
+      "organism": "Gobierno Regional Metropolitano / Minvu",
+      "stage": "operativo",
+      "estimated_date": "2026-03",
+      "estimated_label": "inaugurada en marzo de 2026",
+      "certainty": "alta",
+      "anchor": { "type": "station", "name": "Baquedano" },
+      "geo_precision": "estación de referencia",
+      "radius_m": 500,
+      "radius_justification": "Espacio público recuperado: efecto en el entorno inmediato (5–6 min a pie).",
+      "impacts": { "positive": ["Recuperación del espacio público en el eje Alameda"], "negative": ["El resto del programa Nueva Alameda tiene recortes: alcance incierto"] },
+      "sources": [
+        { "title": "Vecinos reaccionan a la nueva cara de Baquedano tras inauguración del proyecto Nueva Alameda Providencia", "url": "https://www.theclinic.cl/2026/03/05/es-un-agrado-se-ve-que-hay-mas-vegetacion-vecinos-reaccionan-a-la-nueva-cara-de-baquedano-tras-inauguracion-del-proyecto-nueva-alameda-providencia/amp/", "publisher": "The Clinic", "published_at": "2026-03-05", "official": false },
+        { "title": "Nueva Plaza Baquedano será entregada a comienzos de marzo", "url": "https://radio.uchile.cl/2026/02/05/nueva-plaza-baquedano-sera-entregada-a-comienzos-de-marzo/", "publisher": "Radio U. de Chile", "published_at": "2026-02-05", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "cenco-shopping-vitacura",
+      "name": "Centro comercial Cencosud (Vitacura, Santa María con La Pirámide)",
+      "type": "mall",
+      "impact": "mixto",
+      "description": "Proyecto de centro comercial de Cenco Malls (US$125 millones) en terrenos junto al colegio Saint George's. En noviembre de 2025 la autoridad de transporte invalidó su informe de mitigación vial y la empresa lo calificó como 'inviable regulatoriamente por ahora'. Estado 2026 sin confirmar.",
+      "organism": "Cenco Malls / SEA",
+      "stage": "evaluacion",
+      "estimated_date": "2028-12",
+      "estimated_label": "2028 según calendario de 2025; hoy en duda",
+      "certainty": "baja",
+      "geocode_query": "Camino La Pirámide, Vitacura, Región Metropolitana, Chile",
+      "radius_m": 1000,
+      "radius_justification": "Mall regional: área de influencia comercial ~1 km. Certeza baja: puede no construirse.",
+      "impacts": { "positive": ["Comercio cercano si se concreta"], "negative": ["Congestión en Santa María / Pirámide", "Alta probabilidad de no ejecutarse o atrasarse"] },
+      "sources": [
+        { "title": "Cenco Malls reformula proyecto y reingresa a tramitación ambiental nuevo centro comercial en Vitacura", "url": "https://www.theclinic.cl/2024/10/09/cenco-malls-reformula-proyecto-y-reingresa-a-tramitacion-ambiental-nuevo-centro-comercial-en-vitacura/", "publisher": "The Clinic", "published_at": "2024-10-09", "official": false },
+        { "title": "Cencosud prepara hoja de ruta para levantar nuevos centros comerciales en el país", "url": "https://www.df.cl/empresas/retail/cencosud-prepara-hoja-de-ruta-para-levantar-nuevos-centros-comerciales-en", "publisher": "Diario Financiero", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "pendiente_revision"
+    },
+    {
+      "id": "fundamenta-irarrazaval-vespucio",
+      "name": "Megaproyecto residencial y oficinas Irarrázaval con Américo Vespucio (Fundamenta)",
+      "type": "residencial",
+      "impact": "mixto",
+      "description": "Tres torres con 1.752 departamentos más una torre de oficinas y comercio en Irarrázaval con Américo Vespucio (Ñuñoa). En mayo de 2025 informaba la mitad vendido y torres habitacionales para el 1er semestre de 2027.",
+      "organism": "Fundamenta (privado)",
+      "stage": "en_construccion",
+      "estimated_date": "2027-06",
+      "estimated_label": "1er semestre 2027 (dato de mayo 2025)",
+      "certainty": "media",
+      "anchor": { "type": "station", "name": "Plaza Egaña" },
+      "geo_precision": "estación de referencia (esquina Irarrázaval/Vespucio)",
+      "radius_m": 1000,
+      "radius_justification": "1.752 departamentos nuevos: sobreoferta potencial de arriendo para unidades similares a ~1 km.",
+      "impacts": { "positive": ["Comercio y oficinas en la base"], "negative": ["Gran oferta nueva de departamentos compitiendo en arriendo", "Obras y tránsito en Irarrázaval"] },
+      "sources": [
+        { "title": "Tendrá departamentos residenciales y oficinas: así es el megaproyecto inmobiliario que se está desarrollando en Ñuñoa", "url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html", "publisher": "Meganoticias", "published_at": "2025-05-07", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "publicado"
+    },
+    {
+      "id": "clinica-alemana-expansion-2026",
+      "name": "Clínica Alemana: centro de salud mental (La Dehesa) y nuevo centro médico (Las Condes)",
+      "type": "clinica",
+      "impact": "positivo",
+      "description": "En noviembre de 2025 Clínica Alemana anunció retomar su expansión con proyectos por US$90 millones en 2026, entre ellos un centro de salud mental con hospitalización en La Dehesa y un nuevo centro médico en Las Condes. Ubicaciones exactas no publicadas en la fuente revisada.",
+      "organism": "Clínica Alemana (privado)",
+      "stage": "anuncio",
+      "estimated_date": null,
+      "estimated_label": "sin fecha publicada",
+      "certainty": "baja",
+      "radius_m": 1000,
+      "radius_justification": "Pendiente: sin ubicación no se dibuja radio.",
+      "sources": [
+        { "title": "Cristián Piera, gerente general de Clínica Alemana: decidimos descongelar…", "url": "https://www.df.cl/senal-df/el-deal/cristian-piera-gerente-general-de-clinica-alemana-decidimos-descongelar", "publisher": "Diario Financiero", "published_at": "2025-11", "official": false }
+      ],
+      "last_checked": "2026-10-12",
+      "status": "pendiente_revision"
+    }
+  ]
 }

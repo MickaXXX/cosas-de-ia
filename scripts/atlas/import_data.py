@@ -143,7 +143,6 @@ def build_projects(rows: list[dict], now: str) -> dict[str, dict]:
                              "stock_verified": bool(r.get("available_stock_verified")),
                              "verified_at": r.get("data_observed_at")},
                 "publication_url": r.get("publication_url"), "brochure_url": r.get("brochure_url"),
-                "common_expenses_clp": r.get("common_expenses_clp"),
                 "short_term_rental": {"status": r.get("short_term_rental_status") or "por_verificar"},
                 "observed_at": r["data_observed_at"], "demo": bool(r.get("is_demo")),
                 "units": [],
@@ -160,6 +159,7 @@ def build_projects(rows: list[dict], now: str) -> dict[str, dict]:
             "list_price_uf": r.get("list_price_uf"), "offer_price_uf": r.get("offer_price_uf"),
             "bono_pie_pct": r.get("bono_pie_pct"), "parking": r.get("parking"), "storage": r.get("storage"),
             "floor": r.get("floor"), "orientation": r.get("orientation"),
+            "common_expenses_clp": r.get("common_expenses_clp"),
             "available": bool(r.get("available_stock_verified")) if r.get("available_stock_verified") is not None else None,
         })
     return projects
