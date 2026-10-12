@@ -1,0 +1,202 @@
+{
+  "generated_at": "2026-10-12T20:33:09Z",
+  "sources": [
+    {
+      "id": "uf",
+      "name": "UF diaria",
+      "status": "error",
+      "last_update": null,
+      "records": null,
+      "detail": "Sin valor de UF: correr update_uf.py",
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "osm_metro",
+      "name": "Metro operativo y estaciones (OSM)",
+      "status": "desactualizado",
+      "last_update": null,
+      "records": null,
+      "detail": "'lon'",
+      "url": "https://www.openstreetmap.org/copyright",
+      "kind": "dato"
+    },
+    {
+      "id": "osm_pois",
+      "name": "Servicios: malls, salud, educación, parques (OSM)",
+      "status": "ok",
+      "last_update": "2026-10-12T20:33:04Z",
+      "records": 1845,
+      "detail": "© colaboradores de OpenStreetMap (ODbL)",
+      "url": "https://www.openstreetmap.org/copyright",
+      "kind": "dato"
+    },
+    {
+      "id": "osm_communes",
+      "name": "Límites comunales (OSM)",
+      "status": "ok",
+      "last_update": "2026-10-12T20:33:09Z",
+      "records": 43,
+      "detail": "© colaboradores de OpenStreetMap (ODbL)",
+      "url": "https://www.openstreetmap.org/copyright",
+      "kind": "dato"
+    },
+    {
+      "id": "projects",
+      "name": "Proyectos inmobiliarios",
+      "status": "sin_datos",
+      "last_update": null,
+      "records": 0,
+      "detail": "0 reales · 0 demo · 0 unidades · 0 con precio por re-verificar · 0 ubicaciones por revisar",
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "rentals",
+      "name": "Avisos de arriendo (comparables 2 km)",
+      "status": "sin_datos",
+      "last_update": null,
+      "records": 0,
+      "detail": "0 reales · 0 demo. Sin proveedor autorizado conectado: importar CSV propio o contratar un feed.",
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "developments",
+      "name": "Radar urbano: obras y anuncios validados",
+      "status": "sin_datos",
+      "last_update": null,
+      "records": 0,
+      "detail": "0 publicados · 0 pendientes de revisión",
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "radar",
+      "name": "Radar de noticias (candidatos sin validar)",
+      "status": "no_configurado",
+      "last_update": null,
+      "records": 0,
+      "detail": null,
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "rent_reference",
+      "name": "Arriendo de referencia por comuna (informes publicados)",
+      "status": "sin_datos",
+      "last_update": null,
+      "records": 0,
+      "detail": "Promedios comunales publicados por terceros: NO son comparables de 2 km",
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "mortgage_rate",
+      "name": "Tasa hipotecaria de referencia",
+      "status": "sin_datos",
+      "last_update": null,
+      "records": null,
+      "detail": null,
+      "url": null,
+      "kind": "dato"
+    },
+    {
+      "id": "cead",
+      "name": "Seguridad: CEAD / SIED",
+      "status": "no_configurado",
+      "last_update": null,
+      "records": null,
+      "detail": "No configurado. Los indicadores comunales se cargan desde data/communes.json con su fuente; no hay descarga automática.",
+      "url": "https://cead.spd.gov.cl/sala-cead/",
+      "kind": "integracion"
+    },
+    {
+      "id": "sernatur",
+      "name": "Turismo: Sernatur / SIET",
+      "status": "no_configurado",
+      "last_update": null,
+      "records": null,
+      "detail": "No configurado. El índice turístico usa un score propio con POIs de OSM (ver fórmula).",
+      "url": "https://datosturismo.sernatur.cl/siet/",
+      "kind": "integracion"
+    },
+    {
+      "id": "airdna",
+      "name": "Renta corta: AirDNA u otro proveedor licenciado",
+      "status": "no_configurado",
+      "last_update": null,
+      "records": null,
+      "detail": "No configurado (requiere licencia pagada). El módulo Airbnb funciona solo en modo supuestos.",
+      "url": "https://www.airdna.co/",
+      "kind": "integracion"
+    },
+    {
+      "id": "listings_feed",
+      "name": "Feed autorizado de proyectos y arriendos (Portal Inmobiliario, TOCTOC, etc.)",
+      "status": "no_configurado",
+      "last_update": null,
+      "records": null,
+      "detail": "No configurado: requiere acuerdo de datos. Mientras tanto: importación CSV/XLSX.",
+      "url": null,
+      "kind": "integracion"
+    },
+    {
+      "id": "bcch_siete",
+      "name": "Banco Central (SIETE): tasas de colocación vivienda",
+      "status": "no_configurado",
+      "last_update": null,
+      "records": null,
+      "detail": "No configurado: requiere usuario y clave SIETE (BCCH_USER / BCCH_PASS).",
+      "url": "https://si3.bcentral.cl/Siete/",
+      "kind": "integracion"
+    }
+  ],
+  "jobs": {
+    "bootstrap": {
+      "task": "bootstrap",
+      "started_at": "2026-10-12T20:17:52Z",
+      "steps": [
+        {
+          "name": "Geocodificación",
+          "status": "ok",
+          "seconds": 0.0,
+          "error": null
+        },
+        {
+          "name": "UF (si falta)",
+          "status": "advertencia",
+          "seconds": 83.1,
+          "error": null
+        },
+        {
+          "name": "Capas OSM (si faltan)",
+          "status": "advertencia",
+          "seconds": 833.5,
+          "error": null
+        },
+        {
+          "name": "Validación",
+          "status": "ok",
+          "seconds": 0.0,
+          "error": null
+        }
+      ],
+      "finished_at": "2026-10-12T20:33:09Z",
+      "status": "con_advertencias"
+    },
+    "history": [
+      {
+        "task": "bootstrap",
+        "started_at": "2026-10-12T20:17:52Z",
+        "finished_at": "2026-10-12T20:33:09Z",
+        "status": "con_advertencias"
+      }
+    ]
+  },
+  "quality_flags": [],
+  "summary": {
+    "errors": 0,
+    "warnings": 0
+  }
+}
