@@ -123,19 +123,25 @@ export function npv(rate, flows) {
   return flows.reduce((s, f, i) => s + f / Math.pow(1 + rate, i), 0);
 }
 
-/** TIR por bisección sobre flujos periódicos. null si no hay cambio de signo. */
+/** TIR por bisección sobre flujos periódicos (mensuales en la app).
+ *  Rango de búsqueda −50% a +100% por período: con 360 meses, una tasa de −90% hace
+ *  que (1 + r)^i se vaya a 0 y el VAN a infinito, y la bisección se pierde.
+ *  null si no hay cambio de signo o la raíz cae en el borde (TIR sin sentido económico). */
 export function irr(flows) {
   if (!flows.some((f) => f > 0) || !flows.some((f) => f < 0)) return null;
-  let lo = -0.9, hi = 1.0;
-  let flo = npv(lo, flows), fhi = npv(hi, flows);
-  if (flo * fhi > 0) return null;
+  let lo = -0.5, hi = 1.0;
+  let flo = npv(lo, flows);
+  const fhi = npv(hi, flows);
+  if (!Number.isFinite(flo) || !Number.isFinite(fhi) || flo * fhi > 0) return null;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
     const fm = npv(mid, flows);
+    if (!Number.isFinite(fm)) return null;
     if (Math.abs(fm) < 1e-10) return mid;
-    if (flo * fm < 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; }
+    if (flo * fm < 0) hi = mid; else { lo = mid; flo = fm; }
   }
-  return (lo + hi) / 2;
+  const r = (lo + hi) / 2;
+  return r > 0.999 || r < -0.499 ? null : r;
 }
 
 export const annualize = (m) => (m == null ? null : Math.pow(1 + m, 12) - 1);

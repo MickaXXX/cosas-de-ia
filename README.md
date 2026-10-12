@@ -6,6 +6,10 @@ No opera por ti: tú compras y vendes en tu broker (Racional) y registras el mov
 
 > Señal cuantitativa ≠ predicción segura. Es análisis educativo, no asesoría financiera.
 
+## 🏠 También en este repo: Atlas Inversión Santiago
+
+Mapa de proyectos de departamentos en Santiago con análisis de inversión por unidad: color de entrega (rojo inmediata verificada, amarillo ≤ 1 año, verde > 1 año, gris sin verificar), dividendo, arriendo en 2 km, gasto común, flujo, riesgo, obras urbanas cercanas (Metro L7/L8/L9, malls, clínicas) y ranking explicable. Vive en `docs/atlas/` (se publica en `/cosas-de-ia/atlas/`), con su pipeline en `scripts/atlas/` y su documentación en [`docs/atlas/README.md`](docs/atlas/README.md).
+
 ## Estructura
 
 ```

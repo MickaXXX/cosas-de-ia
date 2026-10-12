@@ -168,7 +168,7 @@ document.addEventListener('change', (e) => {
     if (!Number.isFinite(n)) return;
     s[el.dataset.simf] = n / (+el.dataset.mult || 1);
   }
-  renderSimulador($('#view-simulador'));
+  setTimeout(() => renderSimulador($('#view-simulador')), 0);
 });
 handle('sim-mode', (el) => { S.sim.mode = el.dataset.m; renderSimulador($('#view-simulador')); });
 handle('sim-new', () => { S.sim = simDefaults(); renderSimulador($('#view-simulador')); });
@@ -224,7 +224,7 @@ document.addEventListener('change', (e) => {
   const el = e.target;
   if (!el.dataset.radarf) return;
   S.radarFilter[el.dataset.radarf] = el.value;
-  renderRadar($('#view-radar'));
+  setTimeout(() => renderRadar($('#view-radar')), 0);
 });
 handle('dev-map', (el) => {
   const d = S.raw.developments.find((x) => x.id === el.dataset.id);

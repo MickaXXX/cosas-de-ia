@@ -46,7 +46,7 @@ export function renderFicha(p, unitId) {
   }
 }
 
-function rerender() { if (current) renderFicha(current.p, current.unit?.id); }
+function rerender() { setTimeout(() => { if (current) renderFicha(current.p, current.unit?.id); }, 0); }
 
 // ------------------------------------------------------------------ sin unidad
 function noUnitHTML(p) {

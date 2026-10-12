@@ -1,0 +1,50 @@
+name: Atlas · pruebas
+
+# Pruebas del motor financiero (node --test), del pipeline (unittest) y validación
+# estricta de los datos curados. Corre cuando cambia cualquier cosa de Atlas.
+on:
+  push:
+    paths:
+      - "docs/atlas/**"
+      - "scripts/atlas/**"
+      - "tests/atlas/**"
+      - ".github/workflows/atlas-*.yml"
+  pull_request:
+    paths:
+      - "docs/atlas/**"
+      - "scripts/atlas/**"
+      - "tests/atlas/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Motor financiero y análisis (node --test)
+        run: node --test tests/atlas/*.test.mjs
+
+      - name: Sintaxis de los módulos del navegador
+        run: for f in docs/atlas/js/*.js; do node --check "$f"; done
+
+      - name: Pipeline (unittest)
+        run: python -m unittest discover -s scripts/atlas/tests -v
+
+      - name: Validación estricta de los datos (en copia, sin publicar)
+        run: |
+          tmp=$(mktemp -d)
+          cp -r docs scripts "$tmp/"
+          cd "$tmp" && python scripts/atlas/validate.py --strict

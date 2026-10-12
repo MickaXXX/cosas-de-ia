@@ -154,7 +154,7 @@ export function renderRanking(root) {
         ${st.weights ? '<span class="chip info">pesos personalizados</span>' : ''}</div>
       <div class="row"><label class="check"><input type="checkbox" data-rank-all ${st.allUnits ? 'checked' : ''}>Todas las unidades</label>
         <label class="small">Ordenar por <select data-rank-sort>${SORTS.map(([k, l]) => `<option value="${k}" ${key === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div></div>
-      <details style="margin-top:8px"><summary class="small"><b>Ajustar pesos</b> y ver cómo cambian las posiciones</summary>
+      <details style="margin-top:8px" ${st.weightsOpen ? 'open' : ''}><summary class="small"><b>Ajustar pesos</b> y ver cómo cambian las posiciones</summary>
         <div class="weights" style="margin-top:8px">${Object.keys(COMPONENTS).map((k) => `<label class="field"><span>${esc(COMPONENTS[k].label)}: <b class="num">${w[k] ?? 0}</b></span><input type="range" min="0" max="50" step="1" value="${w[k] ?? 0}" data-rank-w="${k}"></label>`).join('')}</div>
         <div class="row" style="margin-top:6px"><button class="btn sm" data-action="rank-save-w">Guardar como pesos del perfil ${esc(cfg.ranking.profiles[cfg.ranking.profile].label)}</button><button class="btn sm" data-action="rank-reset-w">Descartar</button></div>
       </details>
@@ -222,6 +222,7 @@ document.addEventListener('change', (e) => {
   if (el.dataset.rankW) {
     const st = state();
     st.weights = { ...weights(), [el.dataset.rankW]: +el.value };
-    renderRanking($('#view-ranking'));
+    st.weightsOpen = true;
+    setTimeout(() => renderRanking($('#view-ranking')), 0);
   }
 });

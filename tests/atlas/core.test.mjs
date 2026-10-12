@@ -247,6 +247,17 @@ test('compra en verde: pie en cuotas, crédito y arriendo empiezan tras la entre
 test('TIR de flujos conocidos', () => {
   close(irr([-100, 110]), 0.1, 1e-9);
   assert.equal(irr([100, 10]), null);
+  // 30 años mensuales con aporte chico y venta al final: la TIR debe ser finita y razonable.
+  const flows = [-50, ...Array(359).fill(-8), 2500];
+  const m = irr(flows);
+  assert.ok(m != null && m > -0.5 && m < 0.05, `TIR mensual ${m}`);
+  close(flows.reduce((s, f, i) => s + f / Math.pow(1 + m, i), 0), 0, 1e-6);
+});
+
+test('compra con pie cero y bono: la TIR a 30 años no explota', () => {
+  const r = simulate(withDefaults({ priceUf: 1930, bonoPiePct: 0.1, creditPct: 0.9, rentUf: 8.6, commonExpensesUf: 1.45, horizonYears: 30 }));
+  assert.ok(r.metrics.irrReal == null || (r.metrics.irrReal > -1 && r.metrics.irrReal < 1), `TIR ${r.metrics.irrReal}`);
+  for (const row of r.annual) assert.ok(row.irrReal == null || Math.abs(row.irrReal) < 5, `año ${row.years}: ${row.irrReal}`);
 });
 
 // ------------------------------------------------------------------ 8. stock

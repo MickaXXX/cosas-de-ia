@@ -12,6 +12,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import apply_issue  # noqa: E402
 import common  # noqa: E402
 import import_data  # noqa: E402
 import osm_layers  # noqa: E402
@@ -162,6 +163,36 @@ class SiiParserTest(unittest.TestCase):
         out = update_uf.parse_sii(f"<table>{row}</table>", 2026)
         self.assertEqual(len(out), 12)
         self.assertEqual(out[0], {"date": "2026-01-09", "value": 39000.0})
+
+
+class ApplyIssueTest(unittest.TestCase):
+    """Los cambios que llegan por issue se validan antes de tocar la configuración publicada."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        common.write_json(self.tmp / "defaults.json", {"financing": {"annualRate": 0.042}, "_meta": {"version": 3}})
+        self.p = mock.patch.object(apply_issue, "CONFIG", self.tmp)
+        self.p.start()
+
+    def tearDown(self):
+        self.p.stop()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_unknown_key_rejected(self):
+        body = "```json\n{\"financingg\": {\"annualRate\": 0.05}}\n```"
+        self.assertEqual(apply_issue.apply_config(body, "dueno"), 1)
+        cfg = json.loads((self.tmp / "defaults.json").read_text())
+        self.assertEqual(cfg["financing"]["annualRate"], 0.042)
+
+    def test_wrong_type_rejected(self):
+        self.assertEqual(apply_issue.apply_config("```json\n{\"financing\": 5}\n```", "dueno"), 1)
+
+    def test_valid_change_applied_with_audit(self):
+        self.assertEqual(apply_issue.apply_config("```json\n{\"financing\": {\"annualRate\": 0.05}}\n```", "dueno"), 0)
+        cfg = json.loads((self.tmp / "defaults.json").read_text())
+        self.assertEqual(cfg["financing"]["annualRate"], 0.05)
+        self.assertEqual(cfg["_meta"]["version"], 4)
+        self.assertEqual(cfg["_meta"]["updated_by"], "dueno")
 
 
 class ChangesTest(TempDataMixin, unittest.TestCase):

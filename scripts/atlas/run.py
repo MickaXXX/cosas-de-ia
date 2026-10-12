@@ -3,8 +3,9 @@
 Orquestador de tareas programadas de Atlas Inversión Santiago.
 
   daily      UF + validación (todos los días)
-  weekly     lunes 08:00 America/Santiago: UF, geocodificación, radar de noticias,
-             capas OSM si están viejas, validación y detección de cambios
+  weekly     lunes 08:00 America/Santiago: UF, capas OSM si están viejas,
+             geocodificación, radar de noticias, foto del ranking, validación y
+             detección de cambios, digest por correo (si hay SMTP)
   monthly    capas OSM completas (Metro, servicios, comunas) + validación
   bootstrap  lo mínimo para que la app tenga datos: geocodifica, UF si falta,
              OSM si falta o está vieja, valida (corre cuando cambian datos o scripts)
@@ -85,15 +86,33 @@ def step_validate():
     return validate.main([])
 
 
+def step_rank():
+    """Foto del ranking con el motor JS de la app (requiere Node; si no está, se omite)."""
+    import shutil
+    import subprocess
+    if not shutil.which("node"):
+        log("Node no disponible: se omite la foto del ranking")
+        return 0
+    res = subprocess.run(["node", str(Path(__file__).resolve().parent / "rank_snapshot.mjs")], capture_output=True, text=True, timeout=300)
+    log(res.stdout.strip() or res.stderr.strip())
+    return res.returncode
+
+
+def step_digest():
+    import digest
+    return digest.main()
+
+
 PLANS = {
     "daily": [("UF", step_uf), ("Validación", step_validate)],
     "weekly": [("UF", step_uf), ("Capas OSM (si están viejas)", step_osm_if_stale), ("Geocodificación", step_geocode),
-               ("Radar de noticias", step_radar), ("Validación y cambios", step_validate)],
+               ("Radar de noticias", step_radar), ("Foto del ranking", step_rank), ("Validación y cambios", step_validate),
+               ("Digest por correo", step_digest)],
     "monthly": [("Capas OSM", step_osm_full), ("Geocodificación", step_geocode), ("Validación", step_validate)],
     "bootstrap": [("Capas OSM (si faltan)", step_osm_if_stale), ("Geocodificación", step_geocode),
-                  ("UF (si falta)", step_uf_if_missing), ("Validación", step_validate)],
+                  ("UF (si falta)", step_uf_if_missing), ("Foto del ranking", step_rank), ("Validación", step_validate)],
     "now": [("UF", step_uf), ("Capas OSM (si están viejas)", step_osm_if_stale), ("Geocodificación", step_geocode),
-            ("Radar de noticias", step_radar), ("Validación y cambios", step_validate)],
+            ("Radar de noticias", step_radar), ("Foto del ranking", step_rank), ("Validación y cambios", step_validate)],
 }
 
 

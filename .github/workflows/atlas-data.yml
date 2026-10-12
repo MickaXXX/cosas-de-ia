@@ -47,6 +47,11 @@ jobs:
         with:
           python-version: "3.12"
 
+      # La foto semanal del ranking usa el mismo motor JS que la app.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Elegir tarea
         id: task
         env:
@@ -66,6 +71,12 @@ jobs:
       - name: Ejecutar
         env:
           CMF_API_KEY: ${{ secrets.CMF_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ATLAS_URL: ${{ vars.ATLAS_URL }}
         run: python scripts/atlas/run.py "${{ steps.task.outputs.task }}" ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
 
       - name: Publicar

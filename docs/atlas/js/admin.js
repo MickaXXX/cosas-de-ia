@@ -10,6 +10,9 @@ import { $, handle, toast, openModal, closeModal, openIssue, download } from './
 import { parseCSV, validateRows, buildProjects, buildRentals, template } from './csv.js';
 import { esc, date, clp, pct } from './format.js';
 
+/** Redibuja la vista fuera del evento en curso (evita reemplazar el nodo que está perdiendo el foco). */
+function rerender() { setTimeout(() => renderConfig($('#view-config')), 0); }
+
 export function effectiveConfig() {
   return deepMerge(S.raw.defaults, LS.get('config.overrides', {}));
 }
@@ -112,7 +115,7 @@ document.addEventListener('change', (e) => {
   }
   setConfigValue(el.dataset.cfg, v);
   toast('Guardado en este navegador. Recalculado.');
-  renderConfig($('#view-config'));
+  rerender();
 });
 
 // ------------------------------------------------------------------ vista
@@ -128,7 +131,7 @@ export function renderConfig(root) {
     <div id="adminBody">${BODY[tab](cfg)}</div></div>`;
   $('#adminName').addEventListener('change', (e) => LS.set('admin.name', e.target.value.trim()));
 }
-handle('admin-tab', (el) => { S.adminTab = el.dataset.tab; renderConfig($('#view-config')); });
+handle('admin-tab', (el) => { S.adminTab = el.dataset.tab; rerender(); });
 
 const BODY = {
   supuestos: (cfg) => SECTIONS.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.help ? `<p class="small muted" style="margin-top:-4px">${esc(s.help)}</p>` : ''}
@@ -208,7 +211,7 @@ document.addEventListener('change', (e) => {
     toast('Escenario actualizado');
   } else if (el.dataset.weight) {
     setConfigValue(`ranking.profiles.${el.dataset.weight.split('.')[0]}.weights.${el.dataset.weight.split('.')[1]}`, +el.value);
-    renderConfig($('#view-config'));
+    rerender();
   } else if (el.dataset.activeCommune) {
     const c = el.dataset.activeCommune;
     const act = S.config.communes.active;
@@ -224,12 +227,12 @@ document.addEventListener('change', (e) => {
   }
 });
 
-handle('set-profile', (el) => { setConfigValue('ranking.profile', el.dataset.p); renderConfig($('#view-config')); });
+handle('set-profile', (el) => { setConfigValue('ranking.profile', el.dataset.p); rerender(); });
 handle('add-commune', () => {
   const c = $('#newCommune').value.trim();
   if (!c) return;
   setConfigValue('communes.available', [...new Set([...S.config.communes.available, c])]);
-  renderConfig($('#view-config'));
+  rerender();
 });
 handle('save-micro', () => {
   try {
@@ -254,10 +257,10 @@ handle('save-security', () => {
   }
   if (Number.isFinite(ref)) setConfigValue('security.referenceRate', ref);
   setConfigValue('security.byCommune', by);
-  renderConfig($('#view-config'));
+  rerender();
   toast('Seguridad guardada: el componente "seguridad y servicios" ya la usa.');
 });
-handle('revert', (el) => { revert(el.dataset.id); renderConfig($('#view-config')); });
+handle('revert', (el) => { revert(el.dataset.id); rerender(); });
 handle('reset-config', () => {
   if (!confirm('¿Restablecer todos los supuestos originales? Se borran tus ajustes locales (el registro se conserva).')) return;
   const audit = LS.get('config.audit', []);
@@ -265,7 +268,7 @@ handle('reset-config', () => {
   LS.set('config.audit', audit);
   LS.set('config.overrides', {});
   actions.recompute();
-  renderConfig($('#view-config'));
+  rerender();
   toast('Supuestos originales restablecidos');
 });
 handle('export-config', () => download('atlas-config.json', JSON.stringify(effectiveConfig(), null, 2), 'application/json'));
@@ -344,7 +347,7 @@ handle('imp-save', () => {
     LS.set('local.rentals', [...cur.filter((r) => !ids.has(r.id)), ...fresh]);
   }
   actions.recompute();
-  renderConfig($('#view-config'));
+  rerender();
   toast('Importado en este navegador.');
 });
 handle('imp-publish', () => {
@@ -352,7 +355,7 @@ handle('imp-publish', () => {
   openIssue(`atlas-import: ${pending.kind === 'projects' ? 'proyectos' : 'arriendos'} ${new Date().toISOString().slice(0, 10)}`,
     `Importación desde la app (${pending.records.length} filas). El workflow valida con el mismo esquema, geocodifica y publica.\n\n\`\`\`csv\n${pending.csv.trim()}\n\`\`\``);
 });
-handle('imp-clear', () => { LS.set('local.projects', []); LS.set('local.rentals', []); actions.recompute(); renderConfig($('#view-config')); });
+handle('imp-clear', () => { LS.set('local.projects', []); LS.set('local.rentals', []); actions.recompute(); rerender(); });
 
 // ------------------------------------------------------------------ verificaciones con la inmobiliaria
 function verifyListHTML() {
@@ -410,7 +413,7 @@ handle('verif-save', (el) => {
   actions.openProject(id);
   toast('Verificación guardada (en este navegador). Publícala desde Configuración → Verificaciones.');
 });
-handle('verif-del', (el) => { const all = LS.get('verifications', {}); delete all[el.dataset.id]; LS.set('verifications', all); actions.recompute(); renderConfig($('#view-config')); });
+handle('verif-del', (el) => { const all = LS.get('verifications', {}); delete all[el.dataset.id]; LS.set('verifications', all); actions.recompute(); rerender(); });
 handle('verif-publish', (el) => {
   const id = el.dataset.id, x = LS.get('verifications', {})[id], p = projectById(id);
   if (!x?.unit) return toast('Para publicar hace falta la unidad cotizada (m² y precio).');

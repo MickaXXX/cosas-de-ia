@@ -1,0 +1,2 @@
+listing_id,source,url,address,commune,latitude,longitude,geolocation_precision,price_clp,common_expenses_clp,common_expenses_included,bedrooms,bathrooms,useful_area_m2,furnished,parking,building_year,published_at,observed_at,notes,is_demo
+demo-aviso-1,Levantamiento propio,,,Ñuñoa,-33.4569,-70.5978,exacta,450.000,80000,no,1,1,38,no,no,2019,2026-10-05,2026-10-12,FILA DE EJEMPLO: borrar antes de importar,si

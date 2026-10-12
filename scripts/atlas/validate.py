@@ -234,6 +234,28 @@ def detect_changes(projects, developments, cfg) -> list[dict]:
     return events
 
 
+def detect_ranking_changes() -> list[dict]:
+    """Avisa cuando una unidad entra al top 10 o se mueve 3+ puestos (misma configuración publicada)."""
+    cur = load_json(DATA / "ranking_snapshot.json")
+    if not cur:
+        return []
+    prev = load_json(SNAP / "ranking.prev.json")
+    write_json(SNAP / "ranking.prev.json", cur, compact=True)
+    if not prev:
+        return []
+    before = {r["id"]: r for r in prev.get("rows", [])}
+    events = []
+    for r in cur.get("rows", [])[:20]:
+        o = before.get(r["id"])
+        if not o:
+            continue
+        moved = o["position"] - r["position"]
+        if (r["position"] <= 10 < o["position"]) or abs(moved) >= 3:
+            events.append(event("cambio_ranking", r["id"], f"{r['name']}: puesto {o['position']} → {r['position']} en el ranking",
+                                before=o["position"], after=r["position"], evidence="calculo"))
+    return events
+
+
 def merge_changes(new_events: list[dict]) -> int:
     doc = load_json(DATA / "changes.json", {"events": []}) or {"events": []}
     known = {e["id"] for e in doc["events"]}
@@ -320,7 +342,7 @@ def main(argv=None) -> int:
     pstats = validate_projects(projects, cfg, rep)
     dstats = validate_developments(developments, cfg, rep)
     rstats = validate_rentals(rentals, cfg, rep)
-    fresh = merge_changes(detect_changes(projects, developments, cfg))
+    fresh = merge_changes(detect_changes(projects, developments, cfg) + detect_ranking_changes())
     health = build_health(cfg, rep, pstats, dstats, rstats)
     write_json(DATA / "health.json", health)
     log(f"Validación: {len(rep.errors)} errores, {len(rep.warnings)} advertencias, {fresh} cambios nuevos")

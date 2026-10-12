@@ -32,6 +32,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Aplicar cambio
         id: apply
         if: ${{ !startsWith(github.event.issue.title, 'atlas-actualizar:') }}
