@@ -1,23 +1,23 @@
 {
-  "generated_at": "2026-10-12T20:33:09Z",
+  "generated_at": "2026-10-12T20:43:51Z",
   "sources": [
     {
       "id": "uf",
       "name": "UF diaria",
-      "status": "error",
-      "last_update": null,
-      "records": null,
-      "detail": "Sin valor de UF: correr update_uf.py",
-      "url": null,
+      "status": "ok",
+      "last_update": "2026-10-12T20:43:51Z",
+      "records": 420,
+      "detail": "UF 2026-10-12: 41,146.83 · SII (tabla oficial de valores UF)",
+      "url": "https://www.sii.cl/valores_y_fechas/uf/",
       "kind": "dato"
     },
     {
       "id": "osm_metro",
       "name": "Metro operativo y estaciones (OSM)",
-      "status": "desactualizado",
-      "last_update": null,
-      "records": null,
-      "detail": "'lon'",
+      "status": "ok",
+      "last_update": "2026-10-12T20:43:12Z",
+      "records": 126,
+      "detail": "© colaboradores de OpenStreetMap (ODbL)",
       "url": "https://www.openstreetmap.org/copyright",
       "kind": "dato"
     },
@@ -26,7 +26,7 @@
       "name": "Servicios: malls, salud, educación, parques (OSM)",
       "status": "ok",
       "last_update": "2026-10-12T20:33:04Z",
-      "records": 1845,
+      "records": 2133,
       "detail": "© colaboradores de OpenStreetMap (ODbL)",
       "url": "https://www.openstreetmap.org/copyright",
       "kind": "dato"
@@ -44,10 +44,10 @@
     {
       "id": "projects",
       "name": "Proyectos inmobiliarios",
-      "status": "sin_datos",
-      "last_update": null,
-      "records": 0,
-      "detail": "0 reales · 0 demo · 0 unidades · 0 con precio por re-verificar · 0 ubicaciones por revisar",
+      "status": "ok",
+      "last_update": "2026-10-12T21:00:00Z",
+      "records": 17,
+      "detail": "17 reales · 0 demo · 4 unidades · 15 con precio por re-verificar · 1 ubicaciones por revisar",
       "url": null,
       "kind": "dato"
     },
@@ -64,10 +64,10 @@
     {
       "id": "developments",
       "name": "Radar urbano: obras y anuncios validados",
-      "status": "sin_datos",
-      "last_update": null,
-      "records": 0,
-      "detail": "0 publicados · 0 pendientes de revisión",
+      "status": "ok",
+      "last_update": "2026-10-12T21:00:00Z",
+      "records": 10,
+      "detail": "10 publicados · 2 pendientes de revisión",
       "url": null,
       "kind": "dato"
     },
@@ -84,9 +84,9 @@
     {
       "id": "rent_reference",
       "name": "Arriendo de referencia por comuna (informes publicados)",
-      "status": "sin_datos",
-      "last_update": null,
-      "records": 0,
+      "status": "ok",
+      "last_update": "2026-10-12T21:00:00Z",
+      "records": 11,
       "detail": "Promedios comunales publicados por terceros: NO son comparables de 2 km",
       "url": null,
       "kind": "dato"
@@ -94,10 +94,10 @@
     {
       "id": "mortgage_rate",
       "name": "Tasa hipotecaria de referencia",
-      "status": "sin_datos",
-      "last_update": null,
+      "status": "ok",
+      "last_update": "2026-10-12",
       "records": null,
-      "detail": null,
+      "detail": "Banco Central de Chile, indicadores de coyuntura (vía Emol, 07-07-2026)",
       "url": null,
       "kind": "dato"
     },
@@ -155,24 +155,24 @@
   "jobs": {
     "bootstrap": {
       "task": "bootstrap",
-      "started_at": "2026-10-12T20:17:52Z",
+      "started_at": "2026-10-12T20:40:08Z",
       "steps": [
+        {
+          "name": "Capas OSM (si faltan)",
+          "status": "ok",
+          "seconds": 186.6,
+          "error": null
+        },
         {
           "name": "Geocodificación",
           "status": "ok",
-          "seconds": 0.0,
+          "seconds": 33.5,
           "error": null
         },
         {
           "name": "UF (si falta)",
-          "status": "advertencia",
-          "seconds": 83.1,
-          "error": null
-        },
-        {
-          "name": "Capas OSM (si faltan)",
-          "status": "advertencia",
-          "seconds": 833.5,
+          "status": "ok",
+          "seconds": 2.2,
           "error": null
         },
         {
@@ -182,10 +182,16 @@
           "error": null
         }
       ],
-      "finished_at": "2026-10-12T20:33:09Z",
-      "status": "con_advertencias"
+      "finished_at": "2026-10-12T20:43:51Z",
+      "status": "ok"
     },
     "history": [
+      {
+        "task": "bootstrap",
+        "started_at": "2026-10-12T20:40:08Z",
+        "finished_at": "2026-10-12T20:43:51Z",
+        "status": "ok"
+      },
       {
         "task": "bootstrap",
         "started_at": "2026-10-12T20:17:52Z",
@@ -194,9 +200,130 @@
       }
     ]
   },
-  "quality_flags": [],
+  "quality_flags": [
+    {
+      "entity": "mosaic-art-santiago",
+      "field": "lat/lon",
+      "level": "warning",
+      "message": "Sin coordenadas: no aparece en el mapa hasta geocodificar"
+    },
+    {
+      "entity": "mosaic-art-santiago",
+      "field": "geo",
+      "level": "warning",
+      "message": "Sin dirección: agregar la dirección del brochure para ubicarlo."
+    },
+    {
+      "entity": "copper-avsa-nunoa",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "252-marathon-surmonte",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "guillermo-mann-1401",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "andes-nunoa",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "domenica-icg",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "urban-nunoa",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "best-nunoa",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "fundamenta-irarrazaval-vespucio",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "bilbao-514-providencia",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "hernando-de-aguirre-410",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "las-condes-7960",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "las-condes-7520",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "edificio-lira-611",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "curico-77",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "carmen-72-paz",
+      "field": "observed_at",
+      "level": "warning",
+      "message": "Precio/stock observado hace ? días: verificar"
+    },
+    {
+      "entity": "metro-l9-cal-y-canto",
+      "field": "sources",
+      "level": "warning",
+      "message": "Una sola fuente y no oficial: buscar confirmación"
+    },
+    {
+      "entity": "fundamenta-irarrazaval-vespucio",
+      "field": "sources",
+      "level": "warning",
+      "message": "Una sola fuente y no oficial: buscar confirmación"
+    },
+    {
+      "entity": "clinica-alemana-expansion-2026",
+      "field": "geo",
+      "level": "warning",
+      "message": "Sin ubicación: pendiente de geocodificar o de resolver su ancla OSM"
+    }
+  ],
   "summary": {
     "errors": 0,
-    "warnings": 0
+    "warnings": 20
   }
 }

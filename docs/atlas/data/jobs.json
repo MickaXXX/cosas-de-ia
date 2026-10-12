@@ -1,24 +1,24 @@
 {
   "bootstrap": {
     "task": "bootstrap",
-    "started_at": "2026-10-12T20:17:52Z",
+    "started_at": "2026-10-12T20:40:08Z",
     "steps": [
+      {
+        "name": "Capas OSM (si faltan)",
+        "status": "ok",
+        "seconds": 186.6,
+        "error": null
+      },
       {
         "name": "Geocodificación",
         "status": "ok",
-        "seconds": 0.0,
+        "seconds": 33.5,
         "error": null
       },
       {
         "name": "UF (si falta)",
-        "status": "advertencia",
-        "seconds": 83.1,
-        "error": null
-      },
-      {
-        "name": "Capas OSM (si faltan)",
-        "status": "advertencia",
-        "seconds": 833.5,
+        "status": "ok",
+        "seconds": 2.2,
         "error": null
       },
       {
@@ -28,10 +28,16 @@
         "error": null
       }
     ],
-    "finished_at": "2026-10-12T20:33:09Z",
-    "status": "con_advertencias"
+    "finished_at": "2026-10-12T20:43:51Z",
+    "status": "ok"
   },
   "history": [
+    {
+      "task": "bootstrap",
+      "started_at": "2026-10-12T20:40:08Z",
+      "finished_at": "2026-10-12T20:43:51Z",
+      "status": "ok"
+    },
     {
       "task": "bootstrap",
       "started_at": "2026-10-12T20:17:52Z",

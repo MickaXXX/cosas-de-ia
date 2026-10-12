@@ -13,10 +13,10 @@
       "address": "Sara del Campo 580",
       "commune": "Santiago",
       "neighborhood": "Santa Isabel",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.444636,
+      "lon": -70.644008,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -105,7 +105,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:17Z",
+      "geo_display_name": "580, Sara del Campo, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "mosaic-art-santiago",
@@ -213,10 +216,10 @@
       "address": "Zañartu 1287",
       "commune": "Ñuñoa",
       "neighborhood": "Estadio Nacional",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.473253,
+      "lon": -70.618861,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -266,7 +269,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:19Z",
+      "geo_display_name": "1287, Avenida Zañartu, Barrio Bernardo O'Higgins, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "252-marathon-surmonte",
@@ -278,10 +284,10 @@
       "address": "Zañartu 1905",
       "commune": "Ñuñoa",
       "neighborhood": "Estadio Nacional",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.472505,
+      "lon": -70.60432,
+      "geo_precision": "aproximada",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -333,7 +339,9 @@
       "source_kind": "busqueda_web",
       "notes": null,
       "geo_note": "El nombre sugiere Av. Marathon 252, pero el portal informa Zañartu 1905: verificar dirección.",
-      "geo_review": true
+      "geo_review": false,
+      "geocoded_at": "2026-10-12T20:43:20Z",
+      "geo_display_name": "Barrio Plaza Zañartu, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile"
     },
     {
       "id": "guillermo-mann-1401",
@@ -345,10 +353,10 @@
       "address": "Guillermo Mann 1401",
       "commune": "Ñuñoa",
       "neighborhood": "Estadio Nacional",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.471305,
+      "lon": -70.618587,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -398,7 +406,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:23Z",
+      "geo_display_name": "1401, Doctor Guillermo Mann, Villa Exequiel González Cortés, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "andes-nunoa",
@@ -410,10 +421,10 @@
       "address": "Capitán Orella 2575",
       "commune": "Ñuñoa",
       "neighborhood": "Metro Ñuñoa",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.452633,
+      "lon": -70.602354,
+      "geo_precision": "calle",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -463,7 +474,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:25Z",
+      "geo_display_name": "Capitán Orella, Población Empleados Públicos y Periodistas Chile-España, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "domenica-icg",
@@ -475,10 +489,10 @@
       "address": "Fernández Concha 115",
       "commune": "Ñuñoa",
       "neighborhood": "Metro Irarrázaval",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.454423,
+      "lon": -70.621885,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -528,7 +542,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:27Z",
+      "geo_display_name": "115, Fernández Concha, Barrio Javiera Carrera, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "urban-nunoa",
@@ -540,10 +557,10 @@
       "address": "Avenida Irarrázaval 1593",
       "commune": "Ñuñoa",
       "neighborhood": null,
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.453263,
+      "lon": -70.614125,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -593,7 +610,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": "Precio 'desde' inconsistente entre páginas (UF 3.127 y UF 3.220). Un documento del SEA ubica un proyecto de 464 departamentos en Irarrázaval 1563-1593."
+      "notes": "Precio 'desde' inconsistente entre páginas (UF 3.127 y UF 3.220). Un documento del SEA ubica un proyecto de 464 departamentos en Irarrázaval 1563-1593.",
+      "geocoded_at": "2026-10-12T20:43:29Z",
+      "geo_display_name": "1593, Avenida Irarrázaval, Conjunto Elías de la Cruz, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "best-nunoa",
@@ -605,10 +625,10 @@
       "address": "José Pedro Alessandri 1295",
       "commune": "Ñuñoa",
       "neighborhood": null,
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.471912,
+      "lon": -70.599208,
+      "geo_precision": "calle",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -658,7 +678,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:32Z",
+      "geo_display_name": "José Pedro Alessandri, Barrio José Pedro Alessandri, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "fundamenta-irarrazaval-vespucio",
@@ -670,10 +693,10 @@
       "address": "Avenida Irarrázaval con Américo Vespucio",
       "commune": "Ñuñoa",
       "neighborhood": "Plaza Egaña",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.45349,
+      "lon": -70.57082,
+      "geo_precision": "aproximada",
+      "geo_source": "ancla OSM: Plaza Egaña (node/6506316379)",
       "delivery": {
         "status": "futura",
         "date": "2027-06",
@@ -754,7 +777,8 @@
       "anchor": {
         "type": "station",
         "name": "Plaza Egaña"
-      }
+      },
+      "geocoded_at": "2026-10-12T20:43:32Z"
     },
     {
       "id": "bilbao-514-providencia",
@@ -766,10 +790,10 @@
       "address": "Avenida Francisco Bilbao 514",
       "commune": "Providencia",
       "neighborhood": null,
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.441691,
+      "lon": -70.625778,
+      "geo_precision": "calle",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -833,7 +857,9 @@
       "source_kind": "busqueda_web",
       "notes": null,
       "geo_note": "Dirección inferida del nombre del proyecto: verificar.",
-      "geo_review": true
+      "geo_review": false,
+      "geocoded_at": "2026-10-12T20:43:34Z",
+      "geo_display_name": "Avenida Francisco Bilbao, Barrio Las Mil Calles, Providencia, Provincia de Santiago, Región Metropolitana de Santiago, 7500000, Chile"
     },
     {
       "id": "hernando-de-aguirre-410",
@@ -845,10 +871,10 @@
       "address": "Hernando de Aguirre 410",
       "commune": "Providencia",
       "neighborhood": null,
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.427991,
+      "lon": -70.597886,
+      "geo_precision": "calle",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -901,7 +927,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:36Z",
+      "geo_display_name": "Hernando de Aguirre, Barrio Las Lilas, Providencia, Provincia de Santiago, Región Metropolitana de Santiago, 7500000, Chile",
+      "geo_review": false
     },
     {
       "id": "las-condes-7960",
@@ -913,10 +942,10 @@
       "address": "Avenida Las Condes 7960",
       "commune": "Las Condes",
       "neighborhood": null,
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.3996,
+      "lon": -70.552862,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "futura",
         "date": "2027-12",
@@ -969,7 +998,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:39Z",
+      "geo_display_name": "7960, Avenida Las Condes, Renacimiento Italiano, Las Condes, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "las-condes-7520",
@@ -981,10 +1013,10 @@
       "address": "Avenida Las Condes 7520",
       "commune": "Las Condes",
       "neighborhood": null,
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.401699,
+      "lon": -70.555589,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -1034,7 +1066,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:41Z",
+      "geo_display_name": "7520, Avenida Las Condes, Renacimiento Italiano, Las Condes, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "edificio-lira-611",
@@ -1046,10 +1081,10 @@
       "address": "Lira 611",
       "commune": "Santiago",
       "neighborhood": "Santa Isabel",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.450592,
+      "lon": -70.638649,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "futura",
         "date": "2028-12",
@@ -1099,7 +1134,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": "23 unidades disponibles según una ficha."
+      "notes": "23 unidades disponibles según una ficha.",
+      "geocoded_at": "2026-10-12T20:43:43Z",
+      "geo_display_name": "611, Lira, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "curico-77",
@@ -1111,10 +1149,10 @@
       "address": "Curicó 77",
       "commune": "Santiago",
       "neighborhood": "Santa Isabel",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.443657,
+      "lon": -70.634595,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "futura",
         "date": "2027-12",
@@ -1164,7 +1202,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:45Z",
+      "geo_display_name": "77, Curicó, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "carmen-72-paz",
@@ -1176,10 +1217,10 @@
       "address": "Carmen 72",
       "commune": "Santiago",
       "neighborhood": "Lastarria",
-      "lat": null,
-      "lon": null,
-      "geo_precision": "pendiente",
-      "geo_source": null,
+      "lat": -33.443842,
+      "lon": -70.643038,
+      "geo_precision": "exacta",
+      "geo_source": "nominatim",
       "delivery": {
         "status": "desconocida",
         "date": null,
@@ -1229,7 +1270,10 @@
       ],
       "demo": false,
       "source_kind": "busqueda_web",
-      "notes": null
+      "notes": null,
+      "geocoded_at": "2026-10-12T20:43:47Z",
+      "geo_display_name": "72, Carmen, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     }
   ]
 }

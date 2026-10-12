@@ -14,26 +14,837 @@
       "estimated_date": "2028-12",
       "estimated_label": "fines de 2028 (estimación de Metro; puede cambiar)",
       "certainty": "alta",
-      "geometry_from": { "layer": "metro_future", "ref": "7", "status": "en_construccion" },
+      "geometry_from": {
+        "layer": "metro_future",
+        "ref": "7",
+        "status": "en_construccion"
+      },
       "geo_precision": "trazado OSM (mapeado por la comunidad, no oficial)",
       "radius_m": 800,
       "radius_justification": "~10 minutos a pie desde la línea: es la distancia en que una estación nueva cambia la accesibilidad diaria. Las estaciones exactas se marcarán cuando estén confirmadas.",
       "impacts": {
-        "positive": ["Mejor conectividad oriente–poniente sin transbordos", "Mayor demanda de arriendo cerca de futuras estaciones"],
-        "negative": ["Obras con ruido, desvíos y cierre de pistas cerca de las estaciones hasta 2028", "Las fechas de Metro se han corrido antes (2027 → 2028)"]
+        "positive": [
+          "Mejor conectividad oriente–poniente sin transbordos",
+          "Mayor demanda de arriendo cerca de futuras estaciones"
+        ],
+        "negative": [
+          "Obras con ruido, desvíos y cierre de pistas cerca de las estaciones hasta 2028",
+          "Las fechas de Metro se han corrido antes (2027 → 2028)"
+        ]
       },
       "timeline": [
-        { "date": "2026-01", "label": "40% de avance, 16 de 26 km de túnel" },
-        { "date": "2026-12", "label": "Inicio obras civiles primeras estaciones Vitacura/Las Condes (2° sem. 2026)" },
-        { "date": "2028-12", "label": "Puesta en servicio estimada" }
+        {
+          "date": "2026-01",
+          "label": "40% de avance, 16 de 26 km de túnel"
+        },
+        {
+          "date": "2026-12",
+          "label": "Inicio obras civiles primeras estaciones Vitacura/Las Condes (2° sem. 2026)"
+        },
+        {
+          "date": "2028-12",
+          "label": "Puesta en servicio estimada"
+        }
       ],
       "sources": [
-        { "title": "Línea 7 de Metro alcanza 40% de avance y se estima que abrirá a fines de 2028", "url": "https://www.cnnchile.com/pais/linea-7-de-metro-alcanza-40-de-avance-y-se-estima-que-abrira-a-fines-de-2028/", "publisher": "CNN Chile", "published_at": "2026-02-03", "official": false },
-        { "title": "Avanza la Línea 7 Metro de Santiago: cuándo estará lista y a qué comunas beneficiará", "url": "https://www.infraestructurapublica.cl/avanza-la-linea-7-metro-de-santiago-cuando-estara-lista-y-a-que-comunas-beneficiara/", "publisher": "Infraestructura Pública", "published_at": "2026-03", "official": false },
-        { "title": "Trazado en construcción (OpenStreetMap)", "url": "https://www.openstreetmap.org/way/1300644594", "publisher": "OpenStreetMap", "official": false }
+        {
+          "title": "Línea 7 de Metro alcanza 40% de avance y se estima que abrirá a fines de 2028",
+          "url": "https://www.cnnchile.com/pais/linea-7-de-metro-alcanza-40-de-avance-y-se-estima-que-abrira-a-fines-de-2028/",
+          "publisher": "CNN Chile",
+          "published_at": "2026-02-03",
+          "official": false
+        },
+        {
+          "title": "Avanza la Línea 7 Metro de Santiago: cuándo estará lista y a qué comunas beneficiará",
+          "url": "https://www.infraestructurapublica.cl/avanza-la-linea-7-metro-de-santiago-cuando-estara-lista-y-a-que-comunas-beneficiara/",
+          "publisher": "Infraestructura Pública",
+          "published_at": "2026-03",
+          "official": false
+        },
+        {
+          "title": "Trazado en construcción (OpenStreetMap)",
+          "url": "https://www.openstreetmap.org/way/1300644594",
+          "publisher": "OpenStreetMap",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -70.5332,
+              -33.38306
+            ],
+            [
+              -70.53486,
+              -33.38459
+            ],
+            [
+              -70.53575,
+              -33.38515
+            ],
+            [
+              -70.5377,
+              -33.38567
+            ],
+            [
+              -70.55437,
+              -33.39198
+            ],
+            [
+              -70.5692,
+              -33.39716
+            ],
+            [
+              -70.5698,
+              -33.39759
+            ],
+            [
+              -70.57025,
+              -33.39826
+            ],
+            [
+              -70.57037,
+              -33.39894
+            ],
+            [
+              -70.57034,
+              -33.40009
+            ],
+            [
+              -70.57043,
+              -33.4006
+            ],
+            [
+              -70.57055,
+              -33.40084
+            ],
+            [
+              -70.57103,
+              -33.40129
+            ],
+            [
+              -70.57156,
+              -33.40164
+            ],
+            [
+              -70.57273,
+              -33.40217
+            ],
+            [
+              -70.57551,
+              -33.40282
+            ],
+            [
+              -70.57998,
+              -33.40413
+            ],
+            [
+              -70.58169,
+              -33.40482
+            ],
+            [
+              -70.58195,
+              -33.40486
+            ],
+            [
+              -70.58239,
+              -33.40483
+            ],
+            [
+              -70.59291,
+              -33.40223
+            ],
+            [
+              -70.59388,
+              -33.40222
+            ],
+            [
+              -70.59443,
+              -33.40239
+            ],
+            [
+              -70.59535,
+              -33.40315
+            ],
+            [
+              -70.60195,
+              -33.40934
+            ],
+            [
+              -70.60515,
+              -33.41421
+            ],
+            [
+              -70.60728,
+              -33.41649
+            ],
+            [
+              -70.6116,
+              -33.42035
+            ],
+            [
+              -70.61191,
+              -33.42109
+            ],
+            [
+              -70.612,
+              -33.4227
+            ],
+            [
+              -70.61237,
+              -33.42339
+            ],
+            [
+              -70.61696,
+              -33.42753
+            ],
+            [
+              -70.61806,
+              -33.42865
+            ],
+            [
+              -70.61899,
+              -33.42925
+            ],
+            [
+              -70.6198,
+              -33.42962
+            ],
+            [
+              -70.62033,
+              -33.42976
+            ],
+            [
+              -70.62181,
+              -33.42984
+            ],
+            [
+              -70.6223,
+              -33.43007
+            ],
+            [
+              -70.62389,
+              -33.43128
+            ],
+            [
+              -70.62713,
+              -33.43411
+            ],
+            [
+              -70.62806,
+              -33.43474
+            ],
+            [
+              -70.63192,
+              -33.43646
+            ],
+            [
+              -70.63259,
+              -33.43658
+            ],
+            [
+              -70.63477,
+              -33.43672
+            ]
+          ],
+          [
+            [
+              -70.74612,
+              -33.40074
+            ],
+            [
+              -70.745,
+              -33.40288
+            ],
+            [
+              -70.74487,
+              -33.40328
+            ],
+            [
+              -70.74483,
+              -33.40385
+            ],
+            [
+              -70.74493,
+              -33.40444
+            ],
+            [
+              -70.74548,
+              -33.40573
+            ],
+            [
+              -70.74599,
+              -33.4075
+            ],
+            [
+              -70.74625,
+              -33.40966
+            ],
+            [
+              -70.74688,
+              -33.41107
+            ],
+            [
+              -70.74707,
+              -33.4117
+            ],
+            [
+              -70.74714,
+              -33.41393
+            ],
+            [
+              -70.74746,
+              -33.41676
+            ],
+            [
+              -70.74752,
+              -33.4202
+            ],
+            [
+              -70.74746,
+              -33.4207
+            ],
+            [
+              -70.74714,
+              -33.42135
+            ],
+            [
+              -70.74659,
+              -33.42186
+            ],
+            [
+              -70.74603,
+              -33.42214
+            ],
+            [
+              -70.7454,
+              -33.42229
+            ],
+            [
+              -70.73965,
+              -33.42291
+            ],
+            [
+              -70.73723,
+              -33.42306
+            ],
+            [
+              -70.73442,
+              -33.42337
+            ],
+            [
+              -70.72399,
+              -33.42391
+            ],
+            [
+              -70.72318,
+              -33.42415
+            ],
+            [
+              -70.72182,
+              -33.42489
+            ],
+            [
+              -70.72124,
+              -33.42509
+            ],
+            [
+              -70.71111,
+              -33.42716
+            ],
+            [
+              -70.69728,
+              -33.42981
+            ],
+            [
+              -70.6948,
+              -33.43056
+            ],
+            [
+              -70.69191,
+              -33.43174
+            ],
+            [
+              -70.68963,
+              -33.43238
+            ],
+            [
+              -70.68803,
+              -33.43265
+            ],
+            [
+              -70.68651,
+              -33.43279
+            ],
+            [
+              -70.68063,
+              -33.43303
+            ],
+            [
+              -70.67475,
+              -33.43249
+            ],
+            [
+              -70.67006,
+              -33.43216
+            ],
+            [
+              -70.6634,
+              -33.43209
+            ],
+            [
+              -70.6626,
+              -33.43225
+            ],
+            [
+              -70.66087,
+              -33.43309
+            ],
+            [
+              -70.66006,
+              -33.43328
+            ],
+            [
+              -70.65307,
+              -33.43319
+            ],
+            [
+              -70.64902,
+              -33.43329
+            ],
+            [
+              -70.64815,
+              -33.43338
+            ],
+            [
+              -70.64019,
+              -33.43542
+            ],
+            [
+              -70.6397,
+              -33.43566
+            ],
+            [
+              -70.63828,
+              -33.4366
+            ],
+            [
+              -70.63781,
+              -33.43677
+            ],
+            [
+              -70.63685,
+              -33.43687
+            ],
+            [
+              -70.63476,
+              -33.43675
+            ]
+          ],
+          [
+            [
+              -70.63477,
+              -33.43672
+            ],
+            [
+              -70.63685,
+              -33.43684
+            ],
+            [
+              -70.63768,
+              -33.43677
+            ],
+            [
+              -70.63838,
+              -33.43651
+            ],
+            [
+              -70.63978,
+              -33.43557
+            ],
+            [
+              -70.64032,
+              -33.43535
+            ],
+            [
+              -70.64831,
+              -33.43332
+            ],
+            [
+              -70.65307,
+              -33.43316
+            ],
+            [
+              -70.66014,
+              -33.43324
+            ],
+            [
+              -70.66071,
+              -33.43312
+            ],
+            [
+              -70.66233,
+              -33.43231
+            ],
+            [
+              -70.66339,
+              -33.43206
+            ],
+            [
+              -70.67007,
+              -33.43213
+            ],
+            [
+              -70.6762,
+              -33.43257
+            ],
+            [
+              -70.6805,
+              -33.43299
+            ],
+            [
+              -70.6865,
+              -33.43276
+            ],
+            [
+              -70.68803,
+              -33.43262
+            ],
+            [
+              -70.68962,
+              -33.43235
+            ],
+            [
+              -70.6919,
+              -33.43171
+            ],
+            [
+              -70.69455,
+              -33.43062
+            ],
+            [
+              -70.69727,
+              -33.42978
+            ],
+            [
+              -70.71111,
+              -33.42713
+            ],
+            [
+              -70.72123,
+              -33.42506
+            ],
+            [
+              -70.72168,
+              -33.42492
+            ],
+            [
+              -70.72329,
+              -33.42407
+            ],
+            [
+              -70.72398,
+              -33.42388
+            ],
+            [
+              -70.73441,
+              -33.42334
+            ],
+            [
+              -70.73723,
+              -33.42303
+            ],
+            [
+              -70.73965,
+              -33.42288
+            ],
+            [
+              -70.74586,
+              -33.42216
+            ],
+            [
+              -70.74657,
+              -33.42184
+            ],
+            [
+              -70.74711,
+              -33.42133
+            ],
+            [
+              -70.74738,
+              -33.42083
+            ],
+            [
+              -70.74748,
+              -33.42031
+            ],
+            [
+              -70.74741,
+              -33.41653
+            ],
+            [
+              -70.74712,
+              -33.41408
+            ],
+            [
+              -70.74706,
+              -33.41187
+            ],
+            [
+              -70.7469,
+              -33.41123
+            ],
+            [
+              -70.74622,
+              -33.40967
+            ],
+            [
+              -70.74591,
+              -33.40734
+            ],
+            [
+              -70.74544,
+              -33.40573
+            ],
+            [
+              -70.74486,
+              -33.40433
+            ],
+            [
+              -70.74479,
+              -33.40386
+            ],
+            [
+              -70.74481,
+              -33.40341
+            ],
+            [
+              -70.74496,
+              -33.40287
+            ],
+            [
+              -70.74609,
+              -33.40073
+            ]
+          ],
+          [
+            [
+              -70.63476,
+              -33.43675
+            ],
+            [
+              -70.63259,
+              -33.43661
+            ],
+            [
+              -70.63191,
+              -33.43648
+            ],
+            [
+              -70.62804,
+              -33.43476
+            ],
+            [
+              -70.6271,
+              -33.43413
+            ],
+            [
+              -70.62449,
+              -33.43182
+            ],
+            [
+              -70.62323,
+              -33.43078
+            ],
+            [
+              -70.62211,
+              -33.43
+            ],
+            [
+              -70.62163,
+              -33.42984
+            ],
+            [
+              -70.62052,
+              -33.42981
+            ],
+            [
+              -70.61997,
+              -33.42971
+            ],
+            [
+              -70.61875,
+              -33.42915
+            ],
+            [
+              -70.61786,
+              -33.42852
+            ],
+            [
+              -70.61693,
+              -33.42755
+            ],
+            [
+              -70.61232,
+              -33.4234
+            ],
+            [
+              -70.61196,
+              -33.42272
+            ],
+            [
+              -70.61185,
+              -33.42109
+            ],
+            [
+              -70.61154,
+              -33.42038
+            ],
+            [
+              -70.6072,
+              -33.4165
+            ],
+            [
+              -70.60522,
+              -33.41434
+            ],
+            [
+              -70.60483,
+              -33.41384
+            ],
+            [
+              -70.60222,
+              -33.40976
+            ],
+            [
+              -70.60177,
+              -33.40919
+            ],
+            [
+              -70.5948,
+              -33.40269
+            ],
+            [
+              -70.59441,
+              -33.40242
+            ],
+            [
+              -70.59387,
+              -33.40225
+            ],
+            [
+              -70.59291,
+              -33.40226
+            ],
+            [
+              -70.5824,
+              -33.40486
+            ],
+            [
+              -70.58195,
+              -33.40489
+            ],
+            [
+              -70.58168,
+              -33.40485
+            ],
+            [
+              -70.57997,
+              -33.40416
+            ],
+            [
+              -70.5755,
+              -33.40285
+            ],
+            [
+              -70.57272,
+              -33.4022
+            ],
+            [
+              -70.57154,
+              -33.40166
+            ],
+            [
+              -70.571,
+              -33.40131
+            ],
+            [
+              -70.57052,
+              -33.40086
+            ],
+            [
+              -70.57037,
+              -33.40052
+            ],
+            [
+              -70.57031,
+              -33.40009
+            ],
+            [
+              -70.57032,
+              -33.39866
+            ],
+            [
+              -70.57021,
+              -33.39826
+            ],
+            [
+              -70.56978,
+              -33.3976
+            ],
+            [
+              -70.56919,
+              -33.39718
+            ],
+            [
+              -70.55435,
+              -33.39203
+            ],
+            [
+              -70.53798,
+              -33.3858
+            ],
+            [
+              -70.53573,
+              -33.38518
+            ],
+            [
+              -70.53482,
+              -33.38461
+            ],
+            [
+              -70.53319,
+              -33.38308
+            ]
+          ],
+          [
+            [
+              -70.5332,
+              -33.38306
+            ],
+            [
+              -70.53103,
+              -33.38104
+            ]
+          ],
+          [
+            [
+              -70.53319,
+              -33.38308
+            ],
+            [
+              -70.531,
+              -33.38106
+            ]
+          ]
+        ]
+      },
+      "geo_source": "OpenStreetMap (metro_future, ref 7)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "metro-l8-los-leones",
@@ -46,18 +857,51 @@
       "estimated_date": "2033",
       "estimated_label": "2033 para el tramo Chile España – Providencia (planificación de Metro)",
       "certainty": "media",
-      "anchor": { "type": "station", "name": "Los Leones" },
-      "geo_precision": "estación de combinación existente (la estación nueva puede quedar a algunas cuadras)",
+      "anchor": {
+        "type": "station",
+        "name": "Los Leones"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 800,
       "radius_justification": "Estación de combinación confirmada: la ganancia de accesibilidad se concentra a ~10 min a pie. Trazado exacto entre estaciones no publicado aquí: no se dibuja una línea inventada.",
-      "impacts": { "positive": ["Nueva conexión directa al sur-oriente"], "negative": ["Obras de varios años desde que se emita la RCA", "Plazo largo (2033): el efecto en arriendos es lejano"] },
+      "impacts": {
+        "positive": [
+          "Nueva conexión directa al sur-oriente"
+        ],
+        "negative": [
+          "Obras de varios años desde que se emita la RCA",
+          "Plazo largo (2033): el efecto en arriendos es lejano"
+        ]
+      },
       "sources": [
-        { "title": "Aprueban Línea 8 del Metro", "url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-", "publisher": "24horas", "published_at": "2026-05-06", "official": false },
-        { "title": "Línea 8 del Metro de Santiago: estaciones, comunas beneficiadas y fecha de inauguración", "url": "https://www.elmostrador.cl/datos-utiles/2026/06/01/linea-8-del-metro-de-santiago-estaciones-comunas-beneficiadas-y-fecha-de-inauguracion/", "publisher": "El Mostrador", "published_at": "2026-06-01", "official": false },
-        { "title": "Publicación SEA (firma electrónica)", "url": "https://firma.sea.gob.cl/publicaciones/2026/05/20/1779312740_2168532069", "publisher": "Servicio de Evaluación Ambiental", "published_at": "2026-05-20", "official": true }
+        {
+          "title": "Aprueban Línea 8 del Metro",
+          "url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-",
+          "publisher": "24horas",
+          "published_at": "2026-05-06",
+          "official": false
+        },
+        {
+          "title": "Línea 8 del Metro de Santiago: estaciones, comunas beneficiadas y fecha de inauguración",
+          "url": "https://www.elmostrador.cl/datos-utiles/2026/06/01/linea-8-del-metro-de-santiago-estaciones-comunas-beneficiadas-y-fecha-de-inauguracion/",
+          "publisher": "El Mostrador",
+          "published_at": "2026-06-01",
+          "official": false
+        },
+        {
+          "title": "Publicación SEA (firma electrónica)",
+          "url": "https://firma.sea.gob.cl/publicaciones/2026/05/20/1779312740_2168532069",
+          "publisher": "Servicio de Evaluación Ambiental",
+          "published_at": "2026-05-20",
+          "official": true
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.42202,
+      "lon": -70.60856,
+      "geo_source": "ancla OSM: Los Leones (node/5227884071)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "metro-l8-chile-espana",
@@ -70,17 +914,43 @@
       "estimated_date": "2032",
       "estimated_label": "2032 (planificación de Metro)",
       "certainty": "media",
-      "anchor": { "type": "station", "name": "Chile España" },
-      "geo_precision": "estación de combinación existente",
+      "anchor": {
+        "type": "station",
+        "name": "Chile España"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 800,
       "radius_justification": "Estación de combinación confirmada; ~10 min a pie.",
-      "impacts": { "positive": ["Conexión Ñuñoa – La Florida – Puente Alto"], "negative": ["Obras prolongadas en Irarrázaval/Chile España"] },
+      "impacts": {
+        "positive": [
+          "Conexión Ñuñoa – La Florida – Puente Alto"
+        ],
+        "negative": [
+          "Obras prolongadas en Irarrázaval/Chile España"
+        ]
+      },
       "sources": [
-        { "title": "Aprueban Línea 8 del Metro", "url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-", "publisher": "24horas", "published_at": "2026-05-06", "official": false },
-        { "title": "Línea 8 Metro: aprueban proyecto", "url": "https://www.emol.com/noticias/Nacional/2026/05/06/1199242/linea-8-metro-aprueban-proyecto.html", "publisher": "Emol", "published_at": "2026-05-06", "official": false }
+        {
+          "title": "Aprueban Línea 8 del Metro",
+          "url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-",
+          "publisher": "24horas",
+          "published_at": "2026-05-06",
+          "official": false
+        },
+        {
+          "title": "Línea 8 Metro: aprueban proyecto",
+          "url": "https://www.emol.com/noticias/Nacional/2026/05/06/1199242/linea-8-metro-aprueban-proyecto.html",
+          "publisher": "Emol",
+          "published_at": "2026-05-06",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.45491,
+      "lon": -70.59814,
+      "geo_source": "ancla OSM: Chile España (node/1894898784)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "metro-l9-biobio",
@@ -93,17 +963,42 @@
       "estimated_date": "2030",
       "estimated_label": "2030 tramo 1 (estimación de Metro)",
       "certainty": "media",
-      "anchor": { "type": "station", "name": "Bío Bío" },
-      "geo_precision": "estación de combinación existente (inicio del tramo 1)",
+      "anchor": {
+        "type": "station",
+        "name": "Bío Bío"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 800,
       "radius_justification": "Inicio del tramo 1 en combinación con Línea 6. El resto del trazado (eje Santa Rosa) no se dibuja hasta tener estaciones confirmadas.",
-      "impacts": { "positive": ["Eje Santa Rosa conectado al centro"], "negative": ["Obras en Santa Rosa por varios años"] },
+      "impacts": {
+        "positive": [
+          "Eje Santa Rosa conectado al centro"
+        ],
+        "negative": [
+          "Obras en Santa Rosa por varios años"
+        ]
+      },
       "sources": [
-        { "title": "Línea 9 Metro: avance de obras", "url": "https://www.emol.com/noticias/Nacional/2026/09/11/1211210/linea-9-metro-avance-obras.html", "publisher": "Emol", "published_at": "2026-09-11", "official": false },
-        { "title": "Metro de Santiago detalla avance de la Línea 9 y confirma fecha de su primer tramo", "url": "https://www.bloomberglinea.com/latinoamerica/chile/metro-de-santiago-detalla-avance-de-la-linea-9-y-confirma-fecha-de-su-primer-tramo/", "publisher": "Bloomberg Línea", "official": false }
+        {
+          "title": "Línea 9 Metro: avance de obras",
+          "url": "https://www.emol.com/noticias/Nacional/2026/09/11/1211210/linea-9-metro-avance-obras.html",
+          "publisher": "Emol",
+          "published_at": "2026-09-11",
+          "official": false
+        },
+        {
+          "title": "Metro de Santiago detalla avance de la Línea 9 y confirma fecha de su primer tramo",
+          "url": "https://www.bloomberglinea.com/latinoamerica/chile/metro-de-santiago-detalla-avance-de-la-linea-9-y-confirma-fecha-de-su-primer-tramo/",
+          "publisher": "Bloomberg Línea",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.47661,
+      "lon": -70.64218,
+      "geo_source": "ancla OSM: Bío Bío (node/601280944)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "metro-l9-cal-y-canto",
@@ -116,16 +1011,36 @@
       "estimated_date": "2032",
       "estimated_label": "2032 (estimación de Metro)",
       "certainty": "media",
-      "anchor": { "type": "station", "name": "Puente Cal y Canto" },
-      "geo_precision": "estación de combinación existente",
+      "anchor": {
+        "type": "station",
+        "name": "Puente Cal y Canto"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 800,
       "radius_justification": "Extremo norte del tramo 2 en combinación con L2/L3.",
-      "impacts": { "positive": ["Conexión directa del eje Santa Rosa con el centro histórico"], "negative": ["Plazo largo"] },
+      "impacts": {
+        "positive": [
+          "Conexión directa del eje Santa Rosa con el centro histórico"
+        ],
+        "negative": [
+          "Plazo largo"
+        ]
+      },
       "sources": [
-        { "title": "Línea 9 del Metro: una nueva conexión que transformará Santiago", "url": "https://www.elmostrador.cl/datos-utiles/2026/01/12/linea-9-del-metro-una-nueva-conexion-que-transformara-santiago/", "publisher": "El Mostrador", "published_at": "2026-01-12", "official": false }
+        {
+          "title": "Línea 9 del Metro: una nueva conexión que transformará Santiago",
+          "url": "https://www.elmostrador.cl/datos-utiles/2026/01/12/linea-9-del-metro-una-nueva-conexion-que-transformara-santiago/",
+          "publisher": "El Mostrador",
+          "published_at": "2026-01-12",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.43284,
+      "lon": -70.65308,
+      "geo_source": "ancla OSM: Puente Cal y Canto (node/6506316370)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "mall-vivo-santiago-nunoa",
@@ -138,20 +1053,45 @@
       "estimated_date": "2029",
       "estimated_label": "2029 (proyección, sin fecha firme)",
       "certainty": "media",
-      "anchor": { "type": "station", "name": "Ñuble" },
-      "geo_precision": "estación de referencia (el terreno está junto a la estación)",
+      "anchor": {
+        "type": "station",
+        "name": "Ñuble"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 1000,
       "radius_justification": "Mall urbano con cine, oficinas y acceso directo al Metro: atrae comercio y servicios a distancia caminable (~1 km). La torre de renta residencial agrega oferta de arriendo que COMPITE con departamentos cercanos.",
       "impacts": {
-        "positive": ["Comercio, cine y servicios a pasos", "Nuevo polo de empleo"],
-        "negative": ["Varios años de obras con tránsito pesado", "La torre de arriendo suma competencia directa", "Reclamos vecinales pueden atrasarlo"]
+        "positive": [
+          "Comercio, cine y servicios a pasos",
+          "Nuevo polo de empleo"
+        ],
+        "negative": [
+          "Varios años de obras con tránsito pesado",
+          "La torre de arriendo suma competencia directa",
+          "Reclamos vecinales pueden atrasarlo"
+        ]
       },
       "sources": [
-        { "title": "Con acceso directo al Metro, cine y un apart hotel: así será el nuevo Mall Vivo que se construirá en Santiago", "url": "https://www.meganoticias.cl/nacional/517357-nuevo-mall-vivo-santiago-nunoa-vicuna-mackenna-donde-queda-18-03-2026.html", "publisher": "Meganoticias", "published_at": "2026-03-18", "official": false },
-        { "title": "Salfacorp aportará $15.716 millones por el 20% del proyecto Mall Vivo en Ñuñoa", "url": "https://www.latercera.com/pulso/noticia/salfacorp-aportara-15716-millones-por-el-20-de-proyecto-mall-vivo-en-nunoa/", "publisher": "La Tercera", "official": false }
+        {
+          "title": "Con acceso directo al Metro, cine y un apart hotel: así será el nuevo Mall Vivo que se construirá en Santiago",
+          "url": "https://www.meganoticias.cl/nacional/517357-nuevo-mall-vivo-santiago-nunoa-vicuna-mackenna-donde-queda-18-03-2026.html",
+          "publisher": "Meganoticias",
+          "published_at": "2026-03-18",
+          "official": false
+        },
+        {
+          "title": "Salfacorp aportará $15.716 millones por el 20% del proyecto Mall Vivo en Ñuñoa",
+          "url": "https://www.latercera.com/pulso/noticia/salfacorp-aportara-15716-millones-por-el-20-de-proyecto-mall-vivo-en-nunoa/",
+          "publisher": "La Tercera",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.46736,
+      "lon": -70.62476,
+      "geo_source": "ancla OSM: Ñuble (node/615092336)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "teleferico-bicentenario",
@@ -164,17 +1104,44 @@
       "estimated_date": "2027-03",
       "estimated_label": "1er trimestre 2027 (estimación)",
       "certainty": "alta",
-      "anchor": { "type": "station", "name": "Tobalaba" },
-      "geo_precision": "estación de Metro de referencia (la estación del teleférico queda a pocas cuadras)",
+      "anchor": {
+        "type": "station",
+        "name": "Tobalaba"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 600,
       "radius_justification": "Conecta el polo de oficinas de Providencia/Las Condes con Ciudad Empresarial: beneficio para quien trabaja allá; radio caminable a la estación Canal San Carlos.",
-      "impacts": { "positive": ["Viaje de minutos a Ciudad Empresarial", "Atractivo turístico (Parque Metropolitano)"], "negative": ["Efecto acotado: una línea corta"] },
+      "impacts": {
+        "positive": [
+          "Viaje de minutos a Ciudad Empresarial",
+          "Atractivo turístico (Parque Metropolitano)"
+        ],
+        "negative": [
+          "Efecto acotado: una línea corta"
+        ]
+      },
       "sources": [
-        { "title": "Informes ejecutivos mensuales del Teleférico", "url": "https://concesiones.mop.gob.cl/uploads/sites/4/2026/08/Informe-Ejecutivo_Teleferico-junio2026.pdf", "publisher": "MOP Concesiones", "published_at": "2026-08", "official": true },
-        { "title": "Inicia instalación de cabinas del Teleférico Bicentenario", "url": "https://www.meganoticias.cl/nacional/524983-inicia-instalacion-cabinas-teleferico-bicentenario-providencia-huechuraba-18-06-2026.html", "publisher": "Meganoticias", "published_at": "2026-06-18", "official": false }
+        {
+          "title": "Informes ejecutivos mensuales del Teleférico",
+          "url": "https://concesiones.mop.gob.cl/uploads/sites/4/2026/08/Informe-Ejecutivo_Teleferico-junio2026.pdf",
+          "publisher": "MOP Concesiones",
+          "published_at": "2026-08",
+          "official": true
+        },
+        {
+          "title": "Inicia instalación de cabinas del Teleférico Bicentenario",
+          "url": "https://www.meganoticias.cl/nacional/524983-inicia-instalacion-cabinas-teleferico-bicentenario-providencia-huechuraba-18-06-2026.html",
+          "publisher": "Meganoticias",
+          "published_at": "2026-06-18",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.41822,
+      "lon": -70.60149,
+      "geo_source": "ancla OSM: Tobalaba (node/252527597)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "hospital-salvador-geriatria",
@@ -187,17 +1154,44 @@
       "estimated_date": "2026-12",
       "estimated_label": "apertura parcial proyectada para primavera 2026 (con atrasos previos)",
       "certainty": "alta",
-      "anchor": { "type": "poi", "name": "Nuevo Hospital del Salvador" },
-      "geo_precision": "ubicación del recinto en OpenStreetMap",
+      "anchor": {
+        "type": "poi",
+        "name": "Nuevo Hospital del Salvador"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 1000,
       "radius_justification": "Hospital de alta complejidad: polo de empleo (personal de salud) y de demanda de arriendo cercana, a ~1 km.",
-      "impacts": { "positive": ["Demanda de arriendo de personal de salud", "Servicios de salud de alta complejidad"], "negative": ["Más tránsito en Salvador e Infante"] },
+      "impacts": {
+        "positive": [
+          "Demanda de arriendo de personal de salud",
+          "Servicios de salud de alta complejidad"
+        ],
+        "negative": [
+          "Más tránsito en Salvador e Infante"
+        ]
+      },
       "sources": [
-        { "title": "Hospital del Salvador proyecta apertura parcial para 2026 tras superar el 98% de construcción", "url": "https://www.pauta.cl/actualidad/2026/05/16/hospital-del-salvador-proyecta-apertura-parcial-para-2026-tras-superar-el-98-de-construccion.html", "publisher": "Pauta", "published_at": "2026-05-16", "official": false },
-        { "title": "Minsal, 16-05-2026", "url": "https://www.minsal.cl/2026/05/16/", "publisher": "Ministerio de Salud", "published_at": "2026-05-16", "official": true }
+        {
+          "title": "Hospital del Salvador proyecta apertura parcial para 2026 tras superar el 98% de construcción",
+          "url": "https://www.pauta.cl/actualidad/2026/05/16/hospital-del-salvador-proyecta-apertura-parcial-para-2026-tras-superar-el-98-de-construccion.html",
+          "publisher": "Pauta",
+          "published_at": "2026-05-16",
+          "official": false
+        },
+        {
+          "title": "Minsal, 16-05-2026",
+          "url": "https://www.minsal.cl/2026/05/16/",
+          "publisher": "Ministerio de Salud",
+          "published_at": "2026-05-16",
+          "official": true
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.43598,
+      "lon": -70.62423,
+      "geo_source": "ancla OSM: Nuevo Hospital del Salvador (way/972632381)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "plaza-baquedano-nueva-alameda",
@@ -210,17 +1204,43 @@
       "estimated_date": "2026-03",
       "estimated_label": "inaugurada en marzo de 2026",
       "certainty": "alta",
-      "anchor": { "type": "station", "name": "Baquedano" },
-      "geo_precision": "estación de referencia",
+      "anchor": {
+        "type": "station",
+        "name": "Baquedano"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 500,
       "radius_justification": "Espacio público recuperado: efecto en el entorno inmediato (5–6 min a pie).",
-      "impacts": { "positive": ["Recuperación del espacio público en el eje Alameda"], "negative": ["El resto del programa Nueva Alameda tiene recortes: alcance incierto"] },
+      "impacts": {
+        "positive": [
+          "Recuperación del espacio público en el eje Alameda"
+        ],
+        "negative": [
+          "El resto del programa Nueva Alameda tiene recortes: alcance incierto"
+        ]
+      },
       "sources": [
-        { "title": "Vecinos reaccionan a la nueva cara de Baquedano tras inauguración del proyecto Nueva Alameda Providencia", "url": "https://www.theclinic.cl/2026/03/05/es-un-agrado-se-ve-que-hay-mas-vegetacion-vecinos-reaccionan-a-la-nueva-cara-de-baquedano-tras-inauguracion-del-proyecto-nueva-alameda-providencia/amp/", "publisher": "The Clinic", "published_at": "2026-03-05", "official": false },
-        { "title": "Nueva Plaza Baquedano será entregada a comienzos de marzo", "url": "https://radio.uchile.cl/2026/02/05/nueva-plaza-baquedano-sera-entregada-a-comienzos-de-marzo/", "publisher": "Radio U. de Chile", "published_at": "2026-02-05", "official": false }
+        {
+          "title": "Vecinos reaccionan a la nueva cara de Baquedano tras inauguración del proyecto Nueva Alameda Providencia",
+          "url": "https://www.theclinic.cl/2026/03/05/es-un-agrado-se-ve-que-hay-mas-vegetacion-vecinos-reaccionan-a-la-nueva-cara-de-baquedano-tras-inauguracion-del-proyecto-nueva-alameda-providencia/amp/",
+          "publisher": "The Clinic",
+          "published_at": "2026-03-05",
+          "official": false
+        },
+        {
+          "title": "Nueva Plaza Baquedano será entregada a comienzos de marzo",
+          "url": "https://radio.uchile.cl/2026/02/05/nueva-plaza-baquedano-sera-entregada-a-comienzos-de-marzo/",
+          "publisher": "Radio U. de Chile",
+          "published_at": "2026-02-05",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.43722,
+      "lon": -70.63341,
+      "geo_source": "ancla OSM: Baquedano (node/1157168087)",
+      "geocoded_at": "2026-10-12T20:43:47Z"
     },
     {
       "id": "cenco-shopping-vitacura",
@@ -236,13 +1256,39 @@
       "geocode_query": "Camino La Pirámide, Vitacura, Región Metropolitana, Chile",
       "radius_m": 1000,
       "radius_justification": "Mall regional: área de influencia comercial ~1 km. Certeza baja: puede no construirse.",
-      "impacts": { "positive": ["Comercio cercano si se concreta"], "negative": ["Congestión en Santa María / Pirámide", "Alta probabilidad de no ejecutarse o atrasarse"] },
+      "impacts": {
+        "positive": [
+          "Comercio cercano si se concreta"
+        ],
+        "negative": [
+          "Congestión en Santa María / Pirámide",
+          "Alta probabilidad de no ejecutarse o atrasarse"
+        ]
+      },
       "sources": [
-        { "title": "Cenco Malls reformula proyecto y reingresa a tramitación ambiental nuevo centro comercial en Vitacura", "url": "https://www.theclinic.cl/2024/10/09/cenco-malls-reformula-proyecto-y-reingresa-a-tramitacion-ambiental-nuevo-centro-comercial-en-vitacura/", "publisher": "The Clinic", "published_at": "2024-10-09", "official": false },
-        { "title": "Cencosud prepara hoja de ruta para levantar nuevos centros comerciales en el país", "url": "https://www.df.cl/empresas/retail/cencosud-prepara-hoja-de-ruta-para-levantar-nuevos-centros-comerciales-en", "publisher": "Diario Financiero", "official": false }
+        {
+          "title": "Cenco Malls reformula proyecto y reingresa a tramitación ambiental nuevo centro comercial en Vitacura",
+          "url": "https://www.theclinic.cl/2024/10/09/cenco-malls-reformula-proyecto-y-reingresa-a-tramitacion-ambiental-nuevo-centro-comercial-en-vitacura/",
+          "publisher": "The Clinic",
+          "published_at": "2024-10-09",
+          "official": false
+        },
+        {
+          "title": "Cencosud prepara hoja de ruta para levantar nuevos centros comerciales en el país",
+          "url": "https://www.df.cl/empresas/retail/cencosud-prepara-hoja-de-ruta-para-levantar-nuevos-centros-comerciales-en",
+          "publisher": "Diario Financiero",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "pendiente_revision"
+      "status": "pendiente_revision",
+      "lat": -33.388437,
+      "lon": -70.599378,
+      "geo_precision": "calle",
+      "geo_source": "nominatim",
+      "geocoded_at": "2026-10-12T20:43:48Z",
+      "geo_display_name": "Avenida Santa Cruz, Vitacura, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+      "geo_review": false
     },
     {
       "id": "fundamenta-irarrazaval-vespucio",
@@ -255,16 +1301,37 @@
       "estimated_date": "2027-06",
       "estimated_label": "1er semestre 2027 (dato de mayo 2025)",
       "certainty": "media",
-      "anchor": { "type": "station", "name": "Plaza Egaña" },
-      "geo_precision": "estación de referencia (esquina Irarrázaval/Vespucio)",
+      "anchor": {
+        "type": "station",
+        "name": "Plaza Egaña"
+      },
+      "geo_precision": "aproximada",
       "radius_m": 1000,
       "radius_justification": "1.752 departamentos nuevos: sobreoferta potencial de arriendo para unidades similares a ~1 km.",
-      "impacts": { "positive": ["Comercio y oficinas en la base"], "negative": ["Gran oferta nueva de departamentos compitiendo en arriendo", "Obras y tránsito en Irarrázaval"] },
+      "impacts": {
+        "positive": [
+          "Comercio y oficinas en la base"
+        ],
+        "negative": [
+          "Gran oferta nueva de departamentos compitiendo en arriendo",
+          "Obras y tránsito en Irarrázaval"
+        ]
+      },
       "sources": [
-        { "title": "Tendrá departamentos residenciales y oficinas: así es el megaproyecto inmobiliario que se está desarrollando en Ñuñoa", "url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html", "publisher": "Meganoticias", "published_at": "2025-05-07", "official": false }
+        {
+          "title": "Tendrá departamentos residenciales y oficinas: así es el megaproyecto inmobiliario que se está desarrollando en Ñuñoa",
+          "url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html",
+          "publisher": "Meganoticias",
+          "published_at": "2025-05-07",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
-      "status": "publicado"
+      "status": "publicado",
+      "lat": -33.45349,
+      "lon": -70.57082,
+      "geo_source": "ancla OSM: Plaza Egaña (node/6506316379)",
+      "geocoded_at": "2026-10-12T20:43:48Z"
     },
     {
       "id": "clinica-alemana-expansion-2026",
@@ -280,7 +1347,13 @@
       "radius_m": 1000,
       "radius_justification": "Pendiente: sin ubicación no se dibuja radio.",
       "sources": [
-        { "title": "Cristián Piera, gerente general de Clínica Alemana: decidimos descongelar…", "url": "https://www.df.cl/senal-df/el-deal/cristian-piera-gerente-general-de-clinica-alemana-decidimos-descongelar", "publisher": "Diario Financiero", "published_at": "2025-11", "official": false }
+        {
+          "title": "Cristián Piera, gerente general de Clínica Alemana: decidimos descongelar…",
+          "url": "https://www.df.cl/senal-df/el-deal/cristian-piera-gerente-general-de-clinica-alemana-decidimos-descongelar",
+          "publisher": "Diario Financiero",
+          "published_at": "2025-11",
+          "official": false
+        }
       ],
       "last_checked": "2026-10-12",
       "status": "pendiente_revision"

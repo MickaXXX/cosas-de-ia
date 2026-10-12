@@ -1,26 +1,29 @@
 {
   "layers": {
     "metro": {
-      "status": "desactualizado",
-      "last_error": "'lon'",
-      "last_attempt": "2026-10-12T20:19:27Z"
+      "status": "ok",
+      "updated_at": "2026-10-12T20:43:12Z",
+      "last_attempt": "2026-10-12T20:43:12Z",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "lines": 7,
+      "future_segments": 18,
+      "stations": 126
     },
     "pois": {
       "status": "ok",
       "updated_at": "2026-10-12T20:33:04Z",
+      "last_attempt": "2026-10-12T20:43:15Z",
       "counts": {
         "mall": 120,
         "supermercado": 501,
         "hospital": 60,
         "clinica": 410,
-        "universidad": 0,
+        "universidad": 288,
         "parque": 369,
         "turismo": 216,
         "cultura": 169
       },
-      "errors": {
-        "universidad": "https://overpass-api.de/api/interpreter: No se pudo descargar https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout | https://overpass.private.coffee/api/interpreter: No se pudo descargar https://overpass.private.coffee/api/interpreter: The read operation timed out | https://maps."
-      }
+      "errors": {}
     },
     "communes": {
       "status": "ok",
@@ -28,7 +31,8 @@
       "communes": 43
     }
   },
-  "last_attempt": "2026-10-12T20:33:09Z",
+  "last_attempt": "2026-10-12T20:43:15Z",
   "attribution": "© colaboradores de OpenStreetMap (ODbL 1.0)",
-  "source": "OpenStreetMap vía Overpass API"
+  "source": "OpenStreetMap vía Overpass API",
+  "generated_at": "2026-10-12T20:43:15Z"
 }

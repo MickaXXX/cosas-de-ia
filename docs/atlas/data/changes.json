@@ -1,4 +1,302 @@
 {
-  "events": [],
-  "generated_at": "2026-10-12T20:33:09Z"
+  "events": [
+    {
+      "id": "5dad99933f62c877",
+      "type": "proyecto_nuevo",
+      "entity_id": "rau-santa-lucia",
+      "title": "Proyecto nuevo: Rau Santa Lucía (Santiago)",
+      "before": null,
+      "after": 2863.0,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.portalinmobiliario.com/venta/departamento/proyectos/santiago-metropolitana",
+      "evidence": "media"
+    },
+    {
+      "id": "c45c826d31e220d3",
+      "type": "proyecto_nuevo",
+      "entity_id": "mosaic-art-santiago",
+      "title": "Proyecto nuevo: Mosaic Art (Santiago)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": null,
+      "evidence": "media"
+    },
+    {
+      "id": "62eb992f236954eb",
+      "type": "proyecto_nuevo",
+      "entity_id": "copper-avsa-nunoa",
+      "title": "Proyecto nuevo: Copper (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD2500-UFH3000/",
+      "evidence": "media"
+    },
+    {
+      "id": "f3b419e3dcae2312",
+      "type": "proyecto_nuevo",
+      "entity_id": "252-marathon-surmonte",
+      "title": "Proyecto nuevo: 252 Marathon (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD3500-UFH4000/",
+      "evidence": "media"
+    },
+    {
+      "id": "16c30548b05a4d9f",
+      "type": "proyecto_nuevo",
+      "entity_id": "guillermo-mann-1401",
+      "title": "Proyecto nuevo: Guillermo Mann 1401 (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD2500-UFH3000/",
+      "evidence": "media"
+    },
+    {
+      "id": "c581136107495b79",
+      "type": "proyecto_nuevo",
+      "entity_id": "andes-nunoa",
+      "title": "Proyecto nuevo: Andes Ñuñoa (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD3500-UFH4000/",
+      "evidence": "media"
+    },
+    {
+      "id": "5c57db96664ca6f6",
+      "type": "proyecto_nuevo",
+      "entity_id": "domenica-icg",
+      "title": "Proyecto nuevo: Edificio Doménica (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD3500-UFH4000/",
+      "evidence": "media"
+    },
+    {
+      "id": "a6092d596751582f",
+      "type": "proyecto_nuevo",
+      "entity_id": "urban-nunoa",
+      "title": "Proyecto nuevo: Urban Ñuñoa (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD2500-UFH3000/",
+      "evidence": "media"
+    },
+    {
+      "id": "441f48e1f59bda53",
+      "type": "proyecto_nuevo",
+      "entity_id": "best-nunoa",
+      "title": "Proyecto nuevo: Best Ñuñoa (Ñuñoa)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/nunoa/departamento/superficie/UFD3500-UFH4000/",
+      "evidence": "media"
+    },
+    {
+      "id": "c034b3f89ee6c8d7",
+      "type": "proyecto_nuevo",
+      "entity_id": "fundamenta-irarrazaval-vespucio",
+      "title": "Proyecto nuevo: Megaproyecto Irarrázaval – Américo Vespucio (Ñuñoa)",
+      "before": null,
+      "after": 3760.0,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html",
+      "evidence": "media"
+    },
+    {
+      "id": "98abd053acc7d461",
+      "type": "proyecto_nuevo",
+      "entity_id": "bilbao-514-providencia",
+      "title": "Proyecto nuevo: Bilbao 514 (Providencia)",
+      "before": null,
+      "after": 5325.0,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/providencia/departamento/superficie/UFD5000-UFH6000/",
+      "evidence": "media"
+    },
+    {
+      "id": "047d90173e8ed22b",
+      "type": "proyecto_nuevo",
+      "entity_id": "hernando-de-aguirre-410",
+      "title": "Proyecto nuevo: Hernando de Aguirre 410 (Providencia)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/providencia/",
+      "evidence": "media"
+    },
+    {
+      "id": "11df410371fcffda",
+      "type": "proyecto_nuevo",
+      "entity_id": "las-condes-7960",
+      "title": "Proyecto nuevo: Las Condes 7960 (Las Condes)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.enlaceinmobiliario.cl/metropolitano/listado/region-metropolitana/las-condes/departamento/superficie/UFD4500-UFH5000/",
+      "evidence": "media"
+    },
+    {
+      "id": "712bdd55ea3bab92",
+      "type": "proyecto_nuevo",
+      "entity_id": "las-condes-7520",
+      "title": "Proyecto nuevo: Las Condes 7520 (Las Condes)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://bancoestado.enlaceinmobiliario.cl/las-condes/departamento/proyecto-las-condes-7520/7486",
+      "evidence": "media"
+    },
+    {
+      "id": "f15a4e588113004b",
+      "type": "proyecto_nuevo",
+      "entity_id": "edificio-lira-611",
+      "title": "Proyecto nuevo: Edificio Lira (Santiago)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.portalinmobiliario.com/venta/departamento/proyectos/santa-isabel-santiago-santiago-metropolitana",
+      "evidence": "media"
+    },
+    {
+      "id": "99b0483c8b17f7b8",
+      "type": "proyecto_nuevo",
+      "entity_id": "curico-77",
+      "title": "Proyecto nuevo: Curicó 77 (Santiago)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.portalinmobiliario.com/venta/departamento/proyectos/santa-isabel-santiago-santiago-metropolitana",
+      "evidence": "media"
+    },
+    {
+      "id": "753465601481eec8",
+      "type": "proyecto_nuevo",
+      "entity_id": "carmen-72-paz",
+      "title": "Proyecto nuevo: Carmen 72 (Santiago)",
+      "before": null,
+      "after": null,
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.paz.cl/proyectos/santiago",
+      "evidence": "media"
+    },
+    {
+      "id": "fff708d996ce15e1",
+      "type": "obra_nueva",
+      "entity_id": "metro-l7",
+      "title": "Nueva obra en el radar: Línea 7 de Metro (Renca – Vitacura)",
+      "before": null,
+      "after": "en_construccion",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.cnnchile.com/pais/linea-7-de-metro-alcanza-40-de-avance-y-se-estima-que-abrira-a-fines-de-2028/",
+      "evidence": "media"
+    },
+    {
+      "id": "27a6898a76adec2f",
+      "type": "obra_nueva",
+      "entity_id": "metro-l8-los-leones",
+      "title": "Nueva obra en el radar: Línea 8 de Metro · combinación Los Leones",
+      "before": null,
+      "after": "aprobado",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-",
+      "evidence": "alta"
+    },
+    {
+      "id": "100ffe96a9ee1f17",
+      "type": "obra_nueva",
+      "entity_id": "metro-l8-chile-espana",
+      "title": "Nueva obra en el radar: Línea 8 de Metro · combinación Chile España",
+      "before": null,
+      "after": "aprobado",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.24horas.cl/actualidad/nacional/aprueban-linea-8-del-metro-",
+      "evidence": "media"
+    },
+    {
+      "id": "f32506eed31a638f",
+      "type": "obra_nueva",
+      "entity_id": "metro-l9-biobio",
+      "title": "Nueva obra en el radar: Línea 9 de Metro · tramo 1 (desde Bío Bío)",
+      "before": null,
+      "after": "en_construccion",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.emol.com/noticias/Nacional/2026/09/11/1211210/linea-9-metro-avance-obras.html",
+      "evidence": "media"
+    },
+    {
+      "id": "001c4ab93c272186",
+      "type": "obra_nueva",
+      "entity_id": "metro-l9-cal-y-canto",
+      "title": "Nueva obra en el radar: Línea 9 de Metro · tramo 2 (Puente Cal y Canto)",
+      "before": null,
+      "after": "aprobado",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.elmostrador.cl/datos-utiles/2026/01/12/linea-9-del-metro-una-nueva-conexion-que-transformara-santiago/",
+      "evidence": "media"
+    },
+    {
+      "id": "f7ea5da9b81ec2fe",
+      "type": "obra_nueva",
+      "entity_id": "mall-vivo-santiago-nunoa",
+      "title": "Nueva obra en el radar: Mall Vivo Santiago (Ñuñoa)",
+      "before": null,
+      "after": "aprobado",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.meganoticias.cl/nacional/517357-nuevo-mall-vivo-santiago-nunoa-vicuna-mackenna-donde-queda-18-03-2026.html",
+      "evidence": "media"
+    },
+    {
+      "id": "baf4a47427c7e3ce",
+      "type": "obra_nueva",
+      "entity_id": "teleferico-bicentenario",
+      "title": "Nueva obra en el radar: Teleférico Bicentenario · estación Canal San Carlos",
+      "before": null,
+      "after": "en_construccion",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://concesiones.mop.gob.cl/uploads/sites/4/2026/08/Informe-Ejecutivo_Teleferico-junio2026.pdf",
+      "evidence": "alta"
+    },
+    {
+      "id": "f3bfbe51534cd0bf",
+      "type": "obra_nueva",
+      "entity_id": "hospital-salvador-geriatria",
+      "title": "Nueva obra en el radar: Nuevo Hospital del Salvador e Instituto Nacional de Geriatría",
+      "before": null,
+      "after": "en_construccion",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.pauta.cl/actualidad/2026/05/16/hospital-del-salvador-proyecta-apertura-parcial-para-2026-tras-superar-el-98-de-construccion.html",
+      "evidence": "alta"
+    },
+    {
+      "id": "d67852b61b9a36e9",
+      "type": "obra_nueva",
+      "entity_id": "plaza-baquedano-nueva-alameda",
+      "title": "Nueva obra en el radar: Nueva Plaza Baquedano (Nueva Alameda Providencia)",
+      "before": null,
+      "after": "operativo",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.theclinic.cl/2026/03/05/es-un-agrado-se-ve-que-hay-mas-vegetacion-vecinos-reaccionan-a-la-nueva-cara-de-baquedano-tras-inauguracion-del-proyecto-nueva-alameda-providencia/amp/",
+      "evidence": "media"
+    },
+    {
+      "id": "49d42e907983b1a2",
+      "type": "obra_nueva",
+      "entity_id": "fundamenta-irarrazaval-vespucio",
+      "title": "Nueva obra en el radar: Megaproyecto residencial y oficinas Irarrázaval con Américo Vespucio (Fundamenta)",
+      "before": null,
+      "after": "en_construccion",
+      "detected_at": "2026-10-12T20:43:51Z",
+      "source_url": "https://www.meganoticias.cl/nacional/484463-megaproyecto-inmobiliario-nunoa-de-que-se-trata-pdp-07-05-2025.html",
+      "evidence": "media"
+    }
+  ],
+  "generated_at": "2026-10-12T20:43:51Z"
 }

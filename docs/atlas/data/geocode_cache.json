@@ -1,1 +1,146 @@
-{}
+{
+  "Sara del Campo 580, Santiago, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.444636,
+    "lon": -70.644008,
+    "rank": 30,
+    "display_name": "580, Sara del Campo, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:17Z"
+  },
+  "Zañartu 1287, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.473253,
+    "lon": -70.618861,
+    "rank": 30,
+    "display_name": "1287, Avenida Zañartu, Barrio Bernardo O'Higgins, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:19Z"
+  },
+  "Zañartu 1905, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.472505,
+    "lon": -70.60432,
+    "rank": 24,
+    "display_name": "Barrio Plaza Zañartu, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:20Z"
+  },
+  "Guillermo Mann 1401, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.471305,
+    "lon": -70.618587,
+    "rank": 30,
+    "display_name": "1401, Doctor Guillermo Mann, Villa Exequiel González Cortés, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:23Z"
+  },
+  "Capitán Orella 2575, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.452633,
+    "lon": -70.602354,
+    "rank": 26,
+    "display_name": "Capitán Orella, Población Empleados Públicos y Periodistas Chile-España, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:25Z"
+  },
+  "Fernández Concha 115, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.454423,
+    "lon": -70.621885,
+    "rank": 30,
+    "display_name": "115, Fernández Concha, Barrio Javiera Carrera, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:27Z"
+  },
+  "Avenida Irarrázaval 1593, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.453263,
+    "lon": -70.614125,
+    "rank": 30,
+    "display_name": "1593, Avenida Irarrázaval, Conjunto Elías de la Cruz, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:29Z"
+  },
+  "José Pedro Alessandri 1295, Ñuñoa, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.471912,
+    "lon": -70.599208,
+    "rank": 26,
+    "display_name": "José Pedro Alessandri, Barrio José Pedro Alessandri, Ñuñoa, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:32Z"
+  },
+  "Avenida Francisco Bilbao 514, Providencia, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.441691,
+    "lon": -70.625778,
+    "rank": 26,
+    "display_name": "Avenida Francisco Bilbao, Barrio Las Mil Calles, Providencia, Provincia de Santiago, Región Metropolitana de Santiago, 7500000, Chile",
+    "commune": "Providencia",
+    "at": "2026-10-12T20:43:34Z"
+  },
+  "Hernando de Aguirre 410, Providencia, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.427991,
+    "lon": -70.597886,
+    "rank": 26,
+    "display_name": "Hernando de Aguirre, Barrio Las Lilas, Providencia, Provincia de Santiago, Región Metropolitana de Santiago, 7500000, Chile",
+    "commune": "Providencia",
+    "at": "2026-10-12T20:43:36Z"
+  },
+  "Avenida Las Condes 7960, Las Condes, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.3996,
+    "lon": -70.552862,
+    "rank": 30,
+    "display_name": "7960, Avenida Las Condes, Renacimiento Italiano, Las Condes, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:39Z"
+  },
+  "Avenida Las Condes 7520, Las Condes, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.401699,
+    "lon": -70.555589,
+    "rank": 30,
+    "display_name": "7520, Avenida Las Condes, Renacimiento Italiano, Las Condes, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:41Z"
+  },
+  "Lira 611, Santiago, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.450592,
+    "lon": -70.638649,
+    "rank": 30,
+    "display_name": "611, Lira, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:43Z"
+  },
+  "Curicó 77, Santiago, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.443657,
+    "lon": -70.634595,
+    "rank": 30,
+    "display_name": "77, Curicó, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:45Z"
+  },
+  "Carmen 72, Santiago, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.443842,
+    "lon": -70.643038,
+    "rank": 30,
+    "display_name": "72, Carmen, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:47Z"
+  },
+  "Camino La Pirámide, Vitacura, Región Metropolitana, Chile": {
+    "found": true,
+    "lat": -33.388437,
+    "lon": -70.599378,
+    "rank": 26,
+    "display_name": "Avenida Santa Cruz, Vitacura, Santiago, Provincia de Santiago, Región Metropolitana de Santiago, 8320000, Chile",
+    "commune": "Santiago",
+    "at": "2026-10-12T20:43:48Z"
+  }
+}
