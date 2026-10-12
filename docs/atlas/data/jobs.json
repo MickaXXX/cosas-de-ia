@@ -1,7 +1,7 @@
 {
   "bootstrap": {
     "task": "bootstrap",
-    "started_at": "2026-10-12T21:13:35Z",
+    "started_at": "2026-10-12T21:24:08Z",
     "steps": [
       {
         "name": "Capas OSM (si faltan)",
@@ -12,7 +12,7 @@
       {
         "name": "Geocodificación",
         "status": "ok",
-        "seconds": 0.1,
+        "seconds": 0.0,
         "error": null
       },
       {
@@ -22,16 +22,28 @@
         "error": null
       },
       {
+        "name": "Foto del ranking",
+        "status": "ok",
+        "seconds": 0.2,
+        "error": null
+      },
+      {
         "name": "Validación",
         "status": "ok",
         "seconds": 0.0,
         "error": null
       }
     ],
-    "finished_at": "2026-10-12T21:13:35Z",
+    "finished_at": "2026-10-12T21:24:08Z",
     "status": "ok"
   },
   "history": [
+    {
+      "task": "bootstrap",
+      "started_at": "2026-10-12T21:24:08Z",
+      "finished_at": "2026-10-12T21:24:08Z",
+      "status": "ok"
+    },
     {
       "task": "bootstrap",
       "started_at": "2026-10-12T21:13:35Z",
