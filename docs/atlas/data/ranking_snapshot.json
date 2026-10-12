@@ -1,9 +1,109 @@
 {
- "generated_at": "2026-10-12T21:24:08.471Z",
+ "generated_at": "2026-10-12T21:25:03.215Z",
  "profile": "balanceado",
  "uf": 41146.83,
  "note": "Ranking con la configuración publicada y solo datos reales. \"passed\" = pasa las puertas de calidad.",
  "rows": [
+  {
+   "id": "curico-77",
+   "unit": "hipotetica",
+   "name": "Curicó 77",
+   "commune": "Santiago",
+   "score": 36.6,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria",
+    "Unidad hipotética armada con el precio \"desde\""
+   ],
+   "status": "verde",
+   "price_uf": 2504,
+   "monthly_cf_clp": -162142,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 1
+  },
+  {
+   "id": "urban-nunoa",
+   "unit": "hipotetica",
+   "name": "Urban Ñuñoa",
+   "commune": "Ñuñoa",
+   "score": 34.2,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 3127,
+   "monthly_cf_clp": -212559,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 2
+  },
+  {
+   "id": "guillermo-mann-1401",
+   "unit": "hipotetica",
+   "name": "Guillermo Mann 1401",
+   "commune": "Ñuñoa",
+   "score": 33.1,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 2996,
+   "monthly_cf_clp": -187491,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 3
+  },
+  {
+   "id": "copper-avsa-nunoa",
+   "unit": "hipotetica",
+   "name": "Copper",
+   "commune": "Ñuñoa",
+   "score": 32,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 3220,
+   "monthly_cf_clp": -230355,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 4
+  },
+  {
+   "id": "las-condes-7960",
+   "unit": "hipotetica",
+   "name": "Las Condes 7960",
+   "commune": "Las Condes",
+   "score": 31.9,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria",
+    "Unidad hipotética armada con el precio \"desde\""
+   ],
+   "status": "verde",
+   "price_uf": 4740,
+   "monthly_cf_clp": -337631,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 5
+  },
   {
    "id": "bilbao-514-providencia",
    "unit": "ref-1d",
@@ -21,7 +121,8 @@
    "price_uf": 5325,
    "monthly_cf_clp": -384355,
    "rent_source": "referencia",
-   "position": 1
+   "hypothetical": false,
+   "position": 6
   },
   {
    "id": "rau-santa-lucia",
@@ -39,7 +140,28 @@
    "price_uf": 2863,
    "monthly_cf_clp": -308931,
    "rent_source": "referencia",
-   "position": 2
+   "hypothetical": false,
+   "position": 7
+  },
+  {
+   "id": "las-condes-7520",
+   "unit": "hipotetica",
+   "name": "Las Condes 7520",
+   "commune": "Las Condes",
+   "score": 30.6,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 4957,
+   "monthly_cf_clp": -379156,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 8
   },
   {
    "id": "fundamenta-irarrazaval-vespucio",
@@ -58,7 +180,168 @@
    "price_uf": 5960,
    "monthly_cf_clp": -505071,
    "rent_source": "referencia",
-   "position": 3
+   "hypothetical": false,
+   "position": 9
+  },
+  {
+   "id": "carmen-72-paz",
+   "unit": "hipotetica",
+   "name": "Carmen 72",
+   "commune": "Santiago",
+   "score": 27.8,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 3280,
+   "monthly_cf_clp": -310637,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 10
+  },
+  {
+   "id": "andes-nunoa",
+   "unit": "hipotetica",
+   "name": "Andes Ñuñoa",
+   "commune": "Ñuñoa",
+   "score": 27.6,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 3938,
+   "monthly_cf_clp": -367751,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 11
+  },
+  {
+   "id": "hernando-de-aguirre-410",
+   "unit": "hipotetica",
+   "name": "Hernando de Aguirre 410",
+   "commune": "Providencia",
+   "score": 27.4,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 6690,
+   "monthly_cf_clp": -645560,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 12
+  },
+  {
+   "id": "edificio-lira-611",
+   "unit": "hipotetica",
+   "name": "Edificio Lira",
+   "commune": "Santiago",
+   "score": 27.2,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria",
+    "Unidad hipotética armada con el precio \"desde\""
+   ],
+   "status": "verde",
+   "price_uf": 2590,
+   "monthly_cf_clp": -240481,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 13
+  },
+  {
+   "id": "domenica-icg",
+   "unit": "hipotetica",
+   "name": "Edificio Doménica",
+   "commune": "Ñuñoa",
+   "score": 27.1,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 5200,
+   "monthly_cf_clp": -609246,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 14
+  },
+  {
+   "id": "mosaic-art-santiago",
+   "unit": "hipotetica",
+   "name": "Mosaic Art",
+   "commune": "Santiago",
+   "score": 25.4,
+   "passed": false,
+   "pending": [
+    "Precio sin fuente enlazada",
+    "Ubicación aproximada o por revisar",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida"
+   ],
+   "status": "gris",
+   "price_uf": 2921,
+   "monthly_cf_clp": -241939,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 15
+  },
+  {
+   "id": "252-marathon-surmonte",
+   "unit": "hipotetica",
+   "name": "252 Marathon",
+   "commune": "Ñuñoa",
+   "score": 24.8,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Ubicación aproximada o por revisar",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida"
+   ],
+   "status": "gris",
+   "price_uf": 3526,
+   "monthly_cf_clp": -288911,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 16
+  },
+  {
+   "id": "best-nunoa",
+   "unit": "hipotetica",
+   "name": "Best Ñuñoa",
+   "commune": "Ñuñoa",
+   "score": 22.4,
+   "passed": false,
+   "pending": [
+    "Precio sin verificar en los últimos 60 días",
+    "Arriendo sin 8 comparables homogéneos en el radio",
+    "Entrega/stock sin verificar: Fecha de entrega desconocida",
+    "Precio extraído de búsqueda web: confirmar con la inmobiliaria"
+   ],
+   "status": "gris",
+   "price_uf": 3913,
+   "monthly_cf_clp": -362967,
+   "rent_source": "referencia",
+   "hypothetical": true,
+   "position": 17
   }
  ]
 }

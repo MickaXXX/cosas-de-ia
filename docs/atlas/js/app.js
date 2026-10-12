@@ -3,7 +3,7 @@
 import { S, LS, actions, deepMerge, projectById, analysisOf, on, emit } from './core.js';
 import { $, $$, handle, toast, openModal, closeModal } from './ui.js';
 import * as M from './map.js';
-import { buildContext, analyzeProject, unitPrice, devGeometry } from './analysis.js';
+import { buildContext, analyzeProject, unitPrice, devGeometry, hypotheticalUnit } from './analysis.js';
 import { STATUS } from './status.js';
 import { circlePolygon, pointInGeometry, haversine } from './geo.js';
 import { clp, uf, pct, meters, date, esc, todaySantiago } from './format.js';
@@ -79,16 +79,6 @@ function applyVerification(p, v) {
     observed_at: v.at, access_method: 'verificacion_manual', confidence: 'alta', verification_status: 'verificado', notes: v.notes }, ...(q.evidence || [])];
   q.verified_locally = true;
   return q;
-}
-
-function hypotheticalUnit(p, cfg) {
-  if (!p.price_from_uf || (p.units || []).length) return null;
-  const txt = (p.typologies_text || '').toLowerCase();
-  const bedrooms = /estudio/.test(txt) ? 0 : /(\d)\s*d/.test(txt) ? +txt.match(/(\d)\s*d/)[1] : 1;
-  const m = txt.match(/(\d{2,3})\s*[-–a]\s*\d{2,3}\s*m/);
-  const m2 = m ? +m[1] : (cfg.typicalM2 || {})[String(bedrooms)];
-  return { id: 'hipotetica', type: bedrooms === 0 ? 'Estudio (hipotético)' : `${bedrooms}D (hipotético)`, bedrooms, bathrooms: 1, useful_m2: m2,
-    list_price_uf: p.price_from_uf, offer_price_uf: null, reference: true, hypothetical: true, available: null };
 }
 
 export function buildProjects() {

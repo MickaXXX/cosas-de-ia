@@ -16,6 +16,18 @@ export function unitPrice(u) {
   return u.offer_price_uf ?? u.list_price_uf ?? null;
 }
 
+/** Proyecto sin unidades publicadas: unidad hipotética con el precio "desde" y la tipología
+ * del texto (o m² típicos). Siempre rotulada y fuera de la lista verificada del ranking. */
+export function hypotheticalUnit(p, cfg) {
+  if (!p.price_from_uf || (p.units || []).length) return null;
+  const txt = (p.typologies_text || '').toLowerCase();
+  const bedrooms = /estudio/.test(txt) ? 0 : /(\d)\s*d/.test(txt) ? +txt.match(/(\d)\s*d/)[1] : 1;
+  const m = txt.match(/(\d{2,3})\s*[-–a]\s*\d{2,3}\s*m/);
+  const m2 = m ? +m[1] : (cfg.typicalM2 || {})[String(bedrooms)];
+  return { id: 'hipotetica', type: bedrooms === 0 ? 'Estudio (hipotético)' : `${bedrooms}D (hipotético)`, bedrooms, bathrooms: 1, useful_m2: m2,
+    list_price_uf: p.price_from_uf, offer_price_uf: null, reference: true, hypothetical: true, available: null };
+}
+
 /** Índices que se calculan una vez por carga de datos. */
 export function buildContext({ projects = [], rentals = [], references = [], stations = [], metroLines = [], pois = [],
   developments = [], communesGeo = [], config, uf, today = todaySantiago() }) {

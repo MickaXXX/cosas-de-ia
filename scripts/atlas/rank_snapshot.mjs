@@ -8,22 +8,30 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { buildContext, analyzeProject } from '../../docs/atlas/js/analysis.js';
+import { buildContext, analyzeProject, devGeometry, hypotheticalUnit } from '../../docs/atlas/js/analysis.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(here, '..', '..', 'docs', 'atlas');
 const read = (p, d = null) => (existsSync(path.join(APP, p)) ? JSON.parse(readFileSync(path.join(APP, p), 'utf8')) : d);
 
 const config = read('config/defaults.json');
-const projects = (read('data/projects.json', { projects: [] }).projects || []).filter((p) => !p.demo);
+// Igual que la app (app.js → buildProjects): sin unidades publicadas se usa la unidad hipotética
+// con el precio "desde", que nunca pasa las puertas de calidad (queda en la lista provisional).
+const projects = (read('data/projects.json', { projects: [] }).projects || []).filter((p) => !p.demo).map((p) => {
+  const h = hypotheticalUnit(p, config);
+  return h ? { ...p, units: [h], hypothetical_units: true } : p;
+});
+const features = (p) => read(p, { features: [] }).features || [];
 const uf = read('data/uf.json') || { value: read('data/market.json', {}).uf_fallback?.value };
 const ctx = buildContext({
   projects,
   rentals: (read('data/rentals.json', { listings: [] }).listings || []).filter((r) => !r.demo),
   references: read('data/rent_reference.json', { references: [] }).references || [],
-  stations: read('data/osm/metro_stations.geojson', { features: [] }).features,
-  pois: read('data/osm/pois.geojson', { features: [] }).features,
-  developments: (read('data/developments.json', { developments: [] }).developments || []).filter((d) => d.geometry || d.lat != null),
+  stations: features('data/osm/metro_stations.geojson'),
+  metroLines: features('data/osm/metro_lines.geojson'),
+  pois: features('data/osm/pois.geojson'),
+  communesGeo: features('data/osm/communes.geojson'),
+  developments: (read('data/developments.json', { developments: [] }).developments || []).filter((d) => devGeometry(d)),
   config, uf,
 });
 const rows = [];
@@ -35,7 +43,7 @@ for (const p of projects) {
     id: p.id, unit: a.unit.id, name: p.name, commune: p.commune, score: Math.round(a.score * 10) / 10,
     passed: a.gates.passed, pending: a.gates.fails.slice(0, 4), status: a.status.code,
     price_uf: a.priceUf, monthly_cf_clp: uf?.value ? Math.round(a.metrics.monthlyCf * uf.value) : null,
-    rent_source: a.rentSource,
+    rent_source: a.rentSource, hypothetical: !!a.unit.hypothetical,
   });
 }
 rows.sort((x, y) => (y.passed - x.passed) || (y.score - x.score));
