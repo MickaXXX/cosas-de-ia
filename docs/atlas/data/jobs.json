@@ -1,7 +1,7 @@
 {
   "bootstrap": {
     "task": "bootstrap",
-    "started_at": "2026-10-12T21:26:44Z",
+    "started_at": "2026-10-12T23:34:29Z",
     "steps": [
       {
         "name": "Capas OSM (si faltan)",
@@ -24,7 +24,7 @@
       {
         "name": "Foto del ranking",
         "status": "ok",
-        "seconds": 0.7,
+        "seconds": 0.6,
         "error": null
       },
       {
@@ -34,10 +34,16 @@
         "error": null
       }
     ],
-    "finished_at": "2026-10-12T21:26:44Z",
+    "finished_at": "2026-10-12T23:34:30Z",
     "status": "ok"
   },
   "history": [
+    {
+      "task": "bootstrap",
+      "started_at": "2026-10-12T23:34:29Z",
+      "finished_at": "2026-10-12T23:34:30Z",
+      "status": "ok"
+    },
     {
       "task": "bootstrap",
       "started_at": "2026-10-12T21:26:44Z",

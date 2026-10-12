@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T21:26:44Z",
+  "generated_at": "2026-10-12T23:34:30Z",
   "sources": [
     {
       "id": "uf",
@@ -155,7 +155,7 @@
   "jobs": {
     "bootstrap": {
       "task": "bootstrap",
-      "started_at": "2026-10-12T21:26:44Z",
+      "started_at": "2026-10-12T23:34:29Z",
       "steps": [
         {
           "name": "Capas OSM (si faltan)",
@@ -178,7 +178,7 @@
         {
           "name": "Foto del ranking",
           "status": "ok",
-          "seconds": 0.7,
+          "seconds": 0.6,
           "error": null
         },
         {
@@ -188,10 +188,16 @@
           "error": null
         }
       ],
-      "finished_at": "2026-10-12T21:26:44Z",
+      "finished_at": "2026-10-12T23:34:30Z",
       "status": "ok"
     },
     "history": [
+      {
+        "task": "bootstrap",
+        "started_at": "2026-10-12T23:34:29Z",
+        "finished_at": "2026-10-12T23:34:30Z",
+        "status": "ok"
+      },
       {
         "task": "bootstrap",
         "started_at": "2026-10-12T21:26:44Z",
@@ -287,6 +293,12 @@
     },
     {
       "entity": "fundamenta-irarrazaval-vespucio",
+      "field": "payment_terms",
+      "level": "warning",
+      "message": "Condición de pie publicada hace 523 días: puede no estar vigente"
+    },
+    {
+      "entity": "fundamenta-irarrazaval-vespucio",
       "field": "observed_at",
       "level": "warning",
       "message": "Precio/stock observado hace ? días: verificar"
@@ -360,6 +372,6 @@
   ],
   "summary": {
     "errors": 0,
-    "warnings": 22
+    "warnings": 23
   }
 }
