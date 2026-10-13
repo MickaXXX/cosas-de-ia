@@ -158,3 +158,20 @@ test('el pie adelantado entra al calendario de aportes de la simulación (TIR co
   }
   close(sum(a.base.months.map((m) => m.equity)), a.structure.equity, 1e-6, 'se aporta todo el capital');
 });
+
+test('sin fecha pero "venta en blanco": se supone el plazo de la etapa (rotulado) y el pie va en cuotas', () => {
+  const p = proj({ delivery: { status: 'desconocida', sale_stage: 'en_blanco' } });
+  const a = analyzeUnit(p, p.units[0], ctxWith([p]), { rentClpOverride: 480000 });
+  assert.equal(a.status.code, 'gris', 'el pin sigue gris: la fecha no está verificada');
+  assert.equal(a.deliveryMonths, CONFIG.status.assumedDeliveryMonthsByStage.en_blanco);
+  assert.equal(a.terms.source, 'supuesto');
+  assert.equal(a.terms.dateAssumed, true);
+  assert.ok(a.plan.cuotas > 0);
+  assert.ok(a.gates.fails.some((f) => /SUPUSO entrega en 30 meses/.test(f)));
+  assert.ok(a.plan.reasons.some((r) => /Fecha de entrega SUPUESTA/.test(r)));
+  // Sin etapa conocida se mantiene el criterio conservador: entrega inmediata, pie al escriturar.
+  const q = proj({ delivery: { status: 'desconocida' } });
+  const b = analyzeUnit(q, q.units[0], ctxWith([q]), { rentClpOverride: 480000 });
+  assert.equal(b.deliveryMonths, 0);
+  assert.equal(b.plan.cuotas, 0);
+});

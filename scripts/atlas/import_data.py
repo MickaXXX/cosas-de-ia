@@ -139,6 +139,7 @@ def build_projects(rows: list[dict], now: str) -> dict[str, dict]:
                 "geo_source": "manual" if has_geo else None,
                 "delivery": {"status": status, "date": r.get("delivery_date"),
                              "date_status": r.get("delivery_date_status") or ("confirmada" if immediate else "desconocida"),
+                             **({"sale_stage": r["sale_stage"]} if r.get("sale_stage") else {}),
                              "immediate_verified": immediate,
                              "stock_verified": bool(r.get("available_stock_verified")),
                              "verified_at": r.get("data_observed_at")},

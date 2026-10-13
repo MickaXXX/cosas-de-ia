@@ -80,6 +80,10 @@ const SECTIONS = [
     F('rentals.areaTolerance', 'Tolerancia de superficie (±)', 'pct'), F('rentals.minSample', 'Muestra mínima', 'int'),
     F('rentals.areaElasticity', 'Elasticidad arriendo-superficie (referencia comunal)', 'num', { step: 0.05 }),
     F('status.maxVerificationAgeDays', 'Días máx. de una verificación de entrega inmediata', 'int'),
+    F('status.assumedDeliveryMonthsByStage.en_blanco', 'Sin fecha publicada, "venta en blanco": meses supuestos a la entrega', 'int'),
+    F('status.assumedDeliveryMonthsByStage.en_verde', 'Sin fecha publicada, "venta en verde": meses supuestos', 'int'),
+    F('status.assumedDeliveryMonthsByStage.futura', 'Sin fecha publicada, "entrega futura": meses supuestos', 'int'),
+    F('status.assumedDeliveryMonthsByStage.pronta_entrega', 'Sin fecha publicada, "pronta entrega": meses supuestos', 'int'),
     F('ranking.gates.maxPriceAgeDays', 'Días máx. del precio para ranking real', 'int'), F('ranking.gates.minComps', 'Comparables mínimos para ranking real', 'int'),
     F('infrastructure.nearbyRadiusM', 'Radio para obras cercanas (m)', 'int')] },
   { id: 'airbnb', title: 'Renta corta (Airbnb) — supuestos', help: 'Sin proveedor licenciado (AirDNA): son SUPUESTOS editables, no datos de mercado. Verificar reglamento de copropiedad y SII (IVA).', fields: [

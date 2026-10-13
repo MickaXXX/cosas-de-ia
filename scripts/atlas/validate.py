@@ -32,6 +32,7 @@ STAGES = {"idea", "anuncio", "diseno", "evaluacion", "aprobado", "en_construccio
 DEV_TYPES = {"metro_futuro", "metro_extension", "transporte", "vial", "mall", "comercio", "clinica", "hospital",
              "universidad", "educacion", "parque", "cultura", "polo_empleo", "residencial", "normativa", "otro"}
 DELIVERY_STATES = {"inmediata", "futura", "desconocida"}
+SALE_STAGES = {"en_blanco", "en_verde", "futura", "pronta_entrega", "entrega_inmediata"}
 
 
 class Report:
@@ -96,6 +97,8 @@ def validate_projects(doc, cfg, rep: Report) -> dict:
         d = p.get("delivery") or {}
         if d.get("status") and d["status"] not in DELIVERY_STATES:
             rep.err(pid, "delivery.status", f"Estado de entrega desconocido: {d['status']}")
+        if d.get("sale_stage") and d["sale_stage"] not in SALE_STAGES:
+            rep.err(pid, "delivery.sale_stage", f"Etapa de venta desconocida: {d['sale_stage']}")
         if d.get("date") and not parse_date(d["date"]):
             rep.err(pid, "delivery.date", f"Fecha inválida: {d['date']}")
         for k in ("publication_url", "brochure_url"):

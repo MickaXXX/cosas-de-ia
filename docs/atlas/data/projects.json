@@ -25,7 +25,9 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal lo rotula 'Venta en blanco' (obra por iniciar o recién iniciada). Sin fecha de entrega publicada."
+        "note": "El portal lo rotula 'Venta en blanco' (obra por iniciar o recién iniciada). Sin fecha de entrega publicada.",
+        "sale_stage": "en_blanco",
+        "sale_stage_source": "Etiqueta del portal (vía búsqueda web), sin fecha publicada"
       },
       "price_from_uf": 2767,
       "price_range_uf": null,
@@ -228,7 +230,8 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal declara entrega inmediata y 24 unidades disponibles (fecha de la página sin confirmar)."
+        "note": "El portal declara entrega inmediata y 24 unidades disponibles (fecha de la página sin confirmar).",
+        "sale_stage": "entrega_inmediata"
       },
       "price_from_uf": 3220,
       "price_range_uf": null,
@@ -296,7 +299,8 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal declara entrega inmediata."
+        "note": "El portal declara entrega inmediata.",
+        "sale_stage": "entrega_inmediata"
       },
       "price_from_uf": 3526,
       "price_range_uf": null,
@@ -365,7 +369,9 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal dice 'pronta entrega' sin fecha."
+        "note": "El portal dice 'pronta entrega' sin fecha.",
+        "sale_stage": "pronta_entrega",
+        "sale_stage_source": "Etiqueta del portal (vía búsqueda web), sin fecha publicada"
       },
       "price_from_uf": 2996,
       "price_range_uf": null,
@@ -501,7 +507,8 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal declara entrega inmediata."
+        "note": "El portal declara entrega inmediata.",
+        "sale_stage": "entrega_inmediata"
       },
       "price_from_uf": 5200,
       "price_range_uf": null,
@@ -569,7 +576,8 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal declara entrega inmediata."
+        "note": "El portal declara entrega inmediata.",
+        "sale_stage": "entrega_inmediata"
       },
       "price_from_uf": 3127,
       "price_range_uf": null,
@@ -637,7 +645,8 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal declara entrega inmediata."
+        "note": "El portal declara entrega inmediata.",
+        "sale_stage": "entrega_inmediata"
       },
       "price_from_uf": 3913,
       "price_range_uf": null,
@@ -836,7 +845,8 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal declara entrega inmediata."
+        "note": "El portal declara entrega inmediata.",
+        "sale_stage": "entrega_inmediata"
       },
       "price_from_uf": 5325,
       "price_range_uf": null,
@@ -917,7 +927,9 @@
         "immediate_verified": false,
         "stock_verified": false,
         "verified_at": null,
-        "note": "El portal indica 'entrega futura' sin fecha."
+        "note": "El portal indica 'entrega futura' sin fecha.",
+        "sale_stage": "futura",
+        "sale_stage_source": "Etiqueta del portal (vía búsqueda web), sin fecha publicada"
       },
       "price_from_uf": 6690,
       "price_range_uf": [

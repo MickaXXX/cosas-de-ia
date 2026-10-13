@@ -131,7 +131,7 @@ export function buildProjects(records, nowIso) {
         geo_precision: r.geolocation_precision || (hasGeo ? 'exacta' : 'pendiente'),
         geo_source: hasGeo ? 'manual' : null,
         delivery: { status: immediate ? 'inmediata' : r.delivery_date ? 'futura' : 'desconocida', date: r.delivery_date,
-          date_status: r.delivery_date_status || (immediate ? 'confirmada' : 'desconocida'),
+          date_status: r.delivery_date_status || (immediate ? 'confirmada' : 'desconocida'), sale_stage: r.sale_stage || undefined,
           immediate_verified: immediate, stock_verified: !!r.available_stock_verified, verified_at: r.data_observed_at },
         publication_url: r.publication_url, brochure_url: r.brochure_url,
         short_term_rental: { status: r.short_term_rental_status || 'por_verificar' },

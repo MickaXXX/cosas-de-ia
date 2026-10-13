@@ -99,7 +99,7 @@ export function cashPlan(sim, inv, opt = {}) {
   const margin = path.min - cushion;
   let status = 'alcanzable';
   if (margin < -EPS) status = 'no_alcanzable';
-  else if (margin < 3 * fixedMonthly || steadyNet < 0) status = 'ajustado';
+  else if (margin < 3 * fixedMonthly - 1e-6 || steadyNet < 0) status = 'ajustado';
 
   // 3) Si no alcanza: ¿con cuántas cuotas de pie alcanzaría? (sin adelantar pie, que es lo más holgado)
   let minInstallmentsNeeded = null, installmentsHelp = false;
@@ -127,8 +127,12 @@ export function cashPlan(sim, inv, opt = {}) {
   }
   if (sch.cuotas > 0 && sch.cuota > savings[0] + EPS) reasons.push(`La cuota del pie (${clp(toClp(sch.cuota))}/mes) supera tu ahorro mensual (${clp(toClp(savings[0]))}): la diferencia sale de tu caja.`);
   if (steadyNet < 0) reasons.push(`Después de la entrega el depto te pide ${clp(toClp(-sim.metrics.monthlyCf))}/mes y ahorras ${clp(toClp(savings[end]))}: tu caja baja ${clp(toClp(-steadyNet))} cada mes.`);
-  if (status === 'ajustado' && margin < 3 * fixedMonthly) reasons.push(`Tu colchón en el peor mes (${clp(toClp(path.min))}) cubre menos de 3 meses de dividendo + gasto común (${clp(toClp(3 * fixedMonthly))}).`);
-  if (terms.source === 'supuesto') reasons.push('Pie en cuotas hasta la entrega SUPUESTO (práctica habitual en verde/blanco): confírmalo con la inmobiliaria.');
+  if (status === 'ajustado' && margin < 3 * fixedMonthly - 1e-6) reasons.push(`Tu colchón en el peor mes (${clp(toClp(path.min))}) cubre menos de 3 meses de dividendo + gasto común (${clp(toClp(3 * fixedMonthly))}).`);
+  if (terms.source === 'supuesto') {
+    reasons.push(terms.dateAssumed
+      ? `Fecha de entrega SUPUESTA (${promised} meses, el portal dice "${terms.stageLabel || 'sin fecha'}") y pie en cuotas hasta esa fecha SUPUESTO: confirma ambos con la inmobiliaria.`
+      : 'Pie en cuotas hasta la entrega SUPUESTO (práctica habitual en verde/blanco): confírmalo con la inmobiliaria.');
+  }
   if (terms.source === 'sin_datos') reasons.push('Sin datos verificados de pie en cuotas ni de fecha de entrega: se supuso pie al contado en la escritura.');
   if (terms.source === 'sin_cuotas') reasons.push('Entrega inmediata sin pie en cuotas publicado: el pie se paga completo al escriturar.');
 

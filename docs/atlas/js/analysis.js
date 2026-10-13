@@ -11,6 +11,8 @@ import { evidenceScore, componentScores, scoreWithProfile, qualityGates, appreci
 import { haversine, distanceToGeometry, pointInGeometry, walkMinutes } from './geo.js';
 import { todaySantiago, monthIndexSantiago } from './format.js';
 
+export const STAGE_LABEL = { en_blanco: 'venta en blanco', en_verde: 'venta en verde', futura: 'entrega futura sin fecha', pronta_entrega: 'pronta entrega', entrega_inmediata: 'entrega inmediata declarada' };
+
 export const ACCEPTED_PRICE_EVIDENCE = new Set(['verificado', 'importado_sin_verificar', 'captura_usuario']);
 
 export function unitPrice(u) {
@@ -133,7 +135,8 @@ export function paymentTerms(project, unit, a, cfg) {
   }
   if (a.deliveryMonths > 0 && inv.assumeInstallmentsUntilDelivery !== false) {
     return { installmentsMax: Math.min(a.deliveryMonths, fin.pieInstallmentsMax ?? 48), postDelivery: false, minUpfrontPct: 0,
-      source: 'supuesto', notes: 'Pie en cuotas hasta la entrega: práctica habitual en venta en verde/blanco, no publicada para este proyecto.' };
+      source: 'supuesto', dateAssumed: !!a.deliveryAssumedMonths, stage: a.deliveryStage, stageLabel: STAGE_LABEL[a.deliveryStage] || null,
+      notes: `Pie en cuotas hasta la entrega: práctica habitual en venta en verde/blanco, no publicada para este proyecto.${a.deliveryAssumedMonths ? ` La fecha de entrega también es SUPUESTA (${a.deliveryAssumedMonths} meses por ${STAGE_LABEL[a.deliveryStage] || a.deliveryStage}).` : ''}` };
   }
   return { installmentsMax: 0, postDelivery: false, minUpfrontPct: 0, source: a.deliveryAssumed ? 'sin_datos' : 'sin_cuotas' };
 }
@@ -205,7 +208,12 @@ export function analyzeUnit(project, unitIn, ctx, opt = {}) {
   a.status = deliveryStatus(project, ctx.today, cfg.status);
   const mtd = monthsToDelivery(a.status);
   a.monthsToDelivery = mtd;
-  a.deliveryMonths = mtd ?? 0;
+  // Sin fecha: si el portal dice "en blanco", "en verde", etc., se SUPONE un plazo editable por etapa
+  // (config.status.assumedDeliveryMonthsByStage); si no, se simula entrega inmediata.
+  const stage = project.delivery?.sale_stage;
+  a.deliveryAssumedMonths = mtd == null ? (cfg.status?.assumedDeliveryMonthsByStage?.[stage] ?? null) : null;
+  a.deliveryStage = stage || null;
+  a.deliveryMonths = mtd ?? a.deliveryAssumedMonths ?? 0;
   a.deliveryAssumed = mtd == null;
   a.priceUf = unitPrice(unit);
   a.priceClp = a.priceUf && ufv ? a.priceUf * ufv : null;
@@ -294,7 +302,11 @@ export function analyzeUnit(project, unitIn, ctx, opt = {}) {
   if (unit.reference) a.gates.fails.push(unit.hypothetical ? 'Unidad hipotética armada con el precio "desde"' : 'Precio "desde" referencial: no es una unidad concreta');
   if (unit.m2_assumed) a.gates.fails.push(`Superficie supuesta (${unit.useful_m2} m² típicos de la tipología)`);
   if (a.needsMicrosector && !a.microsector) a.gates.fails.push(`${project.commune}: fuera de los microsectores definidos`);
-  if (a.deliveryAssumed) a.gates.fails.push('Fecha de entrega no verificada: se simuló como entrega inmediata');
+  if (a.deliveryAssumed) {
+    a.gates.fails.push(a.deliveryAssumedMonths
+      ? `Fecha de entrega no publicada: se SUPUSO entrega en ${a.deliveryAssumedMonths} meses (${STAGE_LABEL[a.deliveryStage] || a.deliveryStage})`
+      : 'Fecha de entrega no verificada: se simuló como entrega inmediata');
+  }
   if (a.rentSource === 'usuario') a.gates.fails.push('Arriendo ingresado a mano');
   a.gates.passed = a.gates.fails.length === 0;
   a.appreciation = appreciationPotential(a.nearby.filter((n) => n.dev.status === 'publicado'), cfg.ranking.appreciation);

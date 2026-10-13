@@ -453,8 +453,10 @@ function renderOpps() {
   const rows = inView.map((p) => ({ p, a: S.analyses.get(p.id)?.best })).sort((x, y) => (y.a?.score ?? -1) - (x.a?.score ?? -1));
   const ufv = S.raw.uf?.value;
   const noGeo = visibleProjects().filter((p) => p.lat == null);
+  const outside = visibleProjects().filter((p) => p.lat != null).length - inView.length;
   el.innerHTML = `<div class="opps-head"><div class="row between"><h2>Oportunidades en el mapa</h2><div class="row"><span class="chip">${rows.length}</span><button class="btn sm panel-close" data-action="opps-toggle" aria-label="Cerrar">✕</button></div></div>
-    <div class="tiny muted">Ordenadas por score (${esc(S.config.ranking.profiles[S.config.ranking.profile].label)}). Provisional = faltan datos para recomendar.</div></div>
+    <div class="tiny muted">Solo los proyectos dentro del mapa visible, ordenados por score (${esc(S.config.ranking.profiles[S.config.ranking.profile].label)}). Provisional = faltan datos para recomendar.</div>
+    ${outside > 0 ? `<div class="row small" style="margin-top:4px"><span>${outside} proyecto${outside === 1 ? '' : 's'} fuera de esta vista</span><button class="btn sm" data-action="fit-all">Ver todos</button></div>` : ''}</div>
     ${rows.length ? rows.slice(0, 120).map(({ p, a }) => {
     const st = a?.status || STATUS.gris;
     return `<div class="opp ${S.selected?.projectId === p.id ? 'on' : ''}" data-action="opp-click" data-id="${esc(p.id)}" data-hover="${esc(p.id)}">
@@ -510,6 +512,15 @@ function searchItems(q) {
   for (const d of S.raw.developments) if (n(d.name).includes(t)) out.push({ kind: 'Obra', label: d.name, go: () => { const g = devGeometry(d); if (g) M.flyTo(g.type === 'Point' ? g.coordinates : g.coordinates[0][0], 14); } });
   return out.slice(0, 12);
 }
+
+function fitVisibleProjects() {
+  const pts = visibleProjects().filter((p) => p.lat != null);
+  if (!pts.length) return false;
+  const xs = pts.map((p) => p.lon), ys = pts.map((p) => p.lat);
+  M.fitTo([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]]);
+  return true;
+}
+handle('fit-all', () => { fitVisibleProjects(); });
 
 function fitFeature(f) {
   const xs = [], ys = [];
@@ -717,6 +728,8 @@ async function boot() {
       onDevClick: (id, ll) => { const d = S.raw.developments.find((x) => x.id === id); if (d) M.showPopup([ll.lng, ll.lat], devPopupHTML(d)); },
     });
     M.onMove(renderOpps);
+    // En el celular el centro fijo deja proyectos fuera de la vista: se encuadran todos al abrir.
+    if (window.innerWidth <= 860 && !location.hash) fitVisibleProjects();
   } catch (e) {
     $('#mapNote').hidden = false;
     $('#mapNote').textContent = `El mapa no pudo iniciar: ${e.message}`;

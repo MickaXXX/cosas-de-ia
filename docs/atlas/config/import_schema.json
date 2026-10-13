@@ -33,6 +33,7 @@
       { "name": "common_expenses_clp", "type": "number", "required": false, "min": 10000, "max": 2000000 },
       { "name": "delivery_date", "type": "date", "required": false, "help": "AAAA-MM-DD o AAAA-MM" },
       { "name": "delivery_date_status", "type": "enum", "required": false, "enum": ["confirmada", "estimada", "desconocida"] },
+      { "name": "sale_stage", "type": "enum", "required": false, "enum": ["en_blanco", "en_verde", "futura", "pronta_entrega", "entrega_inmediata"], "help": "Etiqueta del portal. Sin fecha de entrega, el plan supone un plazo por etapa (editable en Configuración)." },
       { "name": "immediate_delivery_verified", "type": "bool", "required": false, "help": "Solo 'si' cuando hay recepción final/entrega comprobada." },
       { "name": "available_stock_verified", "type": "bool", "required": false, "help": "Solo 'si' cuando la unidad figura disponible en la fuente en la fecha observada." },
       { "name": "short_term_rental_status", "type": "enum", "required": false, "enum": ["permitido_verificado", "no_permitido_verificado", "por_verificar", "condicionado"] },

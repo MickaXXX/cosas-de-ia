@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-12T23:34:30.348Z",
+ "generated_at": "2026-10-13T01:21:58.095Z",
  "profile": "balanceado",
  "uf": 41146.83,
  "investor_plan": {
@@ -82,9 +82,9 @@
    "hypothetical": true,
    "plan": {
     "status": "no_alcanzable",
-    "terms": "sin_datos",
-    "cuotas": 0,
-    "cuota_clp": 0,
+    "terms": "supuesto",
+    "cuotas": 6,
+    "cuota_clp": 4109197,
     "min_installments_needed": null
    },
    "position": 3
@@ -180,7 +180,7 @@
    "pending": [
     "Arriendo sin 8 comparables homogéneos en el radio",
     "Entrega/stock sin verificar: Fecha de entrega desconocida",
-    "Fecha de entrega no verificada: se simuló como entrega inmediata"
+    "Fecha de entrega no publicada: se SUPUSO entrega en 30 meses (venta en blanco)"
    ],
    "status": "gris",
    "price_uf": 2863,
@@ -188,10 +188,10 @@
    "rent_source": "referencia",
    "hypothetical": false,
    "plan": {
-    "status": "no_alcanzable",
-    "terms": "sin_datos",
-    "cuotas": 0,
-    "cuota_clp": 0,
+    "status": "alcanzable",
+    "terms": "supuesto",
+    "cuotas": 30,
+    "cuota_clp": 274772,
     "min_installments_needed": null
    },
    "position": 7
@@ -324,9 +324,9 @@
    "hypothetical": true,
    "plan": {
     "status": "no_alcanzable",
-    "terms": "sin_datos",
-    "cuotas": 0,
-    "cuota_clp": 0,
+    "terms": "supuesto",
+    "cuotas": 24,
+    "cuota_clp": 2293936,
     "min_installments_needed": null
    },
    "position": 12

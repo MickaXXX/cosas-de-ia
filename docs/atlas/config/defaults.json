@@ -38,7 +38,11 @@
       "attribution": "© OpenStreetMap © CARTO"
     }
   },
-  "status": { "maxVerificationAgeDays": 60 },
+  "status": {
+    "maxVerificationAgeDays": 60,
+    "assumedDeliveryMonthsByStage": { "en_blanco": 30, "en_verde": 18, "futura": 24, "pronta_entrega": 6 },
+    "_assumedDeliveryNote": "Solo si NO hay fecha publicada: meses SUPUESTOS hasta la entrega según la etiqueta del portal (en blanco = obra por iniciar o recién iniciada; en verde = en construcción; futura = sin etapa; pronta entrega). Editables. El pin sigue gris porque la fecha no está verificada."
+  },
   "rentals": {
     "radiusM": 2000,
     "expandedRadiusM": 3000,
