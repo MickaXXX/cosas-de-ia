@@ -368,3 +368,11 @@ table.grid tr.mine td:first-child { background: color-mix(in srgb, var(--accent)
 .kvl { display: grid; grid-template-columns: 96px 1fr; gap: 4px 10px; margin-top: 6px; font-size: 12px; }
 .kvl > span { color: var(--text-2); font-weight: 600; }
 .kvl > p { margin: 0; line-height: 1.4; }
+
+/* Parte del día: descomposición del resultado */
+.desc { padding: 8px 0; border-top: 1px solid var(--border); }
+.desc:first-of-type { border-top: 0; }
+.desc-l { display: grid; grid-template-columns: 62px 1fr auto; gap: 8px; align-items: center; margin-top: 4px; font-size: 12px; }
+.desc-l > span { color: var(--text-2); }
+.desc-l > i { display: block; height: 7px; border-radius: 4px; }
+.desc-l > i.up { background: var(--sb); } .desc-l > i.down { background: var(--ss); }

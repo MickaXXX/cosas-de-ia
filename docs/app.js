@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.9.3';
+const APP_VERSION = '2.0.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -13,6 +13,7 @@ const PUB_URL = './data/portfolios.json';
 const DESKS_URL = './data/desks.json';
 const DISRUP_URL = './data/disruption.json';
 const DEC_URL = './data/decision.json';
+const DAILY_URL = './data/daily.json';
 
 const LS = { book: 'mia.book.v1', portfolio: 'mia.portfolio.v1', cache: 'mia.cache.v1', settings: 'mia.settings.v1' };
 const SIG_ORDER = ['strong_sell', 'sell', 'hold', 'buy', 'strong_buy'];
@@ -35,7 +36,7 @@ const S = {
   radar: { horizon: 'score', signal: 'all', type: 'all', q: '', fav: false, guru: false, limit: RADAR_PAGE },
   book: loadBook(),
   settings: loadJSON(LS.settings, { showClp: true, finnhubKey: '', aiKey: '', aiModel: 'claude-opus-5' }),
-  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, cuadra: null, ocrTotalCLP: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
+  pub: [], pubAt: null, desks: null, disrup: null, disrupHz: 'todas', ocr: null, ocrTx: null, cuadra: null, ocrTotalCLP: null, day: null, pubDiffOculto: false, loadError: null, historyAt: null, refreshing: null, pinPend: null, pinFails: 0,
   unlocked: (() => { try { return localStorage.getItem('mia.pin.ok.v1') === '103f8349d86b471b9982ede3133cb922f2e96a36e2cc45037b71207fa4bf0ee1'; } catch { return false; } })(), refreshTimer: null, chat: loadChat(), chatBusy: false, carteraView: 'posiciones', radarView: 'lista',
 };
 
@@ -292,15 +293,16 @@ async function loadData(fresh = false) {
   const btn = $('#btnRefresh'); btn.classList.add('spin');
   if (!S.data) render();          // pinta "cargando" antes de esperar la red
   try {
-    const [d, q, pub, desks, disrup, dec] = await Promise.all([
+    const [d, q, pub, desks, disrup, dec, day] = await Promise.all([
       fetchJSON(DATA_URL, fresh),
       fetchJSON(QUOTES_URL, fresh).catch(() => null),
       fetchJSON(PUB_URL, true).catch(() => null),
       fetchJSON(DESKS_URL, fresh).catch(() => null),
       fetchJSON(DISRUP_URL, fresh).catch(() => null),
       fetchJSON(DEC_URL, fresh).catch(() => null),
+      fetchJSON(DAILY_URL, fresh).catch(() => null),
     ]);
-    S.data = d; S.quotes = q; S.desks = desks; S.disrup = disrup; S.dec = dec; S.loadError = null;
+    S.data = d; S.quotes = q; S.desks = desks; S.disrup = disrup; S.dec = dec; S.day = day; S.loadError = null;
     S.pub = (pub?.list || []).map((p) => ({
       ...p, baseId: p.id, id: 'pub:' + p.id, fav: p.fav || [],
       tx: (p.tx || []).map((t, i) => ({ ...t, id: t.id || `${p.id}-${i}`, type: t.type || 'buy', date: t.date || today() })),
@@ -1201,6 +1203,67 @@ function movFila(f) {
 
 /** ¿Hay una forma mejor de repartir lo que ya tienes? Es lo primero que se ve en
  *  la hoja de IA, antes del radar: son decisiones sobre la cartera propia. */
+const ACC_CLASE = { COMPRAR: 'sb', 'AÑADIR': 'sb', MANTENER: 'b', VIGILAR: 'h', 'VENDER PARCIAL': 's', VENDER: 'ss' };
+
+/** El parte diario: de dónde viene el resultado y qué hacer hoy.
+ *  Es la capa rápida, la que sí cambia todos los días; el diagnóstico de abajo
+ *  mira la tesis y se mueve lento a propósito. */
+function dailyCard() {
+  const d = S.day;
+  if (!d?.posiciones?.length) return '';
+  const v = d.ventanas || {};
+  const clp = (x) => (x == null ? '—' : (x < 0 ? '−' : '') + '$' + fmtN(Math.abs(x), 0));
+
+  const barra = (w, etiqueta) => {
+    if (!w) return '';
+    const max = Math.max(Math.abs(w.acciones), Math.abs(w.dolar), 1);
+    const px = (x) => Math.max(2, Math.round(Math.abs(x) / max * 100));
+    return `<div class="desc">
+      <div class="between"><b class="small">${etiqueta}</b><b class="mono ${cls(w.total)}">${clp(w.total)}</b></div>
+      <div class="desc-l"><span>Acciones</span><i class="${w.acciones >= 0 ? 'up' : 'down'}" style="width:${px(w.acciones)}%"></i><b class="mono ${cls(w.acciones)}">${clp(w.acciones)}</b></div>
+      <div class="desc-l"><span>Dólar</span><i class="${w.dolar >= 0 ? 'up' : 'down'}" style="width:${px(w.dolar)}%"></i><b class="mono ${cls(w.dolar)}">${clp(w.dolar)}</b></div>
+      <div class="tiny muted">En dólares ${pct(w.usd_pct)} · el dólar ${pct(w.fx_pct)} (${fmtN(w.fx_antes, 0)} → ${fmtN(w.fx_hoy, 0)})</div></div>`;
+  };
+
+  const fila = (f) => `<div class="mov">
+      <div class="between"><div class="row"><b>${esc(f.sym)}</b>
+          <span class="chip sm ${ACC_CLASE[f.accion] || 'b'}">${esc(f.accion)}</span>
+          ${f.gatillo ? `<span class="tag">${esc(f.gatillo)}</span>` : ''}
+          ${f.cambio ? `<span class="tiny" style="color:var(--accent)">ayer: ${esc(f.cambio.toLowerCase())}</span>` : ''}</div>
+        ${f.monto ? `<b class="mono">${fmtUSD(f.monto)}</b>` : ''}</div>
+      <div class="tiny muted" style="margin-top:4px">${esc(f.por_que)}</div>
+      ${f.recompra ? `<div class="tiny" style="color:var(--sb);margin-top:3px">↩️ Vuelve a comprarla bajo <b>${fmtUSD(f.recompra)}</b> (${pct(f.recompra_pct)} desde hoy).</div>`
+        : f.recompra_nota ? `<div class="tiny muted" style="margin-top:3px">${esc(f.recompra_nota)}</div>` : ''}
+      <div class="tiny muted mono" style="margin-top:3px">peso ${fmtN(f.peso, 1)}% → ${fmtN(f.meta, 1)}% · resultado ${pct(f.pnl_pct)}${f.desde_max != null ? ` · ${fmtN(f.desde_max, 1)}% bajo su máximo de 20 días` : ''}${f.rsi != null ? ` · RSI ${f.rsi}` : ''}</div></div>`;
+
+  const hoy = d.posiciones.filter((f) => f.hoy);
+  const luego = d.posiciones.filter((f) => !f.hoy && !['MANTENER', 'VIGILAR'].includes(f.accion));
+  const vigilar = d.posiciones.filter((f) => f.accion === 'VIGILAR');
+  const quietas = d.posiciones.filter((f) => f.accion === 'MANTENER');
+
+  return `<div class="card" style="border-color:var(--accent)">
+      <div class="between"><h2 style="margin:0">📋 Parte del día</h2><span class="tag">${esc(d.date || '')}</span></div>
+      <ul class="reasons">${(d.titular || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <h3>De dónde viene tu resultado</h3>
+      <p class="small muted">Inviertes en dólares y mides en pesos, así que son dos apuestas. Esto las separa.</p>
+      ${barra(v.dia, 'Hoy')}${barra(v.semana, 'Semana')}${barra(v.mes, 'Mes')}
+      <p class="tiny muted">Se calcula con las cantidades que tienes hoy aplicadas a los precios de cada fecha: mide cuánto se movió <b>lo que tienes</b>, sin mezclar tus compras y ventas del periodo.</p></div>
+
+    ${hoy.length ? `<div class="card"><h2 style="margin-top:0">🎯 Para hoy</h2>
+      <p class="small muted">Como máximo cinco. Lo demás puede esperar y está abajo.</p>
+      ${hoy.map(fila).join('')}</div>` : `<div class="card"><h2 style="margin-top:0">🎯 Para hoy</h2>
+      <p class="small" style="color:var(--sb)">Ningún gatillo activo. No hay nada que hacer hoy, y eso también es una decisión.</p></div>`}
+
+    ${luego.length ? `<div class="card"><details><summary class="small"><b>${luego.length}</b> con gatillo, para después</summary>${luego.map(fila).join('')}</details></div>` : ''}
+
+    <div class="card"><details><summary class="small">El resto: ${vigilar.length} a vigilar · ${quietas.length} sin novedad</summary>
+      ${[...vigilar, ...quietas].map(fila).join('')}</details></div>
+
+    <div class="card"><details><summary class="small">Los gatillos que uso</summary>
+      <ul class="reasons small">${(d.reglas || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <p class="tiny muted">${esc(d.nota || '')}</p></details></div>`;
+}
+
 const EST_CLASE = { AUMENTAR: 'sb', MANTENER: 'b', OBSERVAR: 'h', REDUCIR: 's', SALIR: 'ss' };
 const EST_FLECHA = { AUMENTAR: '↑', MANTENER: '=', OBSERVAR: '=', REDUCIR: '↓', SALIR: '↓' };
 const COMP_NOMBRE = {
@@ -1353,7 +1416,7 @@ function ideaCard(e) {
 
 function viewIA() {
   const dk = S.disrup;
-  let html = briefCard() + decisionCard();
+  let html = briefCard() + dailyCard() + decisionCard();
 
   if (!dk?.ideas?.length) {
     html += `<div class="card"><h2 style="margin-top:0">🚀 Radar de disrupción</h2>

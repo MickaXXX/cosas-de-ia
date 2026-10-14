@@ -1,0 +1,48 @@
+name: Parte del día
+
+# El análisis de tesis (decision.json) se mueve lento a propósito. Esto es la
+# capa rápida: de dónde viene el resultado y qué hacer hoy con cada posición.
+# Corre por su cuenta, dos veces al día y a pedido, para que no dependa de que
+# haya corrido el análisis de mercado.
+on:
+  schedule:
+    # Tras el cierre de Wall Street y otra vez de mañana, hora de Chile.
+    - cron: "45 21 * * 1-5"
+    - cron: "30 11 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: parte-dia
+  cancel-in-progress: false
+
+jobs:
+  parte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Precios frescos
+        continue-on-error: true
+        run: python scripts/update_quotes.py
+
+      - name: Parte del día
+        run: python scripts/daily.py
+
+      - name: Publicar
+        run: |
+          scripts/publish.sh "parte del día $(date -u +%Y-%m-%dT%H:%M) [skip ci]" \
+            docs/data/daily.json \
+            docs/data/quotes.json
