@@ -53,6 +53,34 @@ Tres modelos independientes, cada uno 0–100, con explicaciones en español:
 
 Todo se calcula en `scripts/update_data.py`; nada es una caja negra.
 
+## v2.0.0 — el parte del día, y un split que inflaba la cartera en US$965
+
+### El bug primero: MDCX hizo un reverse split 1:50
+
+Medicus Pharma pasó de 71.710.022 acciones en circulación a 1.434.200 —÷50 exacto— y el precio saltó de US$0,07 a US$3,28 por la misma razón. La cartera guarda la **cantidad que uno compró**, así que la posición pasó a valer cincuenta veces más de lo que vale: **US$965 de aire sobre una cartera de US$4.730**, un 20%.
+
+El guard de "precio imposible" no lo veía porque solo descarta un salto que vuelve al día siguiente; un split es un cambio de escala permanente.
+
+Ahora el motor lo detecta con el dato duro —`sharesOutstanding` de ayer contra el de hoy— y exige que el precio se haya movido en sentido contrario y en proporción parecida, para no confundir un split con una emisión o una recompra. Cuando lo encuentra: reescala el historial de precios anteriores, publica el split en `latest.json` y lo deja anotado. La posición se corrige dividiendo la cantidad y multiplicando el precio, así que **el costo no cambia ni un centavo**: no es una venta, es la misma posición con otra cantidad.
+
+### El parte del día
+
+`scripts/daily.py` → `docs/data/daily.json`, con **su propio workflow** y su propio horario: dos veces al día, independiente del análisis de mercado.
+
+El motor de decisión mira la tesis y se mueve lento a propósito. Esta es la capa rápida que faltaba, y hace tres cosas:
+
+**1. De dónde viene el resultado.** Un chileno que invierte en dólares tiene dos apuestas encima. El cambio en pesos se abre exacto, sin residuo:
+
+> Δ(pesos) = efecto acciones + efecto dólar + el cruce de los dos
+
+En la cartera de hoy, el mes: las acciones restaron **$376.132** y el dólar devolvió **$351.198**. Casi se cancelaron — el dólar viene amortiguando, no golpeando.
+
+**2. Un veredicto por posición que sí cambia.** Gatillos explícitos, no un puntaje escondido: distancia al máximo de 20 días **medida contra la del propio mercado** (si todo cae 8%, que una caiga 8% no dice nada de ella), posición contra sus medias, RSI, resultado abierto y peso contra el objetivo. Cada veredicto nombra el gatillo que se activó, y si ninguno se activó lo dice con esas palabras.
+
+**3. Venta parcial con recompra.** Una posición estirada o sobreponderada no se vende entera: se recorta la parte que sobra y queda anotado **a qué precio vuelve a tener sentido recomprarla** — el más cercano entre su media de 20 y un retroceso de 1,5 ATR, porque una recompra 20% abajo no es un plan, es no volver a entrar.
+
+Y tres frenos para que el parte sea un parte y no ruido con fecha: nunca más de **cinco acciones para hoy**, nada bajo **US$40** (la comisión se lo comería; eso pasa a "vigilar"), y nunca recortar más del 40% de una posición de una vez.
+
 ## v1.9.3 — el total en pesos hace de juez
 
 Racional muestra arriba el total de la cartera en pesos: **CLP 4.540.590**. Ese número no depende de leer bien cada tarjeta, así que es la única referencia confiable de la captura — y ahora la cuadratura lo usa como ancla.

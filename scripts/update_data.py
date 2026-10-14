@@ -948,6 +948,70 @@ def backfill_prices(rows: list, frame, keep_days: int, today: str) -> list:
 DIAS_RADAR = 40
 
 
+def detectar_splits(tickers: list, prev_by_sym: dict) -> list:
+    """Encuentra los splits comparando las acciones en circulación de la empresa.
+
+    Un split no es un movimiento de precio: la acción vale otra cosa porque hay
+    otra cantidad de acciones. MDCX hizo un 1:50 y, como la cartera guarda la
+    cantidad que uno compró, la posición pasó a valer cincuenta veces más de lo
+    que vale: US$965 de aire sobre una cartera de US$4.700.
+
+    Se mira el dato duro —sharesOutstanding del snapshot anterior contra el de
+    hoy— y se exige que el precio se haya movido en sentido contrario y en una
+    proporción parecida. Un cambio de acciones sin ese espejo en el precio es
+    una emisión o una recompra, no un split, y no se toca.
+    """
+    out = []
+    for t in tickers:
+        p = prev_by_sym.get(t["sym"])
+        if not p:
+            continue
+        a = num((p.get("fund") or {}).get("shares"))
+        b = num((t.get("fund") or {}).get("shares"))
+        pa, pb = num(p.get("price")), num(t.get("price"))
+        if not (a and b and pa and pb) or a <= 0 or b <= 0:
+            continue
+        razon = a / b                      # >1 reverse split, <1 split normal
+        if 0.95 < razon < 1.05:
+            continue
+        espejo = pb / pa                   # el precio debería moverse al revés
+        if abs(espejo / razon - 1) > 0.25:
+            continue                        # emisión o recompra, no split
+        # Los splits se anuncian en proporciones redondas: 2, 3, 4, 5, 10, 20, 50…
+        factor = min((f for f in (2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 100)),
+                     key=lambda f: abs(razon - f) if razon > 1 else abs(1 / razon - f))
+        if razon < 1:
+            factor = 1 / factor
+        if abs(razon / factor - 1) > 0.15:
+            continue
+        out.append({"sym": t["sym"], "factor": round(factor, 6), "date": t.get("date") or "",
+                    "precio_antes": round(pa, 4), "precio_despues": round(pb, 4),
+                    "tipo": "reverse" if factor > 1 else "split"})
+    return out
+
+
+def aplicar_splits_al_historial(history: dict, splits: list) -> int:
+    """Pone el historial viejo en la misma escala que el precio de hoy.
+
+    Sin esto la curva de rendimiento muestra un salto de miles por ciento el día
+    del split, y el aviso de 'precio imposible' no lo ve porque el salto no
+    vuelve al día siguiente: es un cambio de escala permanente.
+    """
+    tocadas = 0
+    for sp in splits:
+        filas = history.get(sp["sym"]) or []
+        corte = sp.get("date") or ""
+        for r in filas:
+            if r.get("d") < corte and num(r.get("p")):
+                # factor = acciones_antes / acciones_despues. En un reverse 1:50 vale
+                # 50 y el precio viejo hay que multiplicarlo por 50; en un 2:1 vale
+                # 0,5 y hay que multiplicarlo por 0,5. Multiplicar sirve para los dos.
+                r["p"] = round(r["p"] * sp["factor"], 6)
+                r["sp"] = 1                      # queda marcada como reescalada
+                tocadas += 1
+    return tocadas
+
+
 def precio_imposible(prev, cur, nxt) -> bool:
     """¿La fila del medio contradice a sus dos vecinos, que sí concuerdan?
 
@@ -1238,6 +1302,13 @@ def main():
     antes = {k: len(v) for k, v in history.items()}
     history = update_history(history, tickers, today, W["retention"]["history_days"], keep_hist,
                              frames=None if args.demo else hists, hondos=hondos)
+    splits = detectar_splits(tickers, prev_by_sym)
+    if splits:
+        reescaladas = aplicar_splits_al_historial(history, splits)
+        for sp in splits:
+            print(f"-- split detectado en {sp['sym']}: 1:{sp['factor']:.0f} "
+                  f"({sp['precio_antes']} → {sp['precio_despues']}), {reescaladas} filas reescaladas",
+                  flush=True)
     history, sucias = limpiar_precios(history)
     if sucias:
         print(f"-- {sucias} filas con precios imposibles descartadas del historial", flush=True)
@@ -1305,6 +1376,9 @@ def main():
         # Los alias viajan al cliente: así la app puede ofrecer arreglar una
         # posición guardada con un ticker que Yahoo no conoce (HUB por HUBS).
         "renames": universe.get("renames") or {},
+        # Los splits del día: la app los necesita para avisar que una posición
+        # guardada quedó con la cantidad vieja y ofrecer corregirla.
+        "splits": splits,
         "changes": changes[:40], "tickers": tickers, "failed": failed,
         "investors": {i["short"]: i.get("name", i["short"]) for i in investors.get("investors", [])},
         "investors_note": investors.get("_note", ""),

@@ -61,6 +61,10 @@ jobs:
         continue-on-error: true
         run: python scripts/decision.py
 
+      - name: Parte del día
+        continue-on-error: true
+        run: python scripts/daily.py
+
       - name: Publicar
         run: |
           scripts/publish.sh "cartera: sincronizada desde la app [skip ci]" \
@@ -69,6 +73,7 @@ jobs:
             docs/data/history.json \
             docs/data/desks.json \
             docs/data/decision.json \
+            docs/data/daily.json \
             docs/data/disruption.json \
             config/universe.json
 
