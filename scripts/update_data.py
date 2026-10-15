@@ -28,6 +28,7 @@ import argparse
 import json
 import math
 import os
+import re
 import random
 import sys
 import time
@@ -50,6 +51,15 @@ SIGNAL_LABELS = {
     "sell": "Venta",
     "strong_sell": "Venta fuerte",
 }
+
+# Diagnóstico de extracción. Un campo que se publica vacío en los 899 activos no
+# avisa de nada; estos contadores salen en latest.json para que el próximo run
+# diga qué falló en vez de dejarnos adivinando.
+import collections as _col
+DIAG = _col.defaultdict(int)
+DIAG["eps_periodos_vistos"] = set()
+DIAG["eps_claves_vistas"] = set()
+
 
 # Un solo request de quoteSummary trae todo esto:
 QS_MODULES = [
@@ -681,10 +691,33 @@ def parse_modules(mods: dict, price_hint=None) -> dict:
     # Cuánto se movió la estimación de utilidades del próximo año en 30 y 90 días.
     # Es más informativo que contar analistas: dice en qué dirección y cuánto se
     # está moviendo Wall Street, que es lo que termina arrastrando al precio.
-    for tr in (mods.get("earningsTrend") or {}).get("trend") or []:
-        if tr.get("period") != "+1y":
-            continue
+    #
+    # La fila del próximo año se buscaba por period == "+1y" exacto y el campo
+    # salía vacío en los 899 activos: la etiqueta no siempre viene así. Ahora se
+    # busca por varios caminos y queda anotado cuál funcionó, porque un campo que
+    # se publica vacío durante semanas es peor que no tenerlo.
+    filas_tr = (mods.get("earningsTrend") or {}).get("trend") or []
+    fila_1y = next((t for t in filas_tr if str(t.get("period") or "").strip().lower() == "+1y"), None)
+    if fila_1y is None:
+        fila_1y = next((t for t in filas_tr
+                        if re.fullmatch(r"\+?1\s*y(r|ear)?", str(t.get("period") or "").strip().lower())), None)
+        if fila_1y is not None:
+            DIAG["eps_1y_alterno"] += 1
+    if fila_1y is None:
+        # Último recurso: de las filas anuales, la que termina más adelante.
+        anuales = [t for t in filas_tr if "y" in str(t.get("period") or "").lower() and num(t.get("endDate") or 0)]
+        fila_1y = max(anuales, key=lambda t: num(t.get("endDate")) or 0, default=None)
+        if fila_1y is not None:
+            DIAG["eps_1y_por_fecha"] += 1
+    if fila_1y is None:
+        DIAG["eps_sin_trend" if not filas_tr else "eps_sin_fila_1y"] += 1
+        DIAG["eps_periodos_vistos"] |= {str(t.get("period")) for t in filas_tr}
+    for tr in ([fila_1y] if fila_1y is not None else []):
         et = tr.get("epsTrend") or {}
+        if not et:
+            DIAG["eps_sin_epstrend"] += 1
+        else:
+            DIAG["eps_claves_vistas"] |= set(et.keys())
         hoy = num(et.get("current"))
         if hoy:
             for dias in (30, 90):
@@ -713,7 +746,8 @@ def parse_modules(mods: dict, price_hint=None) -> dict:
         if cre is not None:
             a["rev_growth_next"] = round(cre * 100, 1)
         a["eps_growth_next"] = round(num(tr.get("growth")) * 100, 1) if num(tr.get("growth")) is not None else None
-        break
+        if a.get("eps_rev90") is None and a.get("eps_rev30") is None:
+            DIAG["eps_sin_dias_atras"] += 1
 
     # Sorpresas de los últimos trimestres: cuántos superaron y por cuánto.
     sorpresas = []
@@ -1266,12 +1300,19 @@ def main():
             f.update({"name": p.get("name"), "sector": p.get("sector"), "industry": p.get("industry"),
                       "currency": p.get("currency"), "price": None})
             a = p.get("analysts") or {}
+            # Esta rama reconstruía el bloque de analistas campo por campo y se
+            # dejaba afuera las revisiones de utilidades, las sorpresas y el
+            # crecimiento esperado: al reutilizar la caché esos datos se perdían
+            # para siempre. Se arrastran explícitamente.
+            reusados = {k: a.get(k) for k in ("eps_rev30", "eps_rev90", "eps_cruce90",
+                                              "eps_growth_next", "rev_growth_next", "surprises")}
             meta = {"fund": f, "meta_at": p.get("meta_at"),
                     "analysts": {"key": a.get("key"), "mean_rating": a.get("mean"), "count": a.get("count"),
                                  "target_mean": (a.get("target") or {}).get("mean"),
                                  "target_high": (a.get("target") or {}).get("high"),
                                  "target_low": (a.get("target") or {}).get("low"),
-                                 "upside": None, "dist": a.get("dist"), "revisions": a.get("revisions")} if a else {},
+                                 "upside": None, "dist": a.get("dist"), "revisions": a.get("revisions"),
+                                 **reusados} if a else {},
                     "earnings_date": p.get("earnings_date"),
                     "news_parsed": fresh_news if fresh_news is not None
                     else [n for n in (p.get("news") or []) if n.get("d", "") >= cutoff_news]}
@@ -1379,6 +1420,9 @@ def main():
         # Los splits del día: la app los necesita para avisar que una posición
         # guardada quedó con la cantidad vieja y ofrecer corregirla.
         "splits": splits,
+        # Qué logró leer el extractor. Si un campo sale vacío en todos los activos,
+        # acá queda dicho por qué.
+        "diag": {k: (sorted(v)[:12] if isinstance(v, set) else v) for k, v in DIAG.items()},
         "changes": changes[:40], "tickers": tickers, "failed": failed,
         "investors": {i["short"]: i.get("name", i["short"]) for i in investors.get("investors", [])},
         "investors_note": investors.get("_note", ""),

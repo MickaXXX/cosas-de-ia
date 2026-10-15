@@ -38,6 +38,13 @@ jobs:
         continue-on-error: true
         run: python scripts/update_quotes.py
 
+      # decision.json salía de otros workflows y podía quedar viejo respecto a la
+      # cartera: pasó, con el análisis repartiendo sobre US$5.797 cuando la
+      # cartera ya valía US$4.730. Es cálculo local y barato, así que se rehace
+      # junto al parte para que los dos hablen siempre del mismo portafolio.
+      - name: Motor de decisión
+        run: python scripts/decision.py
+
       - name: Parte del día
         run: python scripts/daily.py
 
@@ -45,4 +52,5 @@ jobs:
         run: |
           scripts/publish.sh "parte del día $(date -u +%Y-%m-%dT%H:%M) [skip ci]" \
             docs/data/daily.json \
+            docs/data/decision.json \
             docs/data/quotes.json
