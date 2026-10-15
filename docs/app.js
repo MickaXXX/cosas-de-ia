@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.1.0';
 const REPO = { owner: 'MickaXXX', name: 'cosas-de-ia', workflow: 'update-data.yml', quotesWorkflow: 'quotes.yml', branch: 'main' };
 const DATA_URL = './data/latest.json';
 const HIST_URL = './data/history.json';
@@ -1203,11 +1203,20 @@ function movFila(f) {
 
 /** ¿Hay una forma mejor de repartir lo que ya tienes? Es lo primero que se ve en
  *  la hoja de IA, antes del radar: son decisiones sobre la cartera propia. */
-const ACC_CLASE = { COMPRAR: 'sb', 'AÑADIR': 'sb', MANTENER: 'b', VIGILAR: 'h', 'VENDER PARCIAL': 's', VENDER: 'ss' };
+const ACC_CLASE = { COMPRAR: 'strong_buy', 'AÑADIR': 'buy', MANTENER: 'hold', VIGILAR: 'neutral', 'VENDER PARCIAL': 'sell', VENDER: 'strong_sell' };
+const BANDA_CLASE = { alta: 'sb', media: 'h', baja: 'ss' };
+const MOM_LABEL = {
+  sobrevendida: 'sobrevendida', estirada: 'estirada', corrigiendo: 'corrigiendo',
+  fuerte: 'en tendencia', neutral: 'sin extremos', 'sin dato': 'sin dato',
+};
+const TESIS_NOMBRE = { calidad: 'Calidad del negocio', earnings: 'Revisiones de utilidades', flujos: 'Institucionales', valoracion: 'Valoración' };
 
-/** El parte diario: de dónde viene el resultado y qué hacer hoy.
- *  Es la capa rápida, la que sí cambia todos los días; el diagnóstico de abajo
- *  mira la tesis y se mueve lento a propósito. */
+/** El parte del día: dos ejes (la empresa y el momento) y la tasa base de cada casilla.
+ *
+ *  La versión anterior decidía con el precio solo y vendía cualquier cosa que
+ *  cayera. Esta cruza la empresa con el momento y muestra, al lado de cada
+ *  veredicto, qué pasó históricamente con las posiciones que estuvieron igual.
+ */
 function dailyCard() {
   const d = S.day;
   if (!d?.posiciones?.length) return '';
@@ -1225,21 +1234,87 @@ function dailyCard() {
       <div class="tiny muted">En dólares ${pct(w.usd_pct)} · el dólar ${pct(w.fx_pct)} (${fmtN(w.fx_antes, 0)} → ${fmtN(w.fx_hoy, 0)})</div></div>`;
   };
 
-  const fila = (f) => `<div class="mov">
+  /** Una posición: los dos ejes, el porqué y la tasa base de su casilla. */
+  const fila = (f) => {
+    const bc = BANDA_CLASE[f.banda] || 'h';
+    const pr = f.proyeccion;
+    return `<div class="mov">
       <div class="between"><div class="row"><b>${esc(f.sym)}</b>
-          <span class="chip sm ${ACC_CLASE[f.accion] || 'b'}">${esc(f.accion)}</span>
-          ${f.gatillo ? `<span class="tag">${esc(f.gatillo)}</span>` : ''}
-          ${f.cambio ? `<span class="tiny" style="color:var(--accent)">ayer: ${esc(f.cambio.toLowerCase())}</span>` : ''}</div>
+          <span class="chip sm ${ACC_CLASE[f.accion] || 'hold'}">${esc(f.accion)}</span>
+          ${f.cambio ? `<span class="tiny" style="color:var(--accent)">antes: ${esc(f.cambio.toLowerCase())}</span>` : ''}</div>
         ${f.monto ? `<b class="mono">${fmtUSD(f.monto)}</b>` : ''}</div>
-      <div class="tiny muted" style="margin-top:4px">${esc(f.por_que)}</div>
-      ${f.recompra ? `<div class="tiny" style="color:var(--sb);margin-top:3px">↩️ Vuelve a comprarla bajo <b>${fmtUSD(f.recompra)}</b> (${pct(f.recompra_pct)} desde hoy).</div>`
-        : f.recompra_nota ? `<div class="tiny muted" style="margin-top:3px">${esc(f.recompra_nota)}</div>` : ''}
-      <div class="tiny muted mono" style="margin-top:3px">peso ${fmtN(f.peso, 1)}% → ${fmtN(f.meta, 1)}% · resultado ${pct(f.pnl_pct)}${f.desde_max != null ? ` · ${fmtN(f.desde_max, 1)}% bajo su máximo de 20 días` : ''}${f.rsi != null ? ` · RSI ${f.rsi}` : ''}</div></div>`;
+
+      <div class="row" style="gap:6px;margin-top:5px;flex-wrap:wrap">
+        <span class="tag">empresa <b class="t-${bc}">${esc(f.banda)}${f.tesis != null ? ` ${f.tesis}` : ''}</b></span>
+        <span class="tag">momento <b>${esc(MOM_LABEL[f.momento] || f.momento)}</b></span>
+        ${f.confianza != null && f.confianza < 70 ? `<span class="tag" style="color:var(--h)">datos ${f.confianza}%</span>` : ''}</div>
+
+      <div class="tiny muted" style="margin-top:5px">${esc(f.por_que)}</div>
+      ${f.discrepancia ? `<div class="tiny" style="color:var(--h);margin-top:4px">⚠️ ${esc(f.discrepancia)}</div>` : ''}
+      ${f.vetos?.length && !String(f.gatillo || '').startsWith('veto') ? `<div class="tiny" style="color:var(--ss);margin-top:4px">⛔ ${esc(f.vetos[0])}</div>` : ''}
+      ${f.nota_cartera ? `<div class="tiny" style="color:var(--h);margin-top:4px">⚖️ ${esc(f.nota_cartera)}</div>` : ''}
+
+      ${pr ? `<div class="desc" style="margin-top:6px">
+        <div class="between"><b class="tiny">Su casilla, medida</b>
+          <b class="mono tiny ${cls(pr.media)}">${pct(pr.media, 2)} a ${pr.horizonte}d</b></div>
+        <div class="tiny muted">${fmtN(pr.n, 0)} casos · subió el <b>${pr.acierto}%</b> de las veces · cuando sube ${pct(pr.sube, 2)}, cuando baja ${pct(pr.baja, 2)}${pr.asimetria ? ` · asimetría ${fmtN(pr.asimetria, 2)}` : ''}${pr.vs_base != null ? ` · ${pct(pr.vs_base, 2)} vs el promedio del universo` : ''}</div>
+        ${pr.nota ? `<div class="tiny" style="color:var(--h)">${esc(pr.nota)}</div>` : ''}</div>` : ''}
+
+      ${f.recompra ? `<div class="tiny" style="color:var(--sb);margin-top:4px">↩️ Vuelve a comprarla bajo <b>${fmtUSD(f.recompra)}</b> (${pct(f.recompra_pct)} desde hoy).</div>`
+        : f.recompra_nota ? `<div class="tiny muted" style="margin-top:4px">${esc(f.recompra_nota)}</div>` : ''}
+
+      <div class="tiny muted mono" style="margin-top:4px">peso ${fmtN(f.peso, 1)}% → ${fmtN(f.meta, 1)}% · resultado ${pct(f.pnl_pct)}${f.desde_max != null ? ` · ${fmtN(f.desde_max, 1)}% bajo su máximo de 20 días` : ''}${f.rsi != null ? ` · RSI ${f.rsi}` : ''}</div>
+
+      ${f.comp ? `<details style="margin-top:4px"><summary class="tiny muted">Cómo se arma el puntaje de la empresa</summary>
+        <div class="hbars" style="margin-top:6px">${Object.keys(TESIS_NOMBRE).filter((k) => f.comp[k] != null)
+          .map((k) => scoreBar(f.comp[k], `${TESIS_NOMBRE[k]} (${(d.ejes?.tesis || {})[k] ?? ''}%)`)).join('')}</div>
+        <p class="tiny muted" style="margin-bottom:0">La calidad pesa más que la valoración porque se midió: la valoración casi no separa resultados.</p></details>` : ''}</div>`;
+  };
 
   const hoy = d.posiciones.filter((f) => f.hoy);
   const luego = d.posiciones.filter((f) => !f.hoy && !['MANTENER', 'VIGILAR'].includes(f.accion));
   const vigilar = d.posiciones.filter((f) => f.accion === 'VIGILAR');
   const quietas = d.posiciones.filter((f) => f.accion === 'MANTENER');
+
+  // --- la prueba: ¿la regla separa resultados o no? -------------------------
+  const sim = d.simulacion, mar = d.marcador;
+  const simFila = (a, g) => `<div class="between" style="padding:6px 0;border-top:1px solid var(--border)">
+      <div class="row"><span class="chip sm ${ACC_CLASE[a] || 'hold'}">${esc(a)}</span>
+        <span class="tiny muted">${fmtN(g.n, 0)} casos</span></div>
+      <div style="text-align:right"><b class="mono ${cls(g.media)}">${pct(g.media, 2)}</b>
+        <div class="tiny muted">acertó el ${g.acierto}%</div></div></div>`;
+
+  const pruebaCard = sim ? `<div class="card"><h2 style="margin-top:0">🔬 ¿Esto funciona?</h2>
+      <p class="small muted">Lo justo es que lo preguntes. Esto es la misma regla aplicada día por día a <b>tus ${fmtN((S.day.posiciones || []).length, 0)} acciones</b> durante todo el historial disponible, midiendo qué pasó los ${sim.horizonte} días hábiles siguientes.</p>
+      ${Object.entries(sim.por_accion || {}).sort((a, b) => b[1].media - a[1].media).map(([a, g]) => simFila(a, g)).join('')}
+      ${sim.brecha != null ? `<div class="desc" style="margin-top:8px">
+        <div class="between"><b class="small">La brecha</b><b class="mono ${cls(sim.brecha)}">${pct(sim.brecha, 2)}</b></div>
+        <div class="tiny muted">Lo que la regla quería comprar rindió ${pct(sim.lado_compra, 2)}; lo que quería vender, ${pct(sim.lado_venta, 2)}. Esa diferencia es toda la ventaja que tiene. Si fuera cero, la regla no serviría de nada.</div></div>` : ''}
+      <p class="tiny muted" style="margin-top:8px">Lo que esto <b>no</b> es: la rentabilidad de una cartera. No descuenta comisiones ni supone en qué pondrías la plata que vendes. Y los fundamentales son los de hoy aplicados al pasado, así que el eje de la empresa tiene información que en vivo no vas a tener. Por eso al lado va el marcador real, que no tiene ese problema.</p>
+
+      ${mar ? `<div class="desc" style="margin-top:8px">
+        <div class="between"><b class="small">Marcador real (sin trampa)</b>
+          ${mar.acierto != null ? `<b class="mono">${mar.acierto}% de acierto</b>` : '<span class="tag">llenándose</span>'}</div>
+        <div class="tiny muted">${mar.evaluados} veredictos ya medidos · ${mar.pendientes} esperando que pasen los ${mar.horizonte} días.
+          ${mar.evaluados === 0 ? 'Empieza hoy: cada veredicto queda guardado con su precio y se califica solo cuando el tiempo pasa. Esta es la única prueba que no se puede discutir.' : ''}</div>
+        ${Object.entries(mar.por_accion || {}).map(([a, g]) => `<div class="tiny muted">· ${esc(a)}: ${g.n} medidos, ${pct(g.media, 2)}, acertó el ${g.acierto}%</div>`).join('')}</div>` : ''}</div>` : '';
+
+  // --- el tablero completo --------------------------------------------------
+  const moms = ['sobrevendida', 'corrigiendo', 'neutral', 'fuerte', 'estirada'];
+  const celda = (m, b) => {
+    const c = (d.tasas || {})[`${m}|${b}`];
+    if (!c) return '<div class="tiny muted" style="text-align:center;padding:6px">—</div>';
+    const col = c.media >= 0.5 ? 'sb' : c.media >= -0.5 ? 'h' : 'ss';
+    return `<div style="text-align:center;padding:6px;border-radius:6px;background:color-mix(in srgb, var(--${col}) 14%, transparent)">
+      <b class="mono tiny t-${col}">${pct(c.media, 2)}</b>
+      <div class="tiny muted">${c.acierto}% · n=${c.n}</div></div>`;
+  };
+  const tablero = `<div class="card"><details><summary class="small"><b>El tablero completo</b> — las 15 casillas medidas</summary>
+      <p class="tiny muted" style="margin-top:8px">Cada casilla cruza el momento del precio (filas) con la solidez de la empresa (columnas). El número es lo que rindieron a ${d.ejes?.horizonte || 5} días hábiles las posiciones que estuvieron ahí, y el porcentaje, cuántas veces subieron. Mira la fila <b>corrigiendo</b>: con la empresa sólida y con la empresa floja, la misma caída termina en dos lugares muy distintos. Eso es lo que la versión anterior no veía.</p>
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:4px;align-items:center;margin-top:8px">
+        <span class="tiny muted"></span><b class="tiny" style="text-align:center">empresa alta</b><b class="tiny" style="text-align:center">media</b><b class="tiny" style="text-align:center">baja</b>
+        ${moms.map((m) => `<b class="tiny">${esc(MOM_LABEL[m])}</b>${celda(m, 'alta')}${celda(m, 'media')}${celda(m, 'baja')}`).join('')}</div>
+      ${d.base ? `<p class="tiny muted" style="margin-top:8px">El promedio de todo el universo, para comparar: <b class="mono ${cls(d.base.media)}">${pct(d.base.media, 2)}</b> a ${d.ejes?.horizonte || 5} días (${fmtN(d.base.n, 0)} observaciones).</p>` : ''}</details></div>`;
 
   return `<div class="card" style="border-color:var(--accent)">
       <div class="between"><h2 style="margin:0">📋 Parte del día</h2><span class="tag">${esc(d.date || '')}</span></div>
@@ -1250,21 +1325,25 @@ function dailyCard() {
       <p class="tiny muted">Se calcula con las cantidades que tienes hoy aplicadas a los precios de cada fecha: mide cuánto se movió <b>lo que tienes</b>, sin mezclar tus compras y ventas del periodo.</p></div>
 
     ${hoy.length ? `<div class="card"><h2 style="margin-top:0">🎯 Para hoy</h2>
-      <p class="small muted">Como máximo cinco. Lo demás puede esperar y está abajo.</p>
+      <p class="small muted">Como máximo cinco, con cupos reservados para las compras: si no, las ventas se llevaban todos los lugares y las oportunidades quedaban escondidas.</p>
       ${hoy.map(fila).join('')}</div>` : `<div class="card"><h2 style="margin-top:0">🎯 Para hoy</h2>
-      <p class="small" style="color:var(--sb)">Ningún gatillo activo. No hay nada que hacer hoy, y eso también es una decisión.</p></div>`}
+      <p class="small" style="color:var(--sb)">Nada que hacer hoy, y eso también es una decisión.</p></div>`}
 
-    ${luego.length ? `<div class="card"><details><summary class="small"><b>${luego.length}</b> con gatillo, para después</summary>${luego.map(fila).join('')}</details></div>` : ''}
+    ${pruebaCard}
+
+    ${luego.length ? `<div class="card"><details><summary class="small"><b>${luego.length}</b> con movimiento, para después</summary>${luego.map(fila).join('')}</details></div>` : ''}
 
     <div class="card"><details><summary class="small">El resto: ${vigilar.length} a vigilar · ${quietas.length} sin novedad</summary>
       ${[...vigilar, ...quietas].map(fila).join('')}</details></div>
 
-    <div class="card"><details><summary class="small">Los gatillos que uso</summary>
+    ${tablero}
+
+    <div class="card"><details><summary class="small">Cómo decido</summary>
       <ul class="reasons small">${(d.reglas || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
       <p class="tiny muted">${esc(d.nota || '')}</p></details></div>`;
 }
 
-const EST_CLASE = { AUMENTAR: 'sb', MANTENER: 'b', OBSERVAR: 'h', REDUCIR: 's', SALIR: 'ss' };
+const EST_CLASE = { AUMENTAR: 'strong_buy', MANTENER: 'buy', OBSERVAR: 'hold', REDUCIR: 'sell', SALIR: 'strong_sell' };
 const EST_FLECHA = { AUMENTAR: '↑', MANTENER: '=', OBSERVAR: '=', REDUCIR: '↓', SALIR: '↓' };
 const COMP_NOMBRE = {
   valoracion: 'Fundamentales y valoración', calidad: 'Calidad y factores', tecnico: 'Técnico y momentum',
