@@ -7,10 +7,13 @@ Piloto publicado en Claude: https://claude.ai/artifact/UBLVEFEjjP3thFb3ZVEMPZ
 ## Archivos
 
 ```
-index.html     la aplicación completa (HTML + CSS + JS, sin dependencias)
-plano-hi.png   plano rotado 3427×2853, líneas finas (zoom cercano)
-plano-lo.png   mismo plano a media resolución con líneas engrosadas (vista general)
+index.html       piloto publicado en Claude (HTML + CSS + JS, sin dependencias)
+plano-hi.png     plano rotado 3427×2853, líneas finas (zoom cercano)
+plano-lo.png     mismo plano a media resolución con líneas engrosadas (vista general)
+apps-script/     versión para el dominio de la empresa: Google Sheet + Drive + app web
 ```
+
+La versión de producción es **`apps-script/`**. Su `README.md` tiene la instalación paso a paso.
 
 ## Qué hace
 
@@ -30,25 +33,14 @@ plano-lo.png   mismo plano a media resolución con líneas engrosadas (vista gen
 
 Sectores: `agua, vapor, frio, electrica, riles, proceso, apoyo`.
 
-## Traspaso a Apps Script (dominio de la empresa)
+## Del piloto a Apps Script
 
 | Piloto (Claude) | Apps Script |
 |---|---|
-| `db` colección `points` | Hoja `Puntos` en un Google Sheet |
-| `db` colección `photos` | Hoja `Fotos` |
-| `db` colección `notes` | Hoja `Observaciones` |
-| `assets.upload` | `DriveApp` → carpeta *Plano Fotográfico/Fotos* (archivo + miniatura) |
-| `/_blob/<id>` | `https://drive.google.com/thumbnail?id=<id>&sz=w2048` |
-| `user.id()` | `Session.getActiveUser().getEmail()` |
-| `onSnapshot` (tiempo real) | recarga al volver a la pestaña + sondeo cada 30–60 s |
-| escritura por documento | `google.script.run` + `LockService` al escribir en la hoja |
-
-Pasos:
-
-1. Crear el Sheet con las tres hojas y la carpeta de Drive dentro de una unidad compartida del área.
-2. `Code.gs`: `doGet()` sirve `index.html` con `HtmlService`; funciones `listar()`, `guardarPunto()`, `moverFotos(ids, puntoId)`, `subirFoto(base64, meta)`, `eliminarFoto(id)`, `agregarObservacion()`.
-3. En `index.html` solo cambia la capa de almacenamiento (`makeCloudStore`): el resto de la interfaz se reutiliza tal cual. El redimensionado en el navegador se mantiene, así cada llamada a `subirFoto` pesa pocos cientos de KB.
-4. Publicar como aplicación web: *Ejecutar como* el usuario que accede, *Acceso*: cualquier usuario del dominio.
-5. Cargar los 30 puntos base y mover las fotos reales.
-
-Pendiente de definir antes del traspaso: quién puede editar puntos (todos o solo coordinación), dueño de la carpeta de Drive, y ubicación de la subestación eléctrica (no aparece rotulada en el plano, se agrega en modo edición).
+| colección `points` | hoja `Puntos` |
+| colección `photos` | hoja `Fotos` |
+| colección `notes` | hoja `Observaciones` |
+| almacenamiento de archivos | carpeta de Drive *Plano Fotográfico — Fotos* (+ `miniaturas/`) |
+| identidad del usuario | `Session.getActiveUser().getEmail()` |
+| tiempo real | consulta de versión cada 30 s y al volver a la pestaña |
+| permisos | hoja `Config` (`editores_puntos`, `editores_fotos`), validados en el servidor |
