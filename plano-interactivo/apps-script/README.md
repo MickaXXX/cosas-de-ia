@@ -4,22 +4,22 @@ App web para el dominio de la empresa. El Google Sheet es la base de datos y las
 
 | Archivo | Qué es |
 |---|---|
-| `Code.gs` | Servidor: lectura y escritura en la hoja, subida a Drive, permisos, instalación |
+| `Code.gs` | Servidor: lectura y escritura en la hoja, subida a Drive, permisos, instalación y diagnóstico |
 | `Index.html` | La app (misma interfaz del piloto) |
-| `Plano.html` | El plano ANT-PLA-GEN-004 embebido como imagen (por eso es largo) |
 | `appsscript.json` | Manifiesto: zona horaria de Santiago, app web solo para el dominio |
+
+El plano no va en el código: `instalar` lo descarga una sola vez a Drive (carpeta *Plano Fotográfico — Fotos/plano*).
 
 ## Instalación (unos 10 minutos)
 
 1. **Crea la hoja.** En Google Drive, idealmente en una unidad compartida del área, crea una hoja de cálculo nueva. Nombre sugerido: *Plano Fotográfico — Base de datos*.
 2. **Abre el editor.** En la hoja: *Extensiones → Apps Script*.
-3. **Copia los archivos** desde esta carpeta:
-   - `Code.gs`: borra el contenido del archivo `Código.gs` y pega el de `Code.gs`.
-   - `Index.html`: botón **+** → *HTML* → nombre `Index` → pega el contenido.
-   - `Plano.html`: botón **+** → *HTML* → nombre `Plano` → pega el contenido.
-   - `appsscript.json`: ⚙ *Configuración del proyecto* → marca *Mostrar el archivo de manifiesto "appsscript.json"* → vuelve al editor y reemplaza su contenido.
-4. **Instala.** Guarda (Ctrl+S). Arriba, elige la función `instalar` y presiona ▶ *Ejecutar*. Acepta los permisos de Sheets y Drive con tu cuenta.
-   Se crean las hojas **Puntos** (con los 30 puntos del plano), **Fotos**, **Observaciones** y **Config**, y la carpeta *Plano Fotográfico — Fotos* junto a la hoja.
+3. **Copia los 3 archivos.** Abre cada enlace, selecciona todo (Ctrl+A), copia (Ctrl+C) y pégalo completo en el editor:
+   - [Code.gs](https://raw.githubusercontent.com/MickaXXX/cosas-de-ia/claude/magical-einstein-2xcxtj/plano-interactivo/apps-script/Code.gs) → borra el contenido de `Código.gs` y pega.
+   - [Index.html](https://raw.githubusercontent.com/MickaXXX/cosas-de-ia/claude/magical-einstein-2xcxtj/plano-interactivo/apps-script/Index.html) → botón **+** → *HTML* → nombre `Index` (sin .html) → pega. Debe terminar con la línea `<!-- FIN-INDEX-PLANO-FOTOGRAFICO … -->` y luego `</body>` y `</html>`.
+   - [appsscript.json](https://raw.githubusercontent.com/MickaXXX/cosas-de-ia/claude/magical-einstein-2xcxtj/plano-interactivo/apps-script/appsscript.json) → ⚙ *Configuración del proyecto* → marca *Mostrar el archivo de manifiesto "appsscript.json"* → vuelve al editor y reemplaza su contenido.
+4. **Instala.** Guarda (Ctrl+S). Arriba, elige la función `instalar` y presiona ▶ *Ejecutar*. Acepta los permisos (Sheets, Drive y conexión externa, que se usa una vez para bajar el plano).
+   Se crean las hojas **Puntos** (con los 30 puntos del plano), **Fotos**, **Observaciones** y **Config**, la carpeta *Plano Fotográfico — Fotos* junto a la hoja y el plano dentro de ella.
 5. **Publica.** *Implementar → Nueva implementación* → ⚙ *Aplicación web*:
    - Ejecutar como: **Yo**
    - Quién tiene acceso: **cualquier usuario de tu dominio**
@@ -35,6 +35,7 @@ Con [clasp](https://github.com/google/clasp) los pasos 2 y 3 son: `clasp create 
 | `editores_puntos` | quién crea, mueve, edita o borra puntos del plano | el correo de quien instaló |
 | `editores_fotos` | quién sube, mueve o borra fotos y escribe observaciones | vacío = todos los que abren la app |
 | `subtitulo` | texto bajo el título | Planta Antofagasta · Suministros |
+| `plano_archivo` | enlace de Drive a otra imagen del plano (misma encuadre 3427 × 2853) para reemplazar el incluido | vacío |
 
 Los correos van separados por coma. `@dominio.cl` habilita a todo el dominio. El dueño del script siempre tiene todos los permisos. Los permisos también se validan en el servidor, no solo en la pantalla.
 
@@ -51,15 +52,24 @@ Quién **ve** la app se define al publicar (paso 5).
 
 ## Actualizar la app sin cambiar la URL
 
-Pega los archivos nuevos → *Implementar → Administrar implementaciones* → ✏ → *Versión: nueva versión* → *Implementar*.
+1. Pega los archivos nuevos y guarda.
+2. *Implementar → Administrar implementaciones* → ✏ → *Versión: nueva versión* → *Implementar*.
+
+El enlace `/exec` muestra la **última versión publicada**, no la última guardada. Si no haces el paso 2, sigues viendo la versión anterior.
 
 ## Si algo falla
 
-| Mensaje | Qué hacer |
+Primero usa el menú del Google Sheet **Plano Fotográfico → Diagnóstico**: revisa archivos, hojas, carpetas, plano, publicación y tus permisos, y marca con ✗ lo que falta.
+
+| Lo que ves | Qué hacer |
 |---|---|
-| "La app no está instalada" | En la hoja: menú *Plano Fotográfico → Instalar o reparar* |
+| El plano se ve gigante, sin puntos ni paneles | El código de la página no arrancó. Vuelve a copiar `Index.html` desde el enlace de arriba y publica una **nueva versión** |
+| Página "El archivo Index quedó incompleto" | El pegado se cortó: repite el paso 3 para `Index.html` y publica una nueva versión |
+| Recuadro rojo "La app encontró un error" | Envía una captura del recuadro |
+| "La app no está instalada" o "Falta el plano" | Menú *Plano Fotográfico → Instalar o reparar* |
 | "No tienes permiso…" | Agrega el correo en la hoja **Config** |
-| Falta una hoja o columna | *Instalar o reparar* la recrea sin borrar datos |
 | Una foto HEIC de iPhone no sube | Al elegirla desde Safari el iPhone la convierte a JPG; si falla, expórtala como JPG |
+
+Si quedó un archivo `Plano` de la primera versión, bórralo: ya no se usa.
 
 La subestación eléctrica no está rotulada en el plano: agrégala desde la app con *Editar puntos*.

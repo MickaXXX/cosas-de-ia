@@ -10,7 +10,7 @@ Piloto publicado en Claude: https://claude.ai/artifact/UBLVEFEjjP3thFb3ZVEMPZ
 index.html       piloto publicado en Claude (HTML + CSS + JS, sin dependencias)
 plano-hi.png     plano rotado 3427×2853, líneas finas (zoom cercano)
 plano-lo.png     mismo plano a media resolución con líneas engrosadas (vista general)
-apps-script/     versión para el dominio de la empresa: Google Sheet + Drive + app web
+apps-script/     versión para el dominio de la empresa: Google Sheet + Drive + app web (el plano lo baja instalar desde plano-hi.png y plano-lo.png)
 ```
 
 La versión de producción es **`apps-script/`**. Su `README.md` tiene la instalación paso a paso.

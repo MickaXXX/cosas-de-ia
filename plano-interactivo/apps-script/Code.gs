@@ -2,11 +2,21 @@
  * Plano Fotográfico de Planta — servidor (Google Apps Script).
  *
  * Base de datos: el Google Sheet que contiene este script (hojas Puntos, Fotos, Observaciones, Config).
- * Fotos: carpeta de Drive creada por instalar(), con una subcarpeta de miniaturas.
+ * Fotos: carpeta de Drive creada por instalar(), con subcarpetas de miniaturas y del plano.
  * La app web se publica "Ejecutar como: yo" y "Acceso: usuarios del dominio".
+ * Archivos del proyecto: Code.gs, Index.html y appsscript.json.
  */
 
 const TZ = 'America/Santiago';
+
+// El archivo Index.html termina con esta marca; si falta, quedó incompleto al pegarlo.
+const FIN_INDEX = 'FIN-INDEX-PLANO-FOTOGRAFICO';
+const LARGO_INDEX = 108934;
+
+// Plano ANT-PLA-GEN-004 rotado (3427 × 2853): capa fina para zoom cercano y capa gruesa para la vista general.
+// instalar() las copia una sola vez a Drive; después la app solo lee Drive.
+const PLANO_ORIGEN = 'https://raw.githubusercontent.com/MickaXXX/cosas-de-ia/04b8b2a8f618523e62ff78d979eb520dda0a2bb5/plano-interactivo/';
+const PLANO_CAPAS = { PLANO_HI_ID: 'plano-hi.png', PLANO_LO_ID: 'plano-lo.png' };
 
 const SECTORES = ['agua', 'vapor', 'frio', 'electrica', 'riles', 'proceso', 'apoyo'];
 
@@ -47,6 +57,7 @@ const CONFIG_DEF = [
   ['editores_fotos', '', 'Correos que pueden subir, mover o borrar fotos y escribir observaciones. Vacío = todos los usuarios que abren la app.'],
   ['subtitulo', 'Planta Antofagasta · Suministros', 'Texto bajo el título de la app.'],
   ['carpeta_fotos', '', 'Carpeta de Drive donde se guardan las fotos (la crea Instalar).'],
+  ['plano_archivo', '', 'Opcional: enlace o ID de una imagen del plano en Drive para reemplazar el plano incluido. Debe tener el mismo encuadre (3427 × 2853) para que los puntos calcen.'],
 ];
 
 // Puntos rotulados en el plano ANT-PLA-GEN-004 (píxeles sobre el plano rotado de 3427 × 2853).
@@ -87,22 +98,43 @@ const PUNTOS_BASE = [
 /* ======================= app web ======================= */
 
 function doGet() {
-  const t = HtmlService.createTemplateFromFile('Index');
+  let t;
+  try { t = HtmlService.createTemplateFromFile('Index'); } catch (e) {
+    return paginaError_('Falta el archivo Index', 'El proyecto de Apps Script no tiene el archivo Index.', ['En el editor: botón + → HTML → nombre Index (sin .html) y pega el contenido de Index.html.']);
+  }
+  if (t.getRawContent().indexOf(FIN_INDEX) < 0) {
+    return paginaError_('El archivo Index quedó incompleto', 'Tiene ' + t.getRawContent().length + ' caracteres y debería tener ' + LARGO_INDEX + '. Se cortó al copiarlo o pegarlo.',
+      ['En GitHub abre Index.html y usa el botón "Copy raw file" (ícono de copiar, arriba a la derecha del archivo).',
+       'En el editor de Apps Script abre Index, selecciona todo (Ctrl+A), pega (Ctrl+V) y guarda (Ctrl+S).',
+       'Implementar → Administrar implementaciones → lápiz → Versión: Nueva versión → Implementar.']);
+  }
   let boot;
   try { boot = estado(); } catch (e) { boot = { error: e.message }; }
+  let plano = null;
+  try { plano = plano_(); } catch (e) { if (!boot.error) boot = { error: e.message }; }
   t.boot = JSON.stringify(boot).replace(/</g, '\\u003c');
+  t.planoHi = plano ? plano.hi : '';
+  t.planoLo = plano ? plano.lo : '';
   return t.evaluate()
     .setTitle('Plano Fotográfico')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
 
-function include_(nombre) {
-  return HtmlService.createHtmlOutputFromFile(nombre).getContent();
+function paginaError_(titulo, mensaje, pasos) {
+  const e = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  return HtmlService.createHtmlOutput(
+    '<div style="font:16px/1.5 system-ui,sans-serif;max-width:620px;margin:8vh auto;padding:24px;border:1px solid #d2d9d4;border-radius:14px;color:#17201c">' +
+    '<h1 style="margin:0 0 8px;font-size:22px">' + e(titulo) + '</h1><p>' + e(mensaje) + '</p><ol>' +
+    pasos.map(p => '<li style="margin:6px 0">' + e(p) + '</li>').join('') + '</ol>' +
+    '<p style="color:#5a6761;font-size:14px">En el Google Sheet, el menú Plano Fotográfico → Diagnóstico revisa toda la instalación.</p></div>')
+    .setTitle('Plano Fotográfico')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Plano Fotográfico')
     .addItem('Instalar o reparar', 'instalar')
+    .addItem('Diagnóstico', 'diagnostico')
     .addItem('Ver enlace de la app', 'mostrarEnlace')
     .addToUi();
 }
@@ -113,6 +145,91 @@ function mostrarEnlace() {
   SpreadsheetApp.getUi().alert(url
     ? 'Enlace de la app:\n\n' + url
     : 'La app aún no está publicada. En el editor de Apps Script: Implementar → Nueva implementación → Aplicación web.');
+}
+
+/** Revisa la instalación completa y muestra qué falta. */
+function diagnostico() {
+  const out = [];
+  const linea = (ok, txt) => out.push((ok ? '✓ ' : '✗ ') + txt);
+  let raw = '';
+  try { raw = HtmlService.createTemplateFromFile('Index').getRawContent(); } catch (e) {}
+  linea(!!raw, 'Archivo Index en el proyecto');
+  if (raw) linea(raw.indexOf(FIN_INDEX) >= 0, 'Index completo: ' + raw.length + ' de ' + LARGO_INDEX + ' caracteres');
+  let plano = false;
+  try { plano = HtmlService.createHtmlOutputFromFile('Plano') && true; } catch (e) {}
+  if (plano) out.push('• Hay un archivo Plano de la versión anterior: ya no se usa, puedes borrarlo.');
+  const p = props_();
+  try { ss_(); linea(true, 'Hoja de cálculo conectada'); } catch (e) { linea(false, 'Hoja de cálculo: ' + e.message); }
+  Object.keys(HOJAS).forEach(k => {
+    try { const t = tabla_(k); linea(true, 'Hoja ' + HOJAS[k].nombre + ': ' + t.objetos().length + ' filas'); }
+    catch (e) { linea(false, e.message); }
+  });
+  linea(!!carpeta_(p.getProperty('FOLDER_ID')), 'Carpeta de fotos en Drive');
+  linea(!!carpeta_(p.getProperty('THUMBS_ID')), 'Carpeta de miniaturas');
+  try { plano_(); linea(true, 'Plano disponible en Drive'); } catch (e) { linea(false, e.message); }
+  let url = '';
+  try { url = ScriptApp.getService().getUrl() || ''; } catch (e) {}
+  linea(!!url, url ? 'App publicada: ' + url : 'App sin publicar (Implementar → Nueva implementación → Aplicación web)');
+  try {
+    const yo = usuario_();
+    linea(true, 'Tu cuenta: ' + (yo.email || '(Google no entregó el correo)') + ' · fotos: ' + (yo.puedeFotos ? 'sí' : 'no') + ' · puntos: ' + (yo.puedePuntos ? 'sí' : 'no'));
+  } catch (e) {}
+  out.push('', 'Si cambiaste código: Implementar → Administrar implementaciones → lápiz → Versión: Nueva versión. El enlace /exec muestra la última versión publicada, no la última guardada.');
+  const msg = out.join('\n');
+  try { SpreadsheetApp.getUi().alert('Diagnóstico', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) { Logger.log(msg); }
+  return msg;
+}
+
+/** Imágenes del plano como data URL (desde Drive, con caché de 6 horas). */
+function plano_() {
+  const c = config_();
+  const propio = String(c.plano_archivo || '').trim();
+  if (propio) {
+    const m = propio.match(/\/d\/([-\w]+)/) || propio.match(/[?&]id=([-\w]+)/) || propio.match(/^([-\w]{10,})$/);
+    if (!m) throw new Error('El valor de plano_archivo en Config no parece un enlace de Drive.');
+    let d;
+    try { d = dataUrl_(m[1]); } catch (e) { throw new Error('No se pudo abrir la imagen de plano_archivo (Config). Revisa el enlace.'); }
+    return { hi: d, lo: d };
+  }
+  const p = props_();
+  const hi = p.getProperty('PLANO_HI_ID'), lo = p.getProperty('PLANO_LO_ID');
+  if (!hi || !lo) throw new Error('Falta el plano en Drive. En el Google Sheet usa el menú Plano Fotográfico → Instalar o reparar.');
+  try { return { hi: dataUrl_(hi), lo: dataUrl_(lo) }; }
+  catch (e) { throw new Error('No se pudo leer el plano en Drive (¿se borró?). Usa Plano Fotográfico → Instalar o reparar.'); }
+}
+
+function dataUrl_(fileId) {
+  const cache = CacheService.getScriptCache();
+  const k = 'plano_' + fileId;
+  const n = Number(cache.get(k) || 0);
+  if (n) {
+    const keys = [];
+    for (let i = 0; i < n; i++) keys.push(k + '_' + i);
+    const partes = cache.getAll(keys);
+    if (keys.every(x => partes[x] != null)) return keys.map(x => partes[x]).join('');
+  }
+  const b = DriveApp.getFileById(fileId).getBlob();
+  const s = 'data:' + (b.getContentType() || 'image/png') + ';base64,' + Utilities.base64Encode(b.getBytes());
+  const trozos = {};
+  let i = 0;
+  for (let j = 0; j < s.length; j += 90000) trozos[k + '_' + (i++)] = s.slice(j, j + 90000);
+  try { cache.putAll(trozos, 21600); cache.put(k, String(i), 21600); } catch (e) {}
+  return s;
+}
+
+/** Copia las capas del plano a Drive si todavía no están. */
+function instalarPlano_(carpeta) {
+  const p = props_();
+  let sub = null;
+  Object.keys(PLANO_CAPAS).forEach(prop => {
+    const actual = p.getProperty(prop);
+    if (actual) { try { if (!DriveApp.getFileById(actual).isTrashed()) return; } catch (e) {} }
+    if (!sub) { const it = carpeta.getFoldersByName('plano'); sub = it.hasNext() ? it.next() : carpeta.createFolder('plano'); }
+    const r = UrlFetchApp.fetch(PLANO_ORIGEN + PLANO_CAPAS[prop], { muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) throw new Error('No pude descargar el plano (' + r.getResponseCode() + ').');
+    const f = sub.createFile(r.getBlob().setName(PLANO_CAPAS[prop]));
+    p.setProperty(prop, f.getId());
+  });
 }
 
 /* ======================= lectura ======================= */
@@ -363,6 +480,10 @@ function instalar() {
   let compartida = true;
   try { carpeta.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) { compartida = false; }
   guardarConfig_(ss, 'carpeta_fotos', carpeta.getUrl());
+  let avisoPlano = '';
+  try { instalarPlano_(carpeta); } catch (e) {
+    avisoPlano = 'Aviso: ' + e.message + ' Sube plano-hi.png (está en GitHub, carpeta plano-interactivo) a la carpeta de fotos y pega su enlace en Config → plano_archivo.\n';
+  }
 
   CONFIG_ = null;
   const t = tabla_('puntos');
@@ -373,7 +494,8 @@ function instalar() {
     (nuevos ? nuevos + ' puntos cargados desde el plano ANT-PLA-GEN-004.\n' : 'Los puntos existentes se mantuvieron.\n') +
     'Fotos en: ' + carpeta.getUrl() + '\n' +
     (compartida ? '' : 'Aviso: la política del dominio no permitió compartir la carpeta; la app mostrará las fotos a través del script (más lento).\n') +
-    '\nSiguiente paso: Implementar → Nueva implementación → Aplicación web (Ejecutar como: yo · Acceso: usuarios del dominio).';
+    avisoPlano +
+    '\nSiguiente paso: Implementar → Nueva implementación → Aplicación web (Ejecutar como: yo · Acceso: usuarios del dominio). Si ya estaba publicada: Administrar implementaciones → lápiz → Nueva versión.';
   try { SpreadsheetApp.getUi().alert(msg); } catch (e) { Logger.log(msg); }
   return msg;
 }

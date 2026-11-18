@@ -398,13 +398,37 @@ textarea.inp{height:auto;min-height:70px;padding:8px 10px;resize:vertical;line-h
 .tile.up img{opacity:.5}
 .tile-up{position:absolute;left:5px;top:5px;z-index:2;font:500 10.5px/18px var(--f-mono);padding:0 6px;border-radius:4px;background:var(--signal);color:var(--signal-ink)}
 .lb-stage img:not([src]){visibility:hidden}
-.lb-stage img[src] + .lb-wait{display:none}
 .lb-wait{position:absolute;font:500 12px var(--f-mono);color:rgba(255,255,255,.6)}
 .fatal{max-width:560px;margin:10vh auto;padding:28px;border:1px solid var(--line);border-radius:14px;background:var(--surface);font-size:15px}
 .fatal h1{margin:0 0 10px;font:700 26px var(--f-display);text-transform:uppercase}
 .fatal ol{padding-left:20px}
 .fatal code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
 </style>
+<script>
+// Aviso visible si la app no arranca (archivo incompleto, error de código o versión antigua publicada).
+(function () {
+  var shown = false;
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function show(title, detail) {
+    if (shown || window.__pfReady) return;
+    shown = true;
+    var d = document.createElement('div');
+    d.setAttribute('role', 'alert');
+    d.setAttribute('style', 'position:fixed;left:16px;right:16px;top:16px;z-index:9999;max-width:640px;margin:0 auto;padding:16px 18px;border-radius:12px;background:#fff4f4;border:2px solid #c92a2a;color:#3b0d0d;font:15px/1.45 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)');
+    d.innerHTML = '<b style="font-size:17px">' + esc(title) + '</b><br>' + esc(detail) +
+      '<ol style="margin:8px 0 0;padding-left:20px"><li>En el Google Sheet usa el menú <b>Plano Fotográfico → Diagnóstico</b>.</li>' +
+      '<li>Si pegaste código nuevo: Implementar → Administrar implementaciones → lápiz → <b>Nueva versión</b>.</li>' +
+      '<li>Si sigue igual, envía una captura de este mensaje.</li></ol>';
+    (document.body || document.documentElement).appendChild(d);
+  }
+  window.addEventListener('error', function (e) {
+    show('La app encontró un error al iniciar', (e.message || 'Error desconocido') + (e.lineno ? ' (línea ' + e.lineno + ')' : ''));
+  });
+  setTimeout(function () {
+    show('La app no terminó de cargar', 'El código de la página no arrancó. Lo más común es que el archivo Index haya quedado incompleto al pegarlo.');
+  }, 10000);
+})();
+</script>
 </head>
 <body>
 <div class="app" id="app" data-mode="view" data-tray="mid" data-mtab="tray">
@@ -431,7 +455,8 @@ textarea.inp{height:auto;min-height:70px;padding:8px 10px;resize:vertical;line-h
   <section class="stage" aria-label="Plano de la planta">
     <div class="viewport" id="vp" data-lod="lo">
       <div class="world" id="world">
-        <?!= include_('Plano') ?>
+        <img class="plan-lo" alt="" width="3427" height="2853" draggable="false" src="<?!= planoLo ?>">
+        <img class="plan-hi" alt="Plano general de la planta" width="3427" height="2853" draggable="false" src="<?!= planoHi ?>">
         <div id="markers"></div>
       </div>
     </div>
@@ -1039,7 +1064,7 @@ function renderLightbox() {
   el.hidden = false;
   if (!el._built) {
     el._built = true;
-    el.innerHTML = `<div class="lb-stage" id="lbStage"><img id="lbImg" alt=""><span class="lb-wait">Cargando foto…</span>
+    el.innerHTML = `<div class="lb-stage" id="lbStage"><span class="lb-wait">Cargando foto…</span><img id="lbImg" alt="">
       <button type="button" class="lb-close" data-act="lb-close" aria-label="Cerrar">${ICON.x}</button><span class="lb-count" id="lbCount"></span>
       <button type="button" class="lb-nav prev" data-act="lb-prev" aria-label="Anterior">${ICON.prev}</button>
       <button type="button" class="lb-nav next" data-act="lb-next" aria-label="Siguiente">${ICON.next}</button></div>
@@ -1164,7 +1189,7 @@ async function deletePoint(id) {
 }
 async function loadBase() {
   S.armed = null;
-  try { const r = await write('cargarPuntosBase'); showToast(`${(r && r.n) || 0} puntos cargados desde el plano`); await refresh(true); userMoved = false; fitPoints(true); } catch {}
+  try { const r = await write('cargarPuntosBase'); showToast(`${(r && r.n) || 0} puntos cargados desde el plano`); } catch {}
 }
 async function addNote(text) {
   const note = { id: 'n' + rid(), pointId: S.sel, text: text.slice(0, 2000), by: S.me, createdAt: Date.now() };
@@ -1248,7 +1273,8 @@ async function uploadFiles(files, pid) {
       const [fb, tb] = await Promise.all([toB64(full.blob), toB64(thumb.blob)]);
       const r = await write('subirFoto', meta, fb, tb);
       IMG.local.set(r.photo.assetId, IMG.local.get(la)); IMG.local.set(r.photo.thumbId, IMG.local.get(lt));
-      S.photos.set(id, r.photo);
+      const cur = S.photos.get(id);
+      S.photos.set(id, { ...r.photo, pointId: cur && cur.pointId !== undefined ? r.photo.pointId : r.photo.pointId });
       ok++; S.up.done++;
     } catch (e) { S.photos.delete(id); S.up.failed++; errors.push({ name: f.name, e }); }
     render();
@@ -1661,6 +1687,7 @@ document.addEventListener('pointerup', e => {
 
 /* ================= arranque ================= */
 function fatal(msg) {
+  window.__pfReady = true;
   document.body.innerHTML = `<div class="fatal"><h1>Plano Fotográfico</h1><p>${esc(msg)}</p>
     <ol><li>Abre el Google Sheet donde está el script.</li><li>Menú <b>Plano Fotográfico → Instalar o reparar</b>.</li><li>Vuelve a abrir este enlace.</li></ol></div>`;
 }
@@ -1675,9 +1702,11 @@ function start() {
   render();
   setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, SYNC_MS);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+  window.__pfReady = true;
 }
 start();
 })();
 </script>
+<!-- FIN-INDEX-PLANO-FOTOGRAFICO: si esta línea no está, el archivo quedó incompleto al pegarlo. -->
 </body>
 </html>
